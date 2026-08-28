@@ -59,6 +59,10 @@ WORKING.md             어느 파일이 기준인지
 
 고친 뒤에는 전부 돌린다. Node 만 있으면 된다.
 
+> 줄바꿈은 **LF 로 둔다.** `review-test.js` 같은 검사가 `
+` 로 위치를 잡아서,
+> CRLF 로 바뀌면 앵커를 못 찾고 통째로 실패한다.
+
 ```bash
 node build/undef-test.js      # 선언 없이 쓰는 이름
 node build/review-test.js     # 코드 리뷰 규칙 (139건)

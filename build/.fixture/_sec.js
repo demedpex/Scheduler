@@ -597,13 +597,20 @@ function feed(text){
       msg: who + '조각은 이미 받았어요. ' + (b ? b.got + '/' + b.total + ' 받은 상태 — 남은 조각: ' + b.miss.join(', ') : '')};
   }
   return {st:FD.PARTIAL,
-    msg: who + '조각 ' + b.got + '/' + b.total + ' 까지 받았어요. 남은 조각: ' + b.miss.join(', ')};
+    msg: who + '조각 ' + b.got + '/' + b.total + ' 까지 받았어요. 남은 조각: ' + b.miss.join(', ') +
+         ' — 지금까지 받은 것만 먼저 [반영] 해도 됩니다.'};
 }
 
-// 완성된 배치의 레코드만 모은다. 같은 ID 는 수정시각이 최신인 것만.
+/* 받은 조각에서 읽을 수 있는 건 전부 모은다. 같은 ID 는 수정시각이 최신인 것만.
+
+   전에는 배치가 다 차야만(조각 2개면 2개 다 와야) 반영됐다. 그런데 메신저로
+   주고받다 보면 한 조각이 늦거나 빠지는 일이 흔하고, 그동안 받은 것마저
+   못 넣는 것은 손해다. buildParts 가 레코드를 조각 사이에서 자르지 않으므로,
+   조각 하나만 있어도 그 안의 건들은 온전하다. 그래서 받은 만큼 바로 반영한다.
+   나중에 남은 조각이 와서 다시 반영해도 수정시각으로 겨루므로 안전하다. */
 function inboxRecords(){
   const d = {};
-  for(const b of completeBatches()){
+  for(const b of batchList()){
     const parts = inbox[b.id].parts;
     for(let i = 1; i <= b.total; i++){
       if(!parts[i]) continue;
@@ -684,7 +691,8 @@ function syncApply(){
   DB.cfg.lastSync = nowStamp();
   markDirty();
 
-  // 반영한 배치만 비운다. 아직 조각이 모자란 배치는 그대로 둔다.
+  // 다 받은 배치는 비운다. 조각이 모자란 배치는 남은 조각을 더 받을 수 있게 그대로 둔다.
+  // (이미 반영한 건이 다시 들어와도 수정시각으로 겨루므로 '변화없음' 이 된다)
   completeBatches().forEach(b => { delete inbox[b.id]; });
 
   let msg = '신규 ' + nAdd + '건, 갱신 ' + nUpd + '건, 변화없음 ' + nSame + '건';
@@ -692,8 +700,9 @@ function syncApply(){
   if(nDel) msg += ', 삭제 ' + nDel + '건';
   msg += ' 반영했어요.';
   const left = batchList();
-  if(left.length) msg += '\n\n아직 조각이 모자란 묶음이 ' + left.length + '개 남아 있어요: ' +
-    left.map(b => b.sender + ' (' + b.got + '/' + b.total + ')').join(', ');
+  if(left.length) msg += '\n\n받은 조각까지는 반영했어요. 아직 조각이 모자란 묶음이 ' + left.length + '개 있어요: ' +
+    left.map(b => b.sender + ' (' + b.got + '/' + b.total + ', 남은 조각 ' + b.miss.join('·') + ')').join(', ') +
+    '\n남은 조각을 받으면 그때 다시 붙여넣으면 됩니다.';
   if(dupDocNo.size){
     msg += '\n\n※ 문서번호가 중복된 건이 있어요: ' + Array.from(dupDocNo).join(', ') +
            '\n   (병합은 그대로 했습니다. 어느 쪽이 맞는지 확인해 주세요.)';
@@ -799,6 +808,10 @@ function taskModal(id){
         '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '"></div>' +
         '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
       '</div>' +
+      '<div class="frow"><label>마감일자 (선택)</label>' +
+        '<input type="date" id="f_until" value="' + escHtml(r ? (r.until || '') : '') + '">' +
+        '<div class="hint">마감일자를 정하면 <b>그날까지 매일</b> 목록에 보여요. ' +
+        '하루만 하는 일이면 비워 두세요.</div></div>' +
       '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
     '</div>' +
     '<div class="foot">' +
@@ -815,11 +828,13 @@ function taskModal(id){
     const title = $('#f_title').value.trim();
     const date = $('#f_date').value;
     const time = normTime($('#f_time').value);
+    const until = $('#f_until').value;
     if(!title) return showErr('제목을 입력해 주세요.');
     if(!date)  return showErr('날짜를 입력해 주세요.');
     if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+    if(until && until < date) return showErr('마감일자는 시작 날짜보다 뒤여야 해요.');
     const rec = r || {id:newId(myName()), author:myName(), done:false, doneAt:'', del:false};
-    Object.assign(rec, {title, date, time, content:$('#f_content').value, mtime:nowStamp()});
+    Object.assign(rec, {title, date, time, until, content:$('#f_content').value, mtime:nowStamp()});
     if(!r){
       const ord = nextOrderFor(date);     // 순서를 매긴 날이면 맨 뒤로
       if(ord !== undefined) rec.order = ord;

@@ -374,13 +374,20 @@ function feed(text){
       msg: who + '조각은 이미 받았어요. ' + (b ? b.got + '/' + b.total + ' 받은 상태 — 남은 조각: ' + b.miss.join(', ') : '')};
   }
   return {st:FD.PARTIAL,
-    msg: who + '조각 ' + b.got + '/' + b.total + ' 까지 받았어요. 남은 조각: ' + b.miss.join(', ')};
+    msg: who + '조각 ' + b.got + '/' + b.total + ' 까지 받았어요. 남은 조각: ' + b.miss.join(', ') +
+         ' — 지금까지 받은 것만 먼저 [반영] 해도 됩니다.'};
 }
 
-// 완성된 배치의 레코드만 모은다. 같은 ID 는 수정시각이 최신인 것만.
+/* 받은 조각에서 읽을 수 있는 건 전부 모은다. 같은 ID 는 수정시각이 최신인 것만.
+
+   전에는 배치가 다 차야만(조각 2개면 2개 다 와야) 반영됐다. 그런데 메신저로
+   주고받다 보면 한 조각이 늦거나 빠지는 일이 흔하고, 그동안 받은 것마저
+   못 넣는 것은 손해다. buildParts 가 레코드를 조각 사이에서 자르지 않으므로,
+   조각 하나만 있어도 그 안의 건들은 온전하다. 그래서 받은 만큼 바로 반영한다.
+   나중에 남은 조각이 와서 다시 반영해도 수정시각으로 겨루므로 안전하다. */
 function inboxRecords(){
   const d = {};
-  for(const b of completeBatches()){
+  for(const b of batchList()){
     const parts = inbox[b.id].parts;
     for(let i = 1; i <= b.total; i++){
       if(!parts[i]) continue;
@@ -461,7 +468,8 @@ function syncApply(){
   DB.cfg.lastSync = nowStamp();
   markDirty();
 
-  // 반영한 배치만 비운다. 아직 조각이 모자란 배치는 그대로 둔다.
+  // 다 받은 배치는 비운다. 조각이 모자란 배치는 남은 조각을 더 받을 수 있게 그대로 둔다.
+  // (이미 반영한 건이 다시 들어와도 수정시각으로 겨루므로 '변화없음' 이 된다)
   completeBatches().forEach(b => { delete inbox[b.id]; });
 
   let msg = '신규 ' + nAdd + '건, 갱신 ' + nUpd + '건, 변화없음 ' + nSame + '건';
@@ -469,8 +477,9 @@ function syncApply(){
   if(nDel) msg += ', 삭제 ' + nDel + '건';
   msg += ' 반영했어요.';
   const left = batchList();
-  if(left.length) msg += '\n\n아직 조각이 모자란 묶음이 ' + left.length + '개 남아 있어요: ' +
-    left.map(b => b.sender + ' (' + b.got + '/' + b.total + ')').join(', ');
+  if(left.length) msg += '\n\n받은 조각까지는 반영했어요. 아직 조각이 모자란 묶음이 ' + left.length + '개 있어요: ' +
+    left.map(b => b.sender + ' (' + b.got + '/' + b.total + ', 남은 조각 ' + b.miss.join('·') + ')').join(', ') +
+    '\n남은 조각을 받으면 그때 다시 붙여넣으면 됩니다.';
   if(dupDocNo.size){
     msg += '\n\n※ 문서번호가 중복된 건이 있어요: ' + Array.from(dupDocNo).join(', ') +
            '\n   (병합은 그대로 했습니다. 어느 쪽이 맞는지 확인해 주세요.)';
@@ -576,6 +585,10 @@ function taskModal(id){
         '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '"></div>' +
         '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
       '</div>' +
+      '<div class="frow"><label>마감일자 (선택)</label>' +
+        '<input type="date" id="f_until" value="' + escHtml(r ? (r.until || '') : '') + '">' +
+        '<div class="hint">마감일자를 정하면 <b>그날까지 매일</b> 목록에 보여요. ' +
+        '하루만 하는 일이면 비워 두세요.</div></div>' +
       '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
     '</div>' +
     '<div class="foot">' +
@@ -592,11 +605,13 @@ function taskModal(id){
     const title = $('#f_title').value.trim();
     const date = $('#f_date').value;
     const time = normTime($('#f_time').value);
+    const until = $('#f_until').value;
     if(!title) return showErr('제목을 입력해 주세요.');
     if(!date)  return showErr('날짜를 입력해 주세요.');
     if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+    if(until && until < date) return showErr('마감일자는 시작 날짜보다 뒤여야 해요.');
     const rec = r || {id:newId(myName()), author:myName(), done:false, doneAt:'', del:false};
-    Object.assign(rec, {title, date, time, content:$('#f_content').value, mtime:nowStamp()});
+    Object.assign(rec, {title, date, time, until, content:$('#f_content').value, mtime:nowStamp()});
     if(!r){
       const ord = nextOrderFor(date);     // 순서를 매긴 날이면 맨 뒤로
       if(ord !== undefined) rec.order = ord;
@@ -1324,6 +1339,26 @@ function parseQuickAdd(text, baseDate){
     }
   }
 
+  /* ---------- 기간: (9.3~11.1) ----------
+     한 줄 등록으로도 여러 날 이어지는 일을 넣을 수 있어야 한다.
+     앞이 시작일, 뒤가 마감일. 괄호는 있어도 없어도 된다. */
+  let until = '';
+  if(!usedDate){
+    m = t.match(/ \(?(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\s?[~∼]\s?(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\)? /);
+    if(!m) m = t.match(/ \(?(\d{1,2})\s?월\s?(\d{1,2})\s?일?\s?[~∼]\s?(\d{1,2})\s?월\s?(\d{1,2})\s?일?\)? /);
+    if(m){
+      const a = [+m[1], +m[2]], b = [+m[3], +m[4]];
+      const okMD = v => v[0] >= 1 && v[0] <= 12 && v[1] >= 1 && v[1] <= 31;
+      if(okMD(a) && okMD(b)){
+        const from = qaYearOf(a[0], a[1], today);
+        let to = qaYearOf(b[0], b[1], today);
+        // 12/28~1/3 처럼 해를 넘기면 마감일만 다음 해로 민다
+        if(to < from) to = (+from.slice(0, 4) + 1) + to.slice(4);
+        date = from; until = to; cut(m[0]); usedDate = true;
+      }
+    }
+  }
+
   /* ---------- 날짜: 숫자 표기 ---------- */
   if(!usedDate){
     // 9/3, 9.3, 9-3, 09/03
@@ -1350,7 +1385,7 @@ function parseQuickAdd(text, baseDate){
     }
   }
 
-  return { title: t.replace(/\s+/g, ' ').trim(), date, time, usedDate, usedTime: !!time };
+  return { title: t.replace(/\s+/g, ' ').trim(), date, until, time, usedDate, usedTime: !!time };
 }
 
 // 오전/오후를 반영한 24시간제 시각
@@ -1379,15 +1414,21 @@ function qaYearOf(mo, dd, today){
 function quickAddPreview(){
   const raw = $('#qaInput').value;
   const box = $('#qaHint');
-  if(!raw.trim()){ box.innerHTML = 'Enter 를 누르면 바로 등록돼요. 시간(14:00)이나 날짜(내일, 9/3)를 같이 적어도 됩니다.'; return; }
+  if(!raw.trim()){
+    box.innerHTML = 'Enter 를 누르면 바로 등록돼요. ' +
+      '시간 <b>14:00</b> · 날짜 <b>내일</b> <b>9/3</b> · ' +
+      '여러 날 이어지는 일은 <b>(9.3~11.1)</b> 처럼 적으면 마감일까지 매일 보여요.';
+    return;
+  }
   const p = parseQuickAdd(raw, viewDate);
   if(!p.title){ box.innerHTML = '<span style="color:var(--orange)">제목이 없어요.</span>'; return; }
   const d = parseDate(p.date);
   const label = p.date === todayStr() ? '오늘'
               : (d ? p.date.slice(5).replace('-', '/') + ' (' + WD[d.getDay()] + ')' : p.date);
-  box.innerHTML = '<span class="tag">' + escHtml(label) + '</span>' +
+  box.innerHTML = '<span class="tag">' + escHtml(p.until ? label + ' ~ ' + mdOf(p.until) : label) + '</span>' +
     (p.time ? '<span class="tag">' + escHtml(p.time) + '</span>' : '') +
-    '<b>' + escHtml(p.title) + '</b> 로 등록됩니다';
+    '<b>' + escHtml(p.title) + '</b> 로 등록됩니다' +
+    (p.until ? ' · 마감일까지 매일 보여요' : '');
 }
 
 function quickAddSubmit(){
@@ -1398,7 +1439,7 @@ function quickAddSubmit(){
 
   const rec = {
     id: newId(myName()), title: p.title, content: '',
-    date: p.date, time: p.time, done: false, doneAt: '',
+    date: p.date, until: p.until || '', time: p.time, done: false, doneAt: '',
     author: myName(), mtime: nowStamp(), del: false
   };
   const ord = nextOrderFor(p.date);
@@ -1409,7 +1450,8 @@ function quickAddSubmit(){
   renderAll();
   quickAddPreview();
   $('#qaInput').focus();
-  toast('등록했어요' + (p.date !== todayStr() ? ' (' + p.date + ')' : '') + '.');
+  toast('등록했어요' + (p.until ? ' (' + mdOf(p.date) + '~' + mdOf(p.until) + ')'
+        : p.date !== todayStr() ? ' (' + p.date + ')' : '') + '.');
 }
 
 /* 지난 미완료 업무 — 오늘 화면을 보고 있을 때만 알려 준다.
@@ -1417,7 +1459,8 @@ function quickAddSubmit(){
 function overdueTasks(){
   const t = todayStr();
   return alive(DB.task)
-    .filter(r => !r.done && r.date && r.date < t)
+    // 마감일이 아직 안 지난 기간 업무는 '지난 것'이 아니라 진행 중이다.
+    .filter(r => !r.done && r.date && r.date < t && !(r.until && r.until >= t))
     .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 }
 
@@ -1495,7 +1538,46 @@ function sortTasks(list){
   return list.slice().sort((a, b) =>
     (a.done ? 1 : 0) - (b.done ? 1 : 0) || taskSortKey(a) - taskSortKey(b));
 }
-function dayTasks(ds){ return alive(DB.task).filter(r => r.date === ds); }
+/* 기간 업무 — 마감일자를 정하면 시작일부터 마감일까지 매일 목록에 보인다.
+   일주일·한 달 이어지는 일이 시작한 날에만 뜨고 사라지던 것을 고친 것이다.
+   마감일자가 없으면 예전 그대로 그날 하루만 보인다. */
+function taskOnDay(r, ds){
+  if(r.date === ds) return true;
+  if(!r.until) return false;
+  return ds > r.date && ds <= r.until;
+}
+// 달력에 칠할 날짜들. 너무 긴 건이 달력을 다 덮지 않게 상한을 둔다.
+function taskSpanDays(r){
+  if(!r.date) return [];
+  if(!r.until || r.until <= r.date) return [r.date];
+  const a = parseDate(r.date), b = parseDate(r.until);
+  if(!a || !b) return [r.date];
+  const out = [];
+  for(let x = a; x <= b && out.length < 400; x = addDays(x, 1)) out.push(dateStr(x));
+  return out;
+}
+// 오늘 화면에 보여 줄 남은 기간. 마감일자가 없으면 null.
+function taskSpanInfo(r, d){
+  if(!r.until) return null;
+  const u = parseDate(r.until);
+  if(!u) return null;
+  const left = daysBetween(u, startOfDay(d));
+  return {
+    left,
+    label: left === 0 ? '오늘까지' : left > 0 ? 'D-' + left : 'D+' + (-left),
+    tone: left === 0 ? 'red-solid' : left <= 3 ? 'orange' : 'gray',
+    range: mdOf(r.date) + '~' + mdOf(r.until)
+  };
+}
+function mdOf(ds){ return String(ds || '').slice(5).replace('-', '/'); }
+
+/* 목록 한 줄의 버튼. 수정만 있어서 지우려면 창을 열어야 했다.
+   지우는 것은 되돌리기 어려우니 softDelete 가 한 번 더 묻는다(휴지통으로 간다). */
+function rowActs(){
+  return '<button class="btn sm" data-edit>수정</button>' +
+         '<button class="btn sm del" data-remove>삭제</button>';
+}
+function dayTasks(ds){ return alive(DB.task).filter(r => taskOnDay(r, ds)); }
 
 // 한 번 끌어다 놓으면 그날 업무 전부에 순서를 박아 둔다
 function materializeOrder(ds){

@@ -1,0 +1,39 @@
+Option Explicit
+' 동명이인 선택 팝업
+' 데이터는 modMain.PickerData 에서 읽고, 고른 번호는 modMain.PickerResult 로 돌려준다.
+' ListView 는 mscomctl.ocx 참조가 필요해 다른 PC에서 깨지므로 ListBox 만 쓴다.
+
+Private Sub UserForm_Initialize()
+    Dim m As Variant, i As Long
+    modMain.PickerResult = 0
+    m = modMain.PickerData
+    If IsEmpty(m) Then Exit Sub
+
+    lstPeople.Clear
+    For i = 1 To UBound(m, 1)
+        lstPeople.AddItem CStr(m(i, 1))
+        lstPeople.List(lstPeople.ListCount - 1, 1) = CStr(m(i, 2))
+        lstPeople.List(lstPeople.ListCount - 1, 2) = CStr(m(i, 3))
+        lstPeople.List(lstPeople.ListCount - 1, 3) = CStr(m(i, 4))
+    Next i
+    If lstPeople.ListCount > 0 Then lstPeople.ListIndex = 0
+    lblInfo.Caption = "같은 이름이 " & UBound(m, 1) & "명 있습니다. 한 명을 골라 주세요."
+End Sub
+
+Private Sub lstPeople_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+    cmdOK_Click
+End Sub
+
+Private Sub cmdOK_Click()
+    If lstPeople.ListIndex < 0 Then
+        Warn "목록에서 한 명을 골라 주세요."
+        Exit Sub
+    End If
+    modMain.PickerResult = lstPeople.ListIndex + 1
+    Unload Me
+End Sub
+
+Private Sub cmdCancel_Click()
+    modMain.PickerResult = 0
+    Unload Me
+End Sub

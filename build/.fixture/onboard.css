@@ -1,0 +1,93 @@
+/* ---------- 첫 실행 온보딩 (Claude Design 3a) ----------
+   처음 열었을 때 한 번만. 이름과 화면 모드를 정하고 시작한다. */
+#onboard{
+  position:fixed;inset:0;z-index:300;background:var(--bg);
+  overflow:auto;display:block;
+}
+#onboard[hidden]{display:none}
+.onboard{
+  width:720px;max-width:calc(100% - 32px);margin:0 auto;
+  padding:56px 0 64px;display:flex;flex-direction:column;gap:28px;
+}
+.onboard .ob-top{display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center}
+.onboard .ob-brand{display:flex;align-items:center;gap:9px}
+.onboard .ob-brand .logo{
+  width:30px;height:30px;border-radius:10px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;
+}
+.onboard h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.4px;text-align:center}
+.onboard .lead{font-size:14px;color:var(--ink-2);text-align:center;line-height:1.7}
+
+/* 이름 */
+.ob-name{
+  display:flex;flex-direction:column;gap:9px;background:var(--panel);
+  border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow-1);
+}
+.ob-name label{font-size:13px;font-weight:700;color:var(--ink-2)}
+.ob-name input{
+  height:52px;padding:0 18px;border:0;border-radius:12px;background:var(--panel-2);
+  font-family:inherit;font-size:17px;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);width:100%;
+}
+.ob-name input::placeholder{color:var(--ink-3)}
+.ob-name input:focus{outline:0;box-shadow:inset 0 0 0 2px var(--accent)}
+.ob-name .hint{font-size:12px;color:var(--ink-3);margin:0}
+
+/* 모드 선택 카드 */
+.ob-modes{display:flex;gap:16px;align-items:stretch}
+.ob-card{
+  flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;padding:22px;cursor:pointer;
+  background:var(--panel);border:0;border-radius:var(--radius);text-align:left;
+  box-shadow:inset 0 0 0 1px var(--line),var(--shadow-1);
+  transition:box-shadow .12s,background .12s;font-family:inherit;color:inherit;
+}
+.ob-card:hover{box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow-2)}
+.ob-card:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}
+.ob-card.on{background:var(--accent-t);box-shadow:inset 0 0 0 2px var(--accent)}
+
+.ob-card .head{display:flex;align-items:flex-start;gap:10px}
+.ob-card .check{
+  flex:none;width:22px;height:22px;border-radius:var(--pill);
+  background:var(--panel-2);box-shadow:inset 0 0 0 1.5px var(--line-2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:transparent;
+}
+.ob-card.on .check{background:var(--accent);box-shadow:none;color:#fff}
+.ob-card .name{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.ob-card .one{font-size:13px;color:var(--ink-3);margin-top:3px}
+.ob-card.on .one{color:var(--accent-d)}
+
+/* 미리보기 도식 */
+.ob-preview{background:var(--panel-2);border-radius:var(--radius-sm);padding:12px}
+.ob-card.on .ob-preview{background:var(--panel)}
+.ob-preview svg{display:block;width:100%;height:132px}
+
+/* 특징 목록 */
+.ob-feat{
+  display:flex;flex-direction:column;gap:7px;font-size:13px;
+  color:var(--ink-2);line-height:1.6;margin:0;padding:0;
+}
+.ob-feat li{display:flex;gap:8px;list-style:none}
+.ob-feat li::before{content:"·";color:var(--ink-3);flex:none}
+.ob-card.on .ob-feat li::before{color:var(--accent)}
+.ob-card .who{
+  margin-top:auto;padding-top:12px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-3);
+}
+.ob-card.on .who{border-top-color:rgba(49,130,246,.18);color:var(--accent-d)}
+
+/* 마무리 */
+.onboard .ob-foot{display:flex;flex-direction:column;gap:14px;align-items:center}
+.onboard .later{font-size:12px;color:var(--ink-3);text-align:center}
+.ob-start{
+  width:100%;height:56px;border:0;border-radius:14px;background:var(--accent);
+  color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 16px rgba(49,130,246,.32);
+}
+.ob-start:hover{background:var(--accent-d)}
+.ob-start:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}
+.ob-start[disabled]{opacity:.5;cursor:default;box-shadow:none}
+
+@media (max-width:700px){
+  .onboard{padding:28px 0 40px;gap:20px}
+  .ob-modes{flex-direction:column}
+}

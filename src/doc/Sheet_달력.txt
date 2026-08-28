@@ -1,0 +1,12 @@
+Option Explicit
+
+' 셀 클릭으로 동작한다. 셀 안에서 값을 바꾸므로 이벤트를 껐다 켜지 않으면
+' SelectionChange 가 자기 자신을 다시 부른다.
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    If Target.Cells.Count > 1 Then Exit Sub
+    Application.EnableEvents = False
+    On Error Resume Next
+    modCalendar.CalClick Target.Row, Target.Column
+    On Error GoTo 0
+    Application.EnableEvents = True
+End Sub

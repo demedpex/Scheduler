@@ -1,0 +1,60 @@
+id="2d" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2d</div>
+      <div style="font-size:15px;font-weight:700">달력 — 2026년 8월</div>
+      <div style="font-size:12px;color:var(--ink-2)">오늘은 날짜에 파란 원, 카테고리는 색 칩, 기한 임박일은 붉은 칩</div>
+    </div>
+    <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12)">
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+          <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+        </div>
+        <div style="font-size:13px;color:var(--ink-3)">달력</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+          <div style="font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px">● 모두 저장했어요</div>
+          <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px">파일로 저장하기</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">오늘</div>
+        <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px">달력</div>
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">설정</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 24px">
+        <div style="display:flex;align-items:center;background:var(--panel);border-radius:999px;box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:9px 15px;font-size:13px;color:var(--ink-2)">◀</div>
+          <div style="padding:9px 16px;font-size:16px;font-weight:700">2026년 8월</div>
+          <div style="padding:9px 15px;font-size:13px;color:var(--ink-2)">▶</div>
+        </div>
+        <div style="padding:8px 15px;background:var(--panel);border-radius:999px;font-size:12px;color:var(--ink-2);box-shadow:var(--shadow-1)">이번 달로 가기</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px">
+          <div style="background:var(--task-t);color:var(--task);padding:5px 11px;border-radius:999px;font-weight:700">업무</div>
+          <div style="background:var(--call-t);color:var(--call);padding:5px 11px;border-radius:999px;font-weight:700">연락</div>
+          <div style="background:var(--share-t);color:var(--share);padding:5px 11px;border-radius:999px;font-weight:700">공유</div>
+          <div style="background:var(--lunch-t);color:var(--lunch);padding:5px 11px;border-radius:999px;font-weight:700">점심</div>
+          <div style="background:var(--red);color:#fff;padding:5px 11px;border-radius:999px;font-weight:700;margin-left:4px">회신기한 임박</div>
+        </div>
+      </div>
+      <div style="padding:2px 24px 24px">
+        <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);padding:8px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+            <sc-for list="{{ dowNames }}" as="d" hint-placeholder-count="7">
+              <div style="{{ d.style }}">{{ d.label }}</div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+            <sc-for list="{{ cal }}" as="c" hint-placeholder-count="42">
+              <div style="{{ c.cellStyle }}">
+                <div style="{{ c.numStyle }}">{{ c.num }}</div>
+                <div style="{{ c.chipAStyle }}">{{ c.chipA }}</div>
+                <div style="{{ c.chipBStyle }}">{{ c.chipB }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ─────────── 2e 설정 ─────────── -->
+  <div 

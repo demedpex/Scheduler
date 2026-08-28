@@ -1,0 +1,79 @@
+Option Explicit
+' 업무공유 가져오기 폼
+' 사용자가 Ctrl+V 하는 순간 반응해야 한다. 별도 "분석" 버튼은 두지 않는다.
+' 조각이 여러 개면 TextBox 를 자동으로 비워 다음 조각을 바로 붙여넣게 한다.
+
+Private mBusy As Boolean
+
+Private Sub UserForm_Initialize()
+    Me.Caption = "업무공유 가져오기"
+    SyncResetInbox
+    ClearBox
+    lstPreview.Clear
+    cmdApply.Enabled = False
+    lblStatus.Caption = "받은 텍스트를 아래 칸에 붙여넣으세요 (Ctrl+V)."
+End Sub
+
+Private Sub txtPaste_Change()
+    Dim st As Long, msg As String, t As String
+    If mBusy Then Exit Sub
+
+    t = txtPaste.Text
+    If Len(Trim$(t)) = 0 Then Exit Sub
+
+    st = SyncFeed(t, msg)
+    lblStatus.Caption = msg
+
+    Select Case st
+        Case FD_COMPLETE
+            ClearBox
+            FillPreview
+            cmdApply.Enabled = (lstPreview.ListCount > 0)
+        Case FD_PARTIAL, FD_DUPLICATE
+            ClearBox                      ' 다음 조각을 바로 붙여넣을 수 있게 비운다
+            cmdApply.Enabled = False
+        Case Else
+            ' 형식 불일치 / 체크섬 불일치는 사용자가 내용을 볼 수 있게 지우지 않는다
+            cmdApply.Enabled = False
+    End Select
+End Sub
+
+Private Sub ClearBox()
+    mBusy = True
+    txtPaste.Text = ""
+    mBusy = False
+End Sub
+
+Private Sub FillPreview()
+    Dim p As Variant, i As Long
+    lstPreview.Clear
+    p = SyncPreview()
+    If IsEmpty(p) Then Exit Sub
+    For i = 1 To UBound(p, 1)
+        lstPreview.AddItem CStr(p(i, 1))
+        lstPreview.List(lstPreview.ListCount - 1, 1) = CStr(p(i, 2))
+        lstPreview.List(lstPreview.ListCount - 1, 2) = CStr(p(i, 3))
+    Next i
+End Sub
+
+Private Sub cmdApply_Click()
+    Dim msg As String
+    msg = SyncApply()
+    lstPreview.Clear
+    cmdApply.Enabled = False
+    lblStatus.Caption = msg
+    Say msg
+    modMain.RenderAll
+End Sub
+
+Private Sub cmdReset_Click()
+    SyncResetInbox
+    ClearBox
+    lstPreview.Clear
+    cmdApply.Enabled = False
+    lblStatus.Caption = "받은 조각을 모두 버렸습니다. 처음부터 다시 붙여넣으세요."
+End Sub
+
+Private Sub cmdClose_Click()
+    Unload Me
+End Sub

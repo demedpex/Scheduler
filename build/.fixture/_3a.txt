@@ -1,0 +1,201 @@
+id="3a" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">3a</div>
+      <div style="font-size:15px;font-weight:700">첫 실행 온보딩 — 이름은 한 번, 모드는 좌우로 선택</div>
+      <div style="font-size:12px;color:var(--ink-2)">카드를 눌러보세요. 선택 표시와 버튼 라벨이 함께 바뀝니다</div>
+    </div>
+
+    <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12);display:flex;justify-content:center;padding:52px 0 60px">
+      <div class="onboard" style="width:760px;display:flex;flex-direction:column;gap:26px">
+
+        <div style="display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:30px;height:30px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700">업</div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.4px">AX금융혁신팀 업무스케줄러</div>
+          </div>
+          <div style="font-size:14px;color:var(--ink-2);line-height:1.7">처음 오셨네요. 두 가지만 정하면 바로 시작해요.</div>
+        </div>
+
+        <div class="ob-name" style="display:flex;flex-direction:column;gap:9px;background:var(--panel);border-radius:16px;padding:22px 24px;box-shadow:var(--shadow-1)">
+          <div style="font-size:13px;font-weight:700;color:var(--ink-2)">이름</div>
+          <input class="ob-input" placeholder="홍길동" style="height:52px;padding:0 18px;border:0;border-radius:12px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line-2);font-family:inherit;font-size:17px;color:var(--ink);outline:none">
+          <div style="font-size:12px;color:var(--ink-3)">업무공유를 주고받을 때 작성자로 기록돼요.</div>
+        </div>
+
+        <div class="ob-modes" style="display:flex;gap:16px;align-items:stretch">
+
+          <div class="ob-card" onClick="{{ obSimple.pick }}" style="{{ obSimple.card }}">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="{{ obSimple.check }}">{{ obSimple.mark }}</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:16px;font-weight:700;letter-spacing:-.3px">간편 모드</div>
+                <div style="{{ obSimple.one }}">오늘 할 일에만 집중해요</div>
+              </div>
+            </div>
+            <div class="ob-preview" style="{{ obSimple.mat }}">
+              <svg viewBox="0 0 280 168" width="100%" height="132" role="img" aria-label="간편 모드 화면 축소판 — 위에 입력창 하나, 아래에 세로 목록 하나">
+                  <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
+                  <rect x="16" y="14" width="248" height="26" rx="7" fill="#fff" stroke="#3182f6" stroke-width="1.5"/>
+                  <rect x="26" y="24" width="86" height="6" rx="3" fill="#d1d6db"/>
+                  <rect x="222" y="20" width="32" height="14" rx="7" fill="#3182f6"/>
+                  <g fill="#fff">
+                    <rect x="16" y="52" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+                    <rect x="16" y="78" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+                    <rect x="16" y="104" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+                    <rect x="16" y="130" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+                  </g>
+                  <g fill="#3182f6">
+                    <rect x="22" y="56" width="3" height="12" rx="1.5"/>
+                    <rect x="22" y="82" width="3" height="12" rx="1.5"/>
+                    <rect x="22" y="108" width="3" height="12" rx="1.5"/>
+                    <rect x="22" y="134" width="3" height="12" rx="1.5"/>
+                  </g>
+                  <g fill="#d1d6db">
+                    <rect x="34" y="59" width="130" height="6" rx="3"/>
+                    <rect x="34" y="85" width="96" height="6" rx="3"/>
+                    <rect x="34" y="111" width="142" height="6" rx="3"/>
+                    <rect x="34" y="137" width="110" height="6" rx="3"/>
+                  </g>
+                </svg>
+            </div>
+            <div class="ob-feat" style="display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--ink-2);line-height:1.6">
+              <div style="display:flex;gap:8px">
+<span style="{{ obSimple.bullet }}">·</span>
+<span>한 줄 입력과 업무 목록만 보여줍니다</span>
+</div>
+              <div style="display:flex;gap:8px">
+<span style="{{ obSimple.bullet }}">·</span>
+<span>날짜는 오늘로 고정됩니다</span>
+</div>
+              <div style="display:flex;gap:8px">
+<span style="{{ obSimple.bullet }}">·</span>
+<span>달력·업무공유·설정은 숨겨집니다</span>
+</div>
+            </div>
+            <div style="{{ obSimple.who }}">이런 분께 · 포스트잇 대신 쓰고 싶은 분</div>
+          </div>
+
+          <div class="ob-card" onClick="{{ obFull.pick }}" style="{{ obFull.card }}">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="{{ obFull.check }}">{{ obFull.mark }}</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:16px;font-weight:700;letter-spacing:-.3px">전체 화면</div>
+                <div style="{{ obFull.one }}">업무·공유·연락처·점심까지 한 화면에</div>
+              </div>
+            </div>
+            <div class="ob-preview" style="{{ obFull.mat }}">
+              <svg viewBox="0 0 280 168" width="100%" height="132" role="img" aria-label="전체 화면 축소판 — 탭, 왼쪽 큰 목록, 오른쪽 카드 3개">
+                  <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
+                  <rect x="16" y="14" width="34" height="13" rx="6.5" fill="#3182f6"/>
+                  <g fill="#e5e8eb">
+                    <rect x="56" y="14" width="30" height="13" rx="6.5"/>
+                    <rect x="92" y="14" width="30" height="13" rx="6.5"/>
+                  </g>
+                  <rect x="16" y="36" width="164" height="118" rx="7" fill="#fff" stroke="#e5e8eb"/>
+                  <g fill="#f9fafb" stroke="#e5e8eb">
+                    <rect x="24" y="46" width="70" height="16" rx="5"/>
+                    <rect x="102" y="46" width="70" height="16" rx="5"/>
+                    <rect x="24" y="68" width="70" height="16" rx="5"/>
+                    <rect x="102" y="68" width="70" height="16" rx="5"/>
+                    <rect x="24" y="90" width="70" height="16" rx="5"/>
+                    <rect x="102" y="90" width="70" height="16" rx="5"/>
+                    <rect x="24" y="112" width="70" height="16" rx="5"/>
+                    <rect x="102" y="112" width="70" height="16" rx="5"/>
+                    <rect x="24" y="134" width="70" height="14" rx="5"/>
+                    <rect x="102" y="134" width="70" height="14" rx="5"/>
+                  </g>
+                  <g fill="#3182f6">
+                    <rect x="28" y="49" width="2.5" height="10" rx="1.25"/>
+                    <rect x="106" y="49" width="2.5" height="10" rx="1.25"/>
+                    <rect x="28" y="71" width="2.5" height="10" rx="1.25"/>
+                    <rect x="106" y="71" width="2.5" height="10" rx="1.25"/>
+                  </g>
+                  <g fill="#d1d6db">
+                    <rect x="36" y="52" width="34" height="4" rx="2"/>
+                    <rect x="114" y="52" width="28" height="4" rx="2"/>
+                    <rect x="36" y="74" width="40" height="4" rx="2"/>
+                    <rect x="114" y="74" width="24" height="4" rx="2"/>
+                    <rect x="30" y="96" width="36" height="4" rx="2"/>
+                    <rect x="108" y="96" width="42" height="4" rx="2"/>
+                    <rect x="30" y="118" width="44" height="4" rx="2"/>
+                    <rect x="108" y="118" width="32" height="4" rx="2"/>
+                    <rect x="30" y="139" width="30" height="4" rx="2"/>
+                    <rect x="108" y="139" width="38" height="4" rx="2"/>
+                  </g>
+                  <g fill="#fff" stroke="#d1d6db">
+                    <rect x="188" y="36" width="76" height="37" rx="7"/>
+                    <rect x="188" y="79" width="76" height="37" rx="7"/>
+                    <rect x="188" y="122" width="76" height="32" rx="7"/>
+                  </g>
+                  <g fill="#d1d6db">
+                    <rect x="196" y="44" width="30" height="4" rx="2"/>
+                    <rect x="196" y="54" width="52" height="4" rx="2"/>
+                    <rect x="196" y="62" width="40" height="4" rx="2"/>
+                    <rect x="196" y="87" width="30" height="4" rx="2"/>
+                    <rect x="196" y="97" width="52" height="4" rx="2"/>
+                    <rect x="196" y="105" width="44" height="4" rx="2"/>
+                    <rect x="196" y="130" width="30" height="4" rx="2"/>
+                    <rect x="196" y="140" width="48" height="4" rx="2"/>
+                  </g>
+                </svg>
+            </div>
+            <div class="ob-feat" style="display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--ink-2);line-height:1.6">
+              <div style="display:flex;gap:8px">
+<span style="{{ obFull.bullet }}">·</span>
+<span>업무를 크게, 오른쪽에 업무공유·연락하기·점심약속</span>
+</div>
+              <div style="display:flex;gap:8px">
+<span style="{{ obFull.bullet }}">·</span>
+<span>달력에서 한 달을 한눈에</span>
+</div>
+              <div style="display:flex;gap:8px">
+<span style="{{ obFull.bullet }}">·</span>
+<span>회신기한(D-DAY) 관리와 팀 공유</span>
+</div>
+            </div>
+            <div style="{{ obFull.who }}">이런 분께 · 일정을 두루 챙겨야 하는 분</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+          <div style="font-size:12px;color:var(--ink-3)">나중에 화면 위쪽에서 언제든 바꿀 수 있어요</div>
+          <div class="ob-start" style="width:100%;height:56px;border-radius:14px;background:var(--accent);color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(49,130,246,.32);cursor:pointer">{{ obStartLabel }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:1440px;display:flex;gap:16px;align-items:flex-start">
+      <div style="flex:1;background:var(--panel);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-1)">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">이 화면의 CSS</div>
+        <pre style="margin:0;font-family:Consolas,'Courier New',monospace;font-size:11.5px;line-height:1.75;color:var(--ink-2);white-space:pre-wrap">{{ onboardCss }}</pre>
+      </div>
+      <div style="width:360px;display:flex;flex-direction:column;gap:10px;background:var(--panel);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-1)">
+        <div style="font-size:13px;font-weight:700">붙일 때 메모</div>
+        <div style="font-size:12.5px;color:var(--ink-2);line-height:1.85">
+          · 버튼 라벨은 고른 모드를 그대로 되뇌게 했어요 — 「간편 모드로 시작하기」 / 「전체 화면으로 시작하기」.<br>
+          · 이름이 비면 버튼을 비활성(<code>opacity:.5</code>)으로 두고, 라벨은 「이름을 적어주세요」로 바꾸는 편이 낫습니다.<br>
+          · 설정에 <b>[처음 안내 다시 보기]</b>는 넣는 걸 권합니다. 모드 전환을 헤더에서 하더라도, 두 모드 차이를 다시 보고 싶은 순간이 있어요.<br>
+          · <code>prompt()</code> 자리를 이 화면이 대체하고, 명부 안내 팝업은 <code>onboarded=true</code> 저장 직후에 띄우면 순서가 자연스러워요.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:56px;padding:48px 56px 96px">
+
+  <div style="display:flex;align-items:flex-end;gap:20px;border-bottom:1px solid var(--line-2);padding-bottom:16px">
+    <div>
+      <div style="font-size:11px;letter-spacing:.14em;color:var(--accent-d);margin-bottom:6px">TURN 2 · 둥근 블록형 + 토스 UX 라이팅</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.6px">업무 스케줄러 — 타임블럭스풍 개편</div>
+    </div>
+    <div style="margin-left:auto;font-size:12px;color:var(--ink-2);line-height:1.8;text-align:right">
+      기준 폭 1440px · 외부 리소스 없음 · 맑은 고딕<br>
+      해요체 · 알약 버튼 · 카테고리 색 블록 · 배치는 <a href="#2a">2a</a>(A안)로 확정 · <a href="#2j">2j</a> 토큰·라이팅 규칙
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+    <!-- ─────────── 2a ─────────── -->
+    <div 

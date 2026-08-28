@@ -1,0 +1,21 @@
+Option Explicit
+
+' 한 번 클릭 = 완료 토글 / 내용 보기 / 상단 버튼
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    If Target.Cells.Count > 1 Then Exit Sub
+    Application.EnableEvents = False
+    On Error Resume Next
+    modToday.TodayClick Target.Row, Target.Column
+    On Error GoTo 0
+    Application.EnableEvents = True
+End Sub
+
+' 더블클릭 = 수정
+Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean)
+    Cancel = True
+    Application.EnableEvents = False
+    On Error Resume Next
+    modToday.TodayDblClick Target.Row
+    On Error GoTo 0
+    Application.EnableEvents = True
+End Sub

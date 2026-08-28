@@ -1,0 +1,69 @@
+Option Explicit
+' 점심약속 등록/수정 폼
+' 저장 직전 충돌 검사는 modRecord.SaveLunch 안에서 한다.
+
+Private mID As String
+
+Private Sub UserForm_Initialize()
+    Dim rec As Variant
+    mID = modMain.EditID
+    If Len(mID) = 0 Then
+        Me.Caption = "점심약속 등록"
+        txtDate.Text = DateStr(ViewDate())
+        cmdDelete.Visible = False
+    Else
+        Me.Caption = "점심약속 수정"
+        rec = LoadRecord(TBL_LUNCH, mID)
+        If Not IsEmpty(rec) Then
+            txtTarget.Text = RecGet(rec, TBL_LUNCH, "대상이름")
+            txtDate.Text = RecGet(rec, TBL_LUNCH, "날짜")
+            txtTime.Text = RecGet(rec, TBL_LUNCH, "시간")
+            txtPlace.Text = RecGet(rec, TBL_LUNCH, "장소")
+        End If
+        cmdDelete.Visible = True
+    End If
+    ShowSameDay
+End Sub
+
+Private Sub txtDate_Change()
+    ShowSameDay
+End Sub
+
+' 같은 날짜에 이미 잡힌 약속이 있으면 미리 보여 준다
+Private Sub ShowSameDay()
+    Dim d As Date, other As String
+    d = ParseDate(txtDate.Text)
+    If d = 0 Then
+        lblInfo.Caption = ""
+        Exit Sub
+    End If
+    other = LunchOnDate(DateStr(d), mID)
+    If Len(other) > 0 Then
+        lblInfo.Caption = Format$(d, "m/d") & "에 " & other & "님과 약속이 있습니다."
+    Else
+        lblInfo.Caption = ""
+    End If
+End Sub
+
+Private Sub cmdOK_Click()
+    Dim msg As String
+    msg = SaveLunch(mID, txtTarget.Text, txtDate.Text, txtTime.Text, txtPlace.Text)
+    If msg = "-" Then Exit Sub
+    If Len(msg) > 0 Then
+        Warn msg
+        Exit Sub
+    End If
+    Unload Me
+    modMain.RenderAll
+End Sub
+
+Private Sub cmdCancel_Click()
+    Unload Me
+End Sub
+
+Private Sub cmdDelete_Click()
+    If DeleteRecord(TBL_LUNCH, mID) Then
+        Unload Me
+        modMain.RenderAll
+    End If
+End Sub

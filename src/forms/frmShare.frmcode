@@ -1,0 +1,61 @@
+Option Explicit
+' 업무공유 등록/수정 폼 (이 표만 동기화 대상이다)
+
+Private mID As String
+
+Private Sub UserForm_Initialize()
+    Dim rec As Variant
+    mID = modMain.EditID
+    If Len(mID) = 0 Then
+        Me.Caption = "업무공유 등록"
+        txtReg.Text = TodayStr()
+        txtDue.Text = DateStr(Date + 3)
+        cmdDelete.Visible = False
+    Else
+        Me.Caption = "업무공유 수정"
+        rec = LoadRecord(TBL_SHARE, mID)
+        If Not IsEmpty(rec) Then
+            txtDocNo.Text = RecGet(rec, TBL_SHARE, "문서번호")
+            txtTitle.Text = RecGet(rec, TBL_SHARE, "제목")
+            txtContent.Text = RecGet(rec, TBL_SHARE, "내용")
+            txtReg.Text = RecGet(rec, TBL_SHARE, "등록일")
+            txtDue.Text = RecGet(rec, TBL_SHARE, "회신기한")
+        End If
+        cmdDelete.Visible = True
+    End If
+    lblWarn.Caption = ""
+End Sub
+
+' 문서번호 중복은 등록을 막지 않고 미리 알려만 준다
+Private Sub txtDocNo_Change()
+    Dim owner As String
+    owner = DocNoExists(Trim$(txtDocNo.Text), mID)
+    If Len(owner) > 0 Then
+        lblWarn.Caption = "이미 등록된 문서번호입니다 (등록자: " & owner & ")"
+    Else
+        lblWarn.Caption = ""
+    End If
+End Sub
+
+Private Sub cmdOK_Click()
+    Dim msg As String
+    msg = SaveShare(mID, txtDocNo.Text, txtTitle.Text, txtContent.Text, txtReg.Text, txtDue.Text)
+    If msg = "-" Then Exit Sub
+    If Len(msg) > 0 Then
+        Warn msg
+        Exit Sub
+    End If
+    Unload Me
+    modMain.RenderAll
+End Sub
+
+Private Sub cmdCancel_Click()
+    Unload Me
+End Sub
+
+Private Sub cmdDelete_Click()
+    If DeleteRecord(TBL_SHARE, mID) Then
+        Unload Me
+        modMain.RenderAll
+    End If
+End Sub

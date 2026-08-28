@@ -1,0 +1,101 @@
+Option Explicit
+' 유관부서 연락하기 등록/수정 폼
+' 내선번호는 저장하지 않고 명부에서 조회한 값을 보여 준다.
+' 명부에 없는 사람일 때만 txtExt 에 직접 입력한 값이 내선캐시로 저장된다.
+
+Private mID As String
+
+Private Sub UserForm_Initialize()
+    Dim rec As Variant
+    mID = modMain.EditID
+    If Len(mID) = 0 Then
+        Me.Caption = "연락하기 등록"
+        txtDate.Text = DateStr(ViewDate())
+        cmdDelete.Visible = False
+    Else
+        Me.Caption = "연락하기 수정"
+        rec = LoadRecord(TBL_CONTACT, mID)
+        If Not IsEmpty(rec) Then
+            txtName.Text = RecGet(rec, TBL_CONTACT, "이름")
+            txtDept.Text = RecGet(rec, TBL_CONTACT, "부서")
+            txtExt.Text = RecGet(rec, TBL_CONTACT, "내선캐시")
+            txtDate.Text = RecGet(rec, TBL_CONTACT, "날짜")
+            txtTime.Text = RecGet(rec, TBL_CONTACT, "시간")
+        End If
+        cmdDelete.Visible = True
+    End If
+    ShowExt
+End Sub
+
+' 명부 검색. 0건이면 직접 입력, 1건이면 팝업 없이 자동 세팅, 2건 이상이면 선택 팝업.
+Private Sub cmdFind_Click()
+    Dim matches As Variant, pick As Long
+    If Len(Trim$(txtName.Text)) = 0 Then
+        Warn "이름을 먼저 입력해 주세요. 일부만 입력해도 찾습니다."
+        txtName.SetFocus
+        Exit Sub
+    End If
+
+    matches = EmpSearch(txtName.Text)
+    If IsEmpty(matches) Then
+        If Ask("'" & Trim$(txtName.Text) & "' 은(는) 명부에 없습니다." & vbLf & _
+               "이름과 내선번호를 직접 입력하시겠습니까?") Then
+            txtExt.Enabled = True
+            txtExt.SetFocus
+        End If
+        lblExt.Caption = "(명부에 없음)"
+        Exit Sub
+    End If
+
+    pick = modMain.PickEmployee(matches)
+    If pick = 0 Then Exit Sub
+
+    txtName.Text = CStr(matches(pick, 1))
+    txtDept.Text = CStr(matches(pick, 2))
+    txtExt.Text = ""
+    ShowExt
+End Sub
+
+Private Sub txtName_Change()
+    ShowExt
+End Sub
+
+Private Sub txtDept_Change()
+    ShowExt
+End Sub
+
+' 지금 입력된 이름+부서로 명부에서 내선을 끌어와 보여 준다
+Private Sub ShowExt()
+    Dim ext As String
+    ext = EmpExtension(Trim$(txtName.Text), Trim$(txtDept.Text))
+    If Len(ext) > 0 Then
+        lblExt.Caption = "명부: 내선 " & ext
+        txtExt.Enabled = False
+    Else
+        lblExt.Caption = "명부에 없음 - 아래에 직접 입력"
+        txtExt.Enabled = True
+    End If
+End Sub
+
+Private Sub cmdOK_Click()
+    Dim msg As String
+    msg = SaveContact(mID, txtName.Text, txtDept.Text, txtExt.Text, txtDate.Text, txtTime.Text)
+    If msg = "-" Then Exit Sub
+    If Len(msg) > 0 Then
+        Warn msg
+        Exit Sub
+    End If
+    Unload Me
+    modMain.RenderAll
+End Sub
+
+Private Sub cmdCancel_Click()
+    Unload Me
+End Sub
+
+Private Sub cmdDelete_Click()
+    If DeleteRecord(TBL_CONTACT, mID) Then
+        Unload Me
+        modMain.RenderAll
+    End If
+End Sub

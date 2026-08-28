@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+:root{
+  --bg:#f2f4f6; --panel:#ffffff; --panel-2:#f9fafb;
+  --line:#e5e8eb; --line-2:#d1d6db;
+  --ink:#191f28; --ink-2:#4e5968; --ink-3:#8b95a1;
+  --accent:#3182f6; --accent-d:#1b64da; --accent-t:#e8f3ff;
+  --task:#3182f6; --task-t:#e8f3ff;
+  --call:#00b26b; --call-t:#e4f8ee;
+  --share:#f04452; --share-t:#feecee;
+  --lunch:#ff8a00; --lunch-t:#fff3e0;
+  --red:#f04452; --red-t:#feecee;
+  --orange:#ff8a00; --orange-t:#fff3e0;
+  --green:#00b26b; --green-t:#e4f8ee;
+  --radius:16px; --radius-sm:10px; --pill:999px;
+  --shadow-1:0 1px 2px rgba(25,31,40,.05);
+  --shadow-2:0 6px 18px rgba(25,31,40,.07);
+  --shadow-3:0 20px 48px rgba(25,31,40,.20);
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
+}
+html,body{margin:0;padding:0;background:#e6eaee;
+  font-family:"Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--accent-d);text-decoration:none;border-bottom:1px solid var(--line-2)}
+a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+button{font-family:inherit}
+@media print{ .no-print{display:none !important} body{background:#fff} }
+</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:56px;padding:48px 56px 96px">
+
+  <div style="display:flex;align-items:flex-end;gap:20px;border-bottom:1px solid var(--line-2);padding-bottom:16px">
+    <div>
+      <div style="font-size:11px;letter-spacing:.14em;color:var(--accent-d);margin-bottom:6px">TURN 2 · 둥근 블록형 + 토스 UX 라이팅</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.6px">업무 스케줄러 — 타임블럭스풍 개편</div>
+    </div>
+    <div style="margin-left:auto;font-size:12px;color:var(--ink-2);line-height:1.8;text-align:right">
+      기준 폭 1440px · 외부 리소스 없음 · 맑은 고딕<br>
+      해요체 · 알약 버튼 · 카테고리 색 블록 · 배치는 <a href="#2a">2a</a>(A안)로 확정 · <a href="#2j">2j</a> 토큰·라이팅 규칙
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+    <!-- ─────────── 2a ─────────── -->
+    <div id="2a" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2a</div>
+        <div style="font-size:15px;font-weight:700">오늘 — 확정 배치 (A안 · 주 영역 + 보조 열)</div>
+        <div style="font-size:12px;color:var(--ink-2)">업무를 2열 블록으로 좌측 8/12, 공유·연락·점심은 우측 4/12 열에 위계순</div>
+      </div>
+
+      <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12)">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-27 (목)</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px" class="no-print">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px"><span>●</span><span>모두 저장했어요</span></div>
+            <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.32)">파일로 저장하기</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line)" class="no-print">
+          <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">오늘</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">달력</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">설정</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px">
+          <div style="display:flex;align-items:center;background:var(--panel);border-radius:999px;box-shadow:var(--shadow-1);overflow:hidden">
+            <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">◀</div>
+            <div style="padding:9px 14px;font-size:14px;font-weight:700;letter-spacing:-.2px">2026-08-27 (목)</div>
+            <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">▶</div>
+          </div>
+          <div style="padding:8px 15px;background:var(--panel);border-radius:999px;font-size:12px;color:var(--ink-2);box-shadow:var(--shadow-1)">오늘로 가기</div>
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 14px;background:var(--accent-t);border-radius:999px;font-size:12px;color:var(--accent-d);font-weight:700">
+            오늘 업무 8건 중 2건 했어요
+            <div style="width:76px;height:6px;background:#fff;border-radius:999px;overflow:hidden"><div style="width:25%;height:100%;background:var(--accent);border-radius:999px"></div></div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:7px" class="no-print">
+            <div style="padding:9px 16px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">＋ 업무 추가</div>
+            <div style="padding:9px 15px;background:var(--call-t);color:var(--call);font-size:13px;font-weight:700;border-radius:999px">＋ 연락 추가</div>
+            <div style="padding:9px 15px;background:var(--share-t);color:var(--share);font-size:13px;font-weight:700;border-radius:999px">＋ 공유 추가</div>
+            <div style="padding:9px 15px;background:var(--lunch-t);color:var(--lunch);font-size:13px;font-weight:700;border-radius:999px">＋ 점심 추가</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:8fr 4fr;gap:18px;padding:2px 24px 24px">
+
+          <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:16px 18px 12px">
+              <div style="width:10px;height:10px;border-radius:999px;background:var(--task)"></div>
+              <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">업무</div>
+              <div style="font-size:12px;color:var(--ink-3);background:var(--panel-2);padding:3px 10px;border-radius:999px">8건 중 2건 했어요</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--ink-3)">시간순</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 16px">
+              <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="8">
+                <div style="{{ t.blockStyle }}">
+                  <div style="{{ t.barStyle }}"></div>
+                  <div style="{{ t.checkStyle }}">{{ t.check }}</div>
+                  <div style="min-width:0">
+                    <div style="{{ t.titleStyle }}">{{ t.title }}</div>
+                    <div style="{{ t.subStyle }}">{{ t.sub }}</div>
+                  </div>
+                  <div style="{{ t.timeStyle }}">{{ t.time }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:15px 16px 11px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--share)"></div>
+                <div style="font-size:15px;font-weight:700">업무공유</div>
+                <div style="font-size:11px;color:var(--ink-3)">4건</div>
+                <div style="margin-left:auto;display:flex;gap:6px" class="no-print">
+                  <div style="padding:5px 11px;background:var(--panel-2);font-size:11px;color:var(--ink-2);border-radius:999px">내보내기</div>
+                  <div style="padding:5px 11px;background:var(--panel-2);font-size:11px;color:var(--ink-2);border-radius:999px">가져오기</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 14px 16px">
+                <sc-for list="{{ shares }}" as="s" hint-placeholder-count="4">
+                  <div style="{{ s.blockStyle }}">
+                    <div style="{{ s.badgeStyle }}">{{ s.dday }}</div>
+                    <div style="min-width:0">
+                      <div style="font-size:13px;font-weight:700;line-height:1.45;text-wrap:pretty">{{ s.title }}</div>
+                      <div style="font-size:11px;color:var(--ink-3);margin-top:3px;letter-spacing:-.1px">{{ s.meta }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 10px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--call)"></div>
+                <div style="font-size:14px;font-weight:700">유관부서 연락하기</div>
+                <div style="font-size:11px;color:var(--ink-3)">2건</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 14px 14px">
+                <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="2">
+                  <div style="{{ c.blockStyle }}">
+                    <div style="{{ c.checkStyle }}">{{ c.check }}</div>
+                    <div style="min-width:0;display:flex;align-items:baseline;gap:8px">
+                      <span style="{{ c.nameStyle }}">{{ c.name }}</span>
+                      <span style="{{ c.extStyle }}">{{ c.ext }}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums">{{ c.time }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 10px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--lunch)"></div>
+                <div style="font-size:14px;font-weight:700">점심약속</div>
+                <div style="font-size:11px;color:var(--ink-3)">1건</div>
+              </div>
+              <div style="padding:0 14px 14px">
+                <div style="display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:11px 13px;background:var(--lunch-t);border-radius:var(--radius-sm)">
+                  <div style="display:flex;align-items:baseline;gap:9px">
+                    <span style="font-size:13px;font-weight:700">박준영 과장</span>
+                    <span style="font-size:12px;color:var(--ink-2)">본관 3층 한식당</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--lunch);font-weight:700;font-variant-numeric:tabular-nums">12:00</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────── 2b ─────────── -->
+    <div id="2b" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2b</div>
+        <div style="font-size:15px;font-weight:700">오늘 — 배치안 B · 상단 전폭 + 하단 3열</div>
+        <div style="font-size:12px;color:var(--ink-2)">업무를 상단 전폭 3열 블록 보드로, 공유·연락·점심을 아래 한 줄에</div>
+      </div>
+
+      <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12)">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-27 (목)</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px" class="no-print">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px"><span>●</span><span>모두 저장했어요</span></div>
+            <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.32)">파일로 저장하기</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line)" class="no-print">
+          <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">오늘</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">달력</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">설정</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px">
+          <div style="display:flex;align-items:center;background:var(--panel);border-radius:999px;box-shadow:var(--shadow-1);overflow:hidden">
+            <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">◀</div>
+            <div style="padding:9px 14px;font-size:14px;font-weight:700">2026-08-27 (목)</div>
+            <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">▶</div>
+          </div>
+          <div style="padding:8px 15px;background:var(--panel);border-radius:999px;font-size:12px;color:var(--ink-2);box-shadow:var(--shadow-1)">오늘로 가기</div>
+          <div style="margin-left:auto;display:flex;gap:7px" class="no-print">
+            <div style="padding:9px 16px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">＋ 업무 추가</div>
+            <div style="padding:9px 15px;background:var(--call-t);color:var(--call);font-size:13px;font-weight:700;border-radius:999px">＋ 연락 추가</div>
+            <div style="padding:9px 15px;background:var(--share-t);color:var(--share);font-size:13px;font-weight:700;border-radius:999px">＋ 공유 추가</div>
+            <div style="padding:9px 15px;background:var(--lunch-t);color:var(--lunch);font-size:13px;font-weight:700;border-radius:999px">＋ 점심 추가</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;padding:2px 24px 24px">
+          <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:16px 18px 12px">
+              <div style="width:10px;height:10px;border-radius:999px;background:var(--task)"></div>
+              <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">업무</div>
+              <div style="font-size:12px;color:var(--ink-3);background:var(--panel-2);padding:3px 10px;border-radius:999px">8건 중 2건 했어요</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 14px 16px">
+              <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="8">
+                <div style="{{ t.blockStyle }}">
+                  <div style="{{ t.barStyle }}"></div>
+                  <div style="{{ t.checkStyle }}">{{ t.check }}</div>
+                  <div style="min-width:0">
+                    <div style="{{ t.titleStyle }}">{{ t.title }}</div>
+                    <div style="{{ t.subStyle }}">{{ t.sub }}</div>
+                  </div>
+                  <div style="{{ t.timeStyle }}">{{ t.time }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;align-items:start">
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:15px 16px 11px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--share)"></div>
+                <div style="font-size:15px;font-weight:700">업무공유</div>
+                <div style="font-size:11px;color:var(--ink-3)">4건</div>
+                <div style="margin-left:auto;display:flex;gap:6px" class="no-print">
+                  <div style="padding:5px 11px;background:var(--panel-2);font-size:11px;color:var(--ink-2);border-radius:999px">내보내기</div>
+                  <div style="padding:5px 11px;background:var(--panel-2);font-size:11px;color:var(--ink-2);border-radius:999px">가져오기</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 14px 16px">
+                <sc-for list="{{ shares }}" as="s" hint-placeholder-count="4">
+                  <div style="{{ s.blockStyleWide }}">
+                    <div style="{{ s.badgeStyle }}">{{ s.dday }}</div>
+                    <div style="font-size:13px;font-weight:700">{{ s.title }}</div>
+                    <div style="font-size:11px;color:var(--ink-3)">{{ s.meta }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 10px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--call)"></div>
+                <div style="font-size:14px;font-weight:700">유관부서 연락하기</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 14px 14px">
+                <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="2">
+                  <div style="{{ c.blockStyle }}">
+                    <div style="{{ c.checkStyle }}">{{ c.check }}</div>
+                    <div style="min-width:0">
+                      <div style="{{ c.nameStyle }}">{{ c.name }}</div>
+                      <div style="{{ c.extStyle }}">{{ c.ext }}</div>
+                    </div>
+                    <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums">{{ c.time }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 10px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--lunch)"></div>
+                <div style="font-size:14px;font-weight:700">점심약속</div>
+              </div>
+              <div style="padding:0 14px 14px">
+                <div style="display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:11px 13px;background:var(--lunch-t);border-radius:var(--radius-sm)">
+                  <div>
+                    <div style="font-size:13px;font-weight:700">박준영 과장</div>
+                    <div style="font-size:11px;color:var(--ink-2);margin-top:2px">본관 3층 한식당</div>
+                  </div>
+                  <div style="font-size:12px;color:var(--lunch);font-weight:700">12:00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2c 빈 상태 ─────────── -->
+  <div id="2c" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2c</div>
+      <div style="font-size:15px;font-weight:700">오늘 — 빈 상태</div>
+      <div style="font-size:12px;color:var(--ink-2)">"없습니다" 대신 "추가하면 여기에 보여요" — 긍정형 안내</div>
+    </div>
+    <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12)">
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+          <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+        </div>
+        <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-30 (일)</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+          <div style="font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px">● 모두 저장했어요</div>
+          <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px">파일로 저장하기</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px">오늘</div>
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">달력</div>
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">설정</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 24px">
+        <div style="display:flex;align-items:center;background:var(--panel);border-radius:999px;box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">◀</div>
+          <div style="padding:9px 14px;font-size:14px;font-weight:700">2026-08-30 (일)</div>
+          <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">▶</div>
+        </div>
+        <div style="padding:8px 15px;background:var(--panel);border-radius:999px;font-size:12px;color:var(--ink-2);box-shadow:var(--shadow-1)">오늘로 가기</div>
+        <div style="margin-left:auto;display:flex;gap:7px">
+          <div style="padding:9px 16px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px">＋ 업무 추가</div>
+          <div style="padding:9px 15px;background:var(--call-t);color:var(--call);font-size:13px;font-weight:700;border-radius:999px">＋ 연락 추가</div>
+          <div style="padding:9px 15px;background:var(--share-t);color:var(--share);font-size:13px;font-weight:700;border-radius:999px">＋ 공유 추가</div>
+          <div style="padding:9px 15px;background:var(--lunch-t);color:var(--lunch);font-size:13px;font-weight:700;border-radius:999px">＋ 점심 추가</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:8fr 4fr;gap:18px;padding:2px 24px 24px">
+        <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);min-height:320px;display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:16px 18px 12px">
+            <div style="width:10px;height:10px;border-radius:999px;background:var(--task)"></div>
+            <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">업무</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+            <div style="width:56px;height:56px;border-radius:20px;background:var(--accent-t);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:22px">＋</div>
+            <div style="font-size:13px;color:var(--ink-2)">업무를 추가하면 여기에 보여요</div>
+            <div style="padding:11px 22px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">＋ 업무 추가하기</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+            <div style="padding:15px 16px 11px;display:flex;align-items:center;gap:8px"><div style="width:9px;height:9px;border-radius:999px;background:var(--share)"></div><div style="font-size:15px;font-weight:700">업무공유</div></div>
+            <div style="padding:0 14px 16px"><div style="padding:22px 14px;text-align:center;font-size:12px;color:var(--ink-2);background:var(--panel-2);border-radius:var(--radius-sm)">공유를 받으면 여기에 보여요</div></div>
+          </div>
+          <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+            <div style="padding:14px 16px 10px;display:flex;align-items:center;gap:8px"><div style="width:9px;height:9px;border-radius:999px;background:var(--call)"></div><div style="font-size:14px;font-weight:700">유관부서 연락하기</div></div>
+            <div style="padding:0 14px 14px"><div style="padding:18px 14px;text-align:center;font-size:12px;color:var(--ink-2);background:var(--panel-2);border-radius:var(--radius-sm)">연락할 곳을 추가하면 여기에 보여요</div></div>
+          </div>
+          <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+            <div style="padding:14px 16px 10px;display:flex;align-items:center;gap:8px"><div style="width:9px;height:9px;border-radius:999px;background:var(--lunch)"></div><div style="font-size:14px;font-weight:700">점심약속</div></div>
+            <div style="padding:0 14px 14px"><div style="padding:18px 14px;text-align:center;font-size:12px;color:var(--ink-2);background:var(--panel-2);border-radius:var(--radius-sm)">점심약속을 추가하면 여기에 보여요</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2d 달력 ─────────── -->
+  <div id="2d" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2d</div>
+      <div style="font-size:15px;font-weight:700">달력 — 2026년 8월</div>
+      <div style="font-size:12px;color:var(--ink-2)">오늘은 날짜에 파란 원, 카테고리는 색 칩, 기한 임박일은 붉은 칩</div>
+    </div>
+    <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12)">
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+          <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+        </div>
+        <div style="font-size:13px;color:var(--ink-3)">달력</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+          <div style="font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px">● 모두 저장했어요</div>
+          <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px">파일로 저장하기</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">오늘</div>
+        <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px">달력</div>
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">설정</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 24px">
+        <div style="display:flex;align-items:center;background:var(--panel);border-radius:999px;box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:9px 15px;font-size:13px;color:var(--ink-2)">◀</div>
+          <div style="padding:9px 16px;font-size:16px;font-weight:700">2026년 8월</div>
+          <div style="padding:9px 15px;font-size:13px;color:var(--ink-2)">▶</div>
+        </div>
+        <div style="padding:8px 15px;background:var(--panel);border-radius:999px;font-size:12px;color:var(--ink-2);box-shadow:var(--shadow-1)">이번 달로 가기</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px">
+          <div style="background:var(--task-t);color:var(--task);padding:5px 11px;border-radius:999px;font-weight:700">업무</div>
+          <div style="background:var(--call-t);color:var(--call);padding:5px 11px;border-radius:999px;font-weight:700">연락</div>
+          <div style="background:var(--share-t);color:var(--share);padding:5px 11px;border-radius:999px;font-weight:700">공유</div>
+          <div style="background:var(--lunch-t);color:var(--lunch);padding:5px 11px;border-radius:999px;font-weight:700">점심</div>
+          <div style="background:var(--red);color:#fff;padding:5px 11px;border-radius:999px;font-weight:700;margin-left:4px">회신기한 임박</div>
+        </div>
+      </div>
+      <div style="padding:2px 24px 24px">
+        <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);padding:8px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+            <sc-for list="{{ dowNames }}" as="d" hint-placeholder-count="7">
+              <div style="{{ d.style }}">{{ d.label }}</div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+            <sc-for list="{{ cal }}" as="c" hint-placeholder-count="42">
+              <div style="{{ c.cellStyle }}">
+                <div style="{{ c.numStyle }}">{{ c.num }}</div>
+                <div style="{{ c.chipAStyle }}">{{ c.chipA }}</div>
+                <div style="{{ c.chipBStyle }}">{{ c.chipB }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2e 설정 ─────────── -->
+  <div id="2e" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2e</div>
+      <div style="font-size:15px;font-weight:700">설정</div>
+    </div>
+    <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12)">
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+          <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+        </div>
+        <div style="font-size:13px;color:var(--ink-3)">설정</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+          <div style="font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px">● 모두 저장했어요</div>
+          <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px">파일로 저장하기</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">오늘</div>
+        <div style="padding:9px 22px;font-size:14px;color:var(--ink-2)">달력</div>
+        <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px">설정</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:20px 24px 24px;align-items:start">
+
+        <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:15px 18px 11px;font-size:15px;font-weight:700">내 정보</div>
+          <div style="padding:0 18px 16px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center">
+              <div style="font-size:12px;color:var(--ink-2)">이름</div>
+              <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:10px 13px;font-size:13px">김서연</div>
+            </div>
+            <div style="display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center">
+              <div style="font-size:12px;color:var(--ink-2)">부서</div>
+              <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:10px 13px;font-size:13px">경영지원팀</div>
+            </div>
+            <div style="display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center">
+              <div style="font-size:12px;color:var(--ink-2)">내선</div>
+              <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;font-variant-numeric:tabular-nums">1274</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:15px 18px 11px;font-size:15px;font-weight:700">직원 명부</div>
+          <div style="padding:0 18px 16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px">명부 파일 올리기</div>
+              <div style="font-size:12px;color:var(--ink-2)">명부.xlsx · 342명 · 2026-08-14에 올렸어요</div>
+            </div>
+            <div style="font-size:12px;color:var(--ink-2);line-height:1.75;background:var(--panel-2);border-radius:var(--radius-sm);padding:12px 14px">
+              이름·부서·직급·내선 열이 있는 엑셀 파일을 올려 주세요. 명부에 있는 이름을 쓰면 내선번호가 자동으로 채워져요.
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:15px 18px 11px;font-size:15px;font-weight:700">업무공유</div>
+          <div style="padding:0 18px 16px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;align-items:center">
+              <div style="font-size:12px;color:var(--ink-2)">조각당 글자 수</div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;width:96px;font-variant-numeric:tabular-nums">800</div>
+                <div style="font-size:12px;color:var(--ink-3)">메신저가 한 번에 받는 글자 수예요</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;align-items:center">
+              <div style="font-size:12px;color:var(--ink-2)">조각 머리말</div>
+              <div style="font-size:13px;color:var(--ink-2)">[공유 1/3] 형식으로 자동으로 붙어요</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:15px 18px 11px;font-size:15px;font-weight:700">데이터</div>
+          <div style="padding:0 18px 16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:8px">
+              <div style="padding:9px 16px;background:var(--panel-2);font-size:13px;color:var(--ink-2);border-radius:999px">백업 파일 만들기</div>
+              <div style="padding:9px 16px;background:var(--panel-2);font-size:13px;color:var(--ink-2);border-radius:999px">전체 내보내기</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;background:var(--red-t);border-radius:var(--radius-sm);padding:12px 14px">
+              <div style="padding:8px 16px;background:var(--red);color:#fff;font-size:13px;font-weight:700;border-radius:999px">전체 지우기</div>
+              <div style="font-size:12px;color:var(--red)">지우면 되돌릴 수 없어요. 먼저 백업 파일을 만들어 주세요.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="grid-column:1 / -1;background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+          <div style="padding:15px 18px 11px;font-size:15px;font-weight:700">도움말</div>
+          <div style="padding:0 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="font-size:12px;color:var(--ink-2);line-height:1.9;background:var(--panel-2);border-radius:var(--radius-sm);padding:14px 16px;text-wrap:pretty">이 프로그램은 인터넷 없이 써요. 모든 자료는 브라우저 안에만 있으니, 일을 마치면 위쪽 [파일로 저장하기]를 눌러 파일로 보관해 주세요. 저장하지 않은 변경이 있으면 위에서 알려드려요.</div>
+            <div style="font-size:12px;color:var(--ink-2);line-height:1.9;background:var(--panel-2);border-radius:var(--radius-sm);padding:14px 16px;text-wrap:pretty">업무공유는 메신저로 주고받아요. 내보내기에서 조각을 순서대로 복사해 붙여넣고, 받는 쪽은 가져오기 상자에 붙여넣으면 돼요. 조각은 순서와 관계없이 받을 수 있어요.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2f 내보내기 ─────────── -->
+  <div id="2f" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2f</div>
+      <div style="font-size:15px;font-weight:700">공유 내보내기 — 3/5 조각 진행 중</div>
+      <div style="font-size:12px;color:var(--ink-2)">지금 눌러야 할 버튼 하나만 강조, CTA에 다음 행동을 그대로 적음</div>
+    </div>
+    <div style="width:1440px;height:780px;background:rgba(25,31,40,.45);border-radius:22px;display:flex;align-items:center;justify-content:center">
+      <div style="width:740px;background:var(--panel);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-3)">
+        <div style="display:flex;align-items:center;padding:20px 24px 16px">
+          <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">공유 내보내기</div>
+          <div style="margin-left:auto;width:30px;height:30px;border-radius:999px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink-2)">✕</div>
+        </div>
+        <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel-2);border-radius:var(--radius)">
+            <div style="font-size:12px;color:var(--ink-2)">범위</div>
+            <div style="display:flex;gap:4px;background:#fff;border-radius:999px;padding:3px">
+              <div style="padding:7px 14px;font-size:12px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px">이번 주</div>
+              <div style="padding:7px 14px;font-size:12px;color:var(--ink-2);border-radius:999px">이번 달</div>
+              <div style="padding:7px 14px;font-size:12px;color:var(--ink-2);border-radius:999px">직접 고르기</div>
+            </div>
+            <div style="margin-left:auto;font-size:13px"><span style="font-weight:700">5건</span><span style="color:var(--ink-3)">을 조각 5개로 나눴어요 · 3,842자</span></div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+              <div style="font-size:13px;font-weight:700">조각을 순서대로 복사해 메신저에 붙여넣어 주세요</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--ink-2)">2개 복사했어요 · <span style="color:var(--accent-d);font-weight:700">3개 남았어요</span></div>
+            </div>
+            <div style="height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin-bottom:14px">
+              <div style="width:40%;height:100%;background:var(--accent);border-radius:999px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ exportPieces }}" as="p" hint-placeholder-count="5">
+                <div style="{{ p.rowStyle }}">
+                  <div style="{{ p.markStyle }}">{{ p.mark }}</div>
+                  <div style="{{ p.labelStyle }}">{{ p.label }}</div>
+                  <div style="{{ p.sizeStyle }}">{{ p.size }}</div>
+                  <div style="{{ p.btnStyle }}">{{ p.btn }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:12px;font-size:12px;color:var(--ink-3);line-height:1.7">
+              한 조각을 붙여넣은 뒤 다음 조각을 복사해 주세요. 창을 닫아도 진행한 곳부터 이어서 할 수 있어요.
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;padding-top:16px;border-top:1px solid var(--line)">
+            <div style="font-size:12px;color:var(--ink-3)">이제 3번째 조각을 복사해요</div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <div style="padding:10px 18px;background:var(--panel-2);font-size:13px;color:var(--ink-2);border-radius:999px">닫기</div>
+              <div style="padding:10px 18px;background:#fff;box-shadow:inset 0 0 0 1px var(--line-2);font-size:13px;color:var(--ink-2);border-radius:999px">처음부터 다시하기</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2g 가져오기 ─────────── -->
+  <div id="2g" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2g</div>
+      <div style="font-size:15px;font-weight:700">공유 가져오기 — 5개 중 2개 수신</div>
+      <div style="font-size:12px;color:var(--ink-2)">"활성화되지 않습니다" 대신 "붙여넣으면 반영할 수 있어요"</div>
+    </div>
+    <div style="width:1440px;height:840px;background:rgba(25,31,40,.45);border-radius:22px;display:flex;align-items:center;justify-content:center">
+      <div style="width:780px;background:var(--panel);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-3)">
+        <div style="display:flex;align-items:center;padding:20px 24px 16px">
+          <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">공유 가져오기</div>
+          <div style="margin-left:auto;width:30px;height:30px;border-radius:999px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink-2)">✕</div>
+        </div>
+        <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:16px">
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">받은 조각을 아래에 붙여넣어 주세요 — 순서는 상관없어요</div>
+            <div style="border:2px dashed var(--line-2);border-radius:var(--radius);background:var(--panel-2);padding:18px;font-size:12px;color:var(--ink-3);min-height:82px;line-height:1.7">
+              여기에 붙여넣으면 바로 알아봐요. (Ctrl+V)
+            </div>
+          </div>
+
+          <div style="background:var(--panel-2);border-radius:var(--radius);padding:16px">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">
+              <div style="font-size:13px;font-weight:700">조각 5개 중 <span style="color:var(--accent-d)">2개</span> 받았어요</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--red);font-weight:700;background:var(--red-t);padding:5px 12px;border-radius:999px">2 · 3 · 5번 조각을 더 받으면 돼요</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+              <sc-for list="{{ importPieces }}" as="p" hint-placeholder-count="5">
+                <div style="{{ p.boxStyle }}">
+                  <div style="{{ p.numStyle }}">{{ p.num }}</div>
+                  <div style="{{ p.stateStyle }}">{{ p.state }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="opacity:.55">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">미리보기 <span style="color:var(--ink-3);font-weight:400">— 조각을 모두 받으면 보여요</span></div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{ previewRows }}" as="r" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:84px 1fr auto;gap:12px;align-items:center;padding:11px 14px;background:var(--panel-2);border-radius:var(--radius-sm)">
+                  <div style="{{ r.tagStyle }}">{{ r.tag }}</div>
+                  <div style="font-size:13px;font-weight:600">{{ r.title }}</div>
+                  <div style="font-size:11px;color:var(--ink-3)">{{ r.meta }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;padding-top:16px;border-top:1px solid var(--line)">
+            <div style="font-size:12px;color:var(--ink-2)">남은 조각 3개를 붙여넣으면 반영할 수 있어요</div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <div style="padding:10px 18px;background:var(--panel-2);font-size:13px;color:var(--ink-2);border-radius:999px">닫기</div>
+              <div style="padding:10px 22px;background:var(--panel-2);font-size:13px;color:var(--ink-3);font-weight:700;border-radius:999px;opacity:.5">5건 반영하기</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2h 등록 · 동명이인 ─────────── -->
+  <div id="2h" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2h</div>
+      <div style="font-size:15px;font-weight:700">업무 수정 모달 · 동명이인 고르기 모달</div>
+      <div style="font-size:12px;color:var(--ink-2)">모달 왼쪽 버튼은 [취소]가 아니라 [닫기]</div>
+    </div>
+    <div style="width:1440px;height:720px;background:rgba(25,31,40,.45);border-radius:22px;display:flex;align-items:center;justify-content:center;gap:40px">
+      <div style="width:560px;background:var(--panel);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-3)">
+        <div style="display:flex;align-items:center;padding:20px 24px 14px">
+          <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">업무 수정</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--ink-3);background:var(--panel-2);padding:5px 12px;border-radius:999px">2026-08-27 (목)</div>
+        </div>
+        <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div style="font-size:12px;color:var(--ink-2);margin-bottom:6px">제목</div>
+            <div style="background:#fff;box-shadow:inset 0 0 0 2px var(--accent);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px">기획안 v3 검토</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div style="font-size:12px;color:var(--ink-2);margin-bottom:6px">시간</div>
+              <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px;font-variant-numeric:tabular-nums">09:30</div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--ink-2);margin-bottom:6px">담당</div>
+              <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px">김서연</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--ink-2);margin-bottom:6px">내용</div>
+            <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;min-height:100px;line-height:1.75;color:var(--ink-2)">2분기 로드맵 반영분을 확인하고 사업부에 회신해요. 3장 일정표는 바뀐 납기 기준으로 다시 계산해요.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding-top:14px;border-top:1px solid var(--line)">
+            <div style="padding:10px 16px;background:var(--red-t);color:var(--red);font-size:13px;font-weight:700;border-radius:999px">이 업무 지우기</div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <div style="padding:10px 18px;background:var(--panel-2);font-size:13px;color:var(--ink-2);border-radius:999px">닫기</div>
+              <div style="padding:10px 24px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.32)">저장하기</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:520px;background:var(--panel);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-3)">
+        <div style="padding:20px 24px 14px">
+          <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">이름이 같은 분이 3명 있어요</div>
+          <div style="font-size:12px;color:var(--ink-2);margin-top:5px">연락할 분을 골라 주세요.</div>
+        </div>
+        <div style="padding:0 24px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:grid;grid-template-columns:78px 1fr 80px 72px;gap:10px;padding:0 14px;font-size:11px;color:var(--ink-3)">
+            <div>이름</div><div>부서</div><div>직급</div><div>내선</div>
+          </div>
+          <sc-for list="{{ dupes }}" as="d" hint-placeholder-count="3">
+            <div style="{{ d.rowStyle }}">
+              <div style="font-size:13px;font-weight:700">{{ d.name }}</div>
+              <div style="font-size:13px;color:var(--ink-2)">{{ d.dept }}</div>
+              <div style="font-size:13px;color:var(--ink-2)">{{ d.rank }}</div>
+              <div style="font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums">{{ d.ext }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding:18px 24px 22px">
+          <div style="padding:10px 18px;background:var(--panel-2);font-size:13px;color:var(--ink-2);border-radius:999px">닫기</div>
+          <div style="padding:10px 24px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.32)">이 분으로 정하기</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2i 헤더/탭 ─────────── -->
+  <div id="2i" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2i</div>
+      <div style="font-size:15px;font-weight:700">헤더 / 탭 — 기본 상태와 미저장 경고 상태</div>
+    </div>
+    <div style="width:1440px;display:flex;flex-direction:column;gap:24px">
+      <div style="background:var(--panel);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-2)">
+        <div style="font-size:11px;color:var(--ink-3);padding:10px 20px;background:var(--panel-2)">기본 — 저장을 마친 상태</div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 24px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-27 (목)</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px"><span>●</span><span>14:02에 저장했어요</span></div>
+            <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.32)">파일로 저장하기</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:0 24px 14px">
+          <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">오늘</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">달력</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">설정</div>
+        </div>
+      </div>
+
+      <div style="background:var(--panel);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-2)">
+        <div style="font-size:11px;color:var(--ink-3);padding:10px 20px;background:var(--panel-2)">경고 — 아직 저장하지 않은 상태: 헤더 위 붉은 띠 + 붉은 알약 + 저장 버튼이 붉게</div>
+        <div style="height:4px;background:var(--red)"></div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 24px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-27 (목)</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#fff;background:var(--red);padding:7px 14px;border-radius:999px">
+              <span>●</span><span>저장하지 않은 변경 3건이 있어요</span>
+            </div>
+            <div style="padding:9px 18px;background:var(--red);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(240,68,82,.32)">지금 저장하기</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:0 24px 14px">
+          <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px">오늘</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">달력</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">설정</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2j 토큰/컴포넌트 ─────────── -->
+  <div id="2j" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2j</div>
+      <div style="font-size:15px;font-weight:700">컴포넌트 / 토큰 / UX 라이팅 — 이 시트만 옮기면 됩니다</div>
+    </div>
+    <div style="width:1440px;background:var(--panel);border-radius:22px;box-shadow:var(--shadow-2);padding:30px;display:flex;flex-direction:column;gap:30px">
+
+      <div>
+        <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">색 토큰</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:12px">
+          <sc-for list="{{ tokens }}" as="k" hint-placeholder-count="14">
+            <div style="border-radius:var(--radius-sm);overflow:hidden;background:var(--panel-2)">
+              <div style="{{ k.swatchStyle }}"></div>
+              <div style="padding:9px 11px">
+                <div style="font-size:12px;font-weight:700">{{ k.name }}</div>
+                <div style="font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums">{{ k.value }}</div>
+                <div style="font-size:11px;color:var(--ink-2);margin-top:3px">{{ k.use }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">UX 라이팅 규칙 — 화면 문구는 이 기준으로 씁니다</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <sc-for list="{{ writing }}" as="w" hint-placeholder-count="6">
+            <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:13px;font-weight:700">{{ w.rule }}</div>
+              <div style="display:flex;align-items:baseline;gap:8px">
+                <div style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-t);padding:3px 8px;border-radius:999px">이렇게 안 씀</div>
+                <div style="font-size:12px;color:var(--ink-3);text-decoration:line-through">{{ w.bad }}</div>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:8px">
+                <div style="font-size:10px;font-weight:700;color:var(--green);background:var(--green-t);padding:3px 8px;border-radius:999px">이렇게 씀</div>
+                <div style="font-size:12px;color:var(--ink);font-weight:600">{{ w.good }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px">
+        <div>
+          <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">타이포 스케일</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:baseline;padding:11px 14px;background:var(--panel-2);border-radius:var(--radius-sm)">
+                <div style="font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums">{{ t.label }}</div>
+                <div style="{{ t.style }}">{{ t.sample }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">간격 · 모서리</div>
+          <div style="background:var(--panel-2);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:11px">
+            <sc-for list="{{ spacing }}" as="s" hint-placeholder-count="6">
+              <div style="display:grid;grid-template-columns:70px 1fr 46px;gap:12px;align-items:center">
+                <div style="font-size:11px;color:var(--ink-3)">{{ s.name }}</div>
+                <div style="{{ s.barStyle }}"></div>
+                <div style="font-size:11px;color:var(--ink-2);text-align:right">{{ s.value }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:12px;border-top:1px solid var(--line-2);padding-top:14px;margin-top:3px">
+              <div style="font-size:11px;color:var(--ink-3);width:70px">--radius</div>
+              <div style="width:52px;height:34px;background:#fff;border-radius:16px;box-shadow:var(--shadow-1)"></div>
+              <div style="width:52px;height:34px;background:#fff;border-radius:10px;box-shadow:var(--shadow-1)"></div>
+              <div style="width:66px;height:34px;background:#fff;border-radius:999px;box-shadow:var(--shadow-1)"></div>
+              <div style="font-size:11px;color:var(--ink-2)">카드 16px · 내부 10px · 버튼·배지 알약</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;align-items:start">
+        <div>
+          <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">버튼 3종 · 상태</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:9px">
+              <div style="padding:9px 17px;background:var(--panel-2);font-size:13px;color:var(--ink-2);border-radius:999px">기본</div>
+              <div style="padding:9px 17px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">주요</div>
+              <div style="padding:9px 17px;background:var(--red-t);color:var(--red);font-size:13px;font-weight:700;border-radius:999px">위험</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px">
+              <div style="padding:9px 17px;background:#eef1f4;font-size:13px;color:var(--ink);border-radius:999px">기본 호버</div>
+              <div style="padding:9px 17px;background:var(--accent-d);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 4px 12px rgba(27,100,218,.34)">주요 호버</div>
+              <div style="padding:9px 17px;background:var(--red);color:#fff;font-size:13px;font-weight:700;border-radius:999px">위험 호버</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px">
+              <div style="padding:9px 17px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;outline:3px solid var(--accent-t);outline-offset:2px">포커스</div>
+              <div style="padding:9px 17px;background:var(--panel-2);font-size:13px;color:var(--ink-3);border-radius:999px;opacity:.5">비활성</div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-3);line-height:1.7;margin-top:2px">CTA에는 다음 행동을 그대로 적습니다 — [확인] 대신 [파일로 저장하기], [반영] 대신 [5건 반영하기].</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">D-day 배지 4단계</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ ddayLegend }}" as="d" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="{{ d.badgeStyle }}">{{ d.label }}</div>
+                <div style="font-size:12px;color:var(--ink-2)">{{ d.desc }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin:22px 0 12px">상태 딱지 · 카테고리 칩</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ previewRows }}" as="r" hint-placeholder-count="4">
+              <div style="{{ r.tagStyle }}">{{ r.tag }}</div>
+            </sc-for>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-basis:100%">
+              <div style="background:var(--task-t);color:var(--task);font-size:11px;font-weight:700;padding:4px 11px;border-radius:999px">업무</div>
+              <div style="background:var(--call-t);color:var(--call);font-size:11px;font-weight:700;padding:4px 11px;border-radius:999px">연락</div>
+              <div style="background:var(--share-t);color:var(--share);font-size:11px;font-weight:700;padding:4px 11px;border-radius:999px">공유</div>
+              <div style="background:var(--lunch-t);color:var(--lunch);font-size:11px;font-weight:700;padding:4px 11px;border-radius:999px">점심</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">입력 · 블록 행 · 달력 칸</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="background:var(--panel-2);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px;color:var(--ink-3)">기본 입력</div>
+            <div style="background:#fff;box-shadow:inset 0 0 0 2px var(--accent);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px">포커스된 입력</div>
+            <div style="background:var(--red-t);box-shadow:inset 0 0 0 1px var(--red);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px;color:var(--red)">제목을 입력하면 저장할 수 있어요</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+              <div style="position:relative;display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:11px 13px 11px 18px;background:var(--panel-2);border-radius:var(--radius-sm);overflow:hidden">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--task)"></div>
+                <div style="font-size:13px;color:var(--ink-2)">☐</div>
+                <div><div style="font-size:13px;font-weight:700">기본 블록</div><div style="font-size:11px;color:var(--ink-3);margin-top:2px">부제가 한 줄</div></div>
+                <div style="font-size:12px;color:var(--ink-3)">09:30</div>
+              </div>
+              <div style="position:relative;display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:11px 13px 11px 18px;background:#fff;border-radius:var(--radius-sm);box-shadow:var(--shadow-2);overflow:hidden">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--task)"></div>
+                <div style="font-size:13px;color:var(--ink-2)">☐</div>
+                <div><div style="font-size:13px;font-weight:700">호버 블록</div><div style="font-size:11px;color:var(--ink-3);margin-top:2px">우측에 [수정]이 나타나요</div></div>
+                <div style="display:flex;align-items:center;gap:8px"><div style="padding:3px 10px;background:var(--panel-2);font-size:11px;color:var(--ink-2);border-radius:999px">수정</div><div style="font-size:12px;color:var(--ink-3)">10:00</div></div>
+              </div>
+              <div style="position:relative;display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:11px 13px 11px 18px;background:var(--panel-2);border-radius:var(--radius-sm);overflow:hidden;opacity:.7">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--line-2)"></div>
+                <div style="font-size:13px;color:var(--green)">☑</div>
+                <div><div style="font-size:13px;font-weight:700;text-decoration:line-through;color:var(--ink-3)">완료 블록</div><div style="font-size:11px;color:var(--ink-3);margin-top:2px;text-decoration:line-through">부제도 함께 흐리게</div></div>
+                <div style="font-size:12px;color:var(--ink-3);text-decoration:line-through">11:00</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px">
+              <div style="background:var(--panel-2);border-radius:12px;padding:9px;min-height:86px">
+                <div style="font-size:13px;font-weight:700">26</div>
+                <div style="margin-top:5px;display:flex;flex-direction:column;gap:3px"><div style="font-size:10px;background:var(--task-t);color:var(--task);padding:2px 7px;border-radius:999px;font-weight:700">업무 3</div></div>
+              </div>
+              <div style="background:#fff;border-radius:12px;padding:9px;min-height:86px;box-shadow:inset 0 0 0 2px var(--accent)">
+                <div style="display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 7px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;border-radius:999px">27</div>
+                <div style="margin-top:5px;display:flex;flex-direction:column;gap:3px"><div style="font-size:10px;background:var(--task-t);color:var(--task);padding:2px 7px;border-radius:999px;font-weight:700">업무 8</div></div>
+              </div>
+              <div style="background:var(--panel-2);border-radius:12px;padding:9px;min-height:86px">
+                <div style="font-size:13px;font-weight:700;color:var(--red)">28</div>
+                <div style="margin-top:5px;display:flex;flex-direction:column;gap:3px"><div style="font-size:10px;background:var(--red);color:#fff;padding:2px 7px;border-radius:999px;font-weight:700">공유 2 · 임박</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;letter-spacing:.12em;color:var(--accent-d);margin-bottom:12px">기존 파일에 붙여넣을 CSS — :root 토큰 + 클래스 + 격자</div>
+        <pre style="margin:0;background:#0f1621;color:#dde5f0;border-radius:var(--radius);padding:22px;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1.7;overflow:auto;white-space:pre-wrap">{{ cssCode }}</pre>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1600,&quot;height&quot;:1000}}">
+const BLOCK = 'position:relative;display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:11px 13px 11px 19px;border-radius:10px;overflow:hidden';
+const BAR = 'position:absolute;left:0;top:0;bottom:0;width:4px;background:';
+
+const pill = (bg, fg, w) =>
+  `display:inline-block;min-width:54px;text-align:center;font-size:11px;font-weight:${w};padding:4px 9px;border-radius:999px;background:${bg};color:${fg};font-variant-numeric:tabular-nums`;
+
+const BADGE = {
+  dday: pill('var(--red)', '#fff', 800),
+  over: pill('var(--red-t)', 'var(--red)', 800),
+  soon: pill('var(--orange-t)', 'var(--orange)', 700),
+  calm: pill('var(--panel-2)', 'var(--ink-2)', 700)
+};
+
+const tag = (bg, fg) => `display:inline-block;text-align:center;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:${bg};color:${fg}`;
+
+class Component extends DCLogic {
+  renderVals() {
+    const rawTasks = [
+      [false, '기획안 v3 검토', '2분기 로드맵 반영분을 사업부에 회신해요', '09:30'],
+      [false, '주간 실적 집계', '영업 1~3팀 수치를 모아요', '10:00'],
+      [true, '월간 보고서 초안 제출', '부서장 확인까지 마쳤어요', '11:00'],
+      [false, '예산 조정 회의 준비', '자료 12부 인쇄 · 회의실 3 예약', '13:00'],
+      [false, '협력사 계약서 검토 의견', '법무팀 회신을 기다려요', '14:30'],
+      [true, '출입증 재발급 신청', '총무팀에 접수했어요', '15:00'],
+      [false, '설비 점검 일정 확정', '기술지원팀 담당자와 협의해요', '16:00'],
+      [false, '내일 조회 자료 정리', '주요 지표 3개만 요약해요', '17:30']
+    ];
+    const tasks = rawTasks.map(([done, title, sub, time], i) => ({
+      key: i, check: done ? '☑' : '☐', title, sub, time,
+      blockStyle: BLOCK + ';background:var(--panel-2)' + (done ? ';opacity:.65' : ''),
+      barStyle: BAR + (done ? 'var(--line-2)' : 'var(--task)'),
+      checkStyle: 'font-size:13px;line-height:1.4;color:' + (done ? 'var(--green)' : 'var(--ink-2)'),
+      titleStyle: 'font-size:13px;font-weight:700;line-height:1.45;letter-spacing:-.2px' + (done ? ';text-decoration:line-through;color:var(--ink-3)' : ''),
+      subStyle: 'font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.45' + (done ? ';text-decoration:line-through' : ''),
+      timeStyle: 'font-size:12px;font-weight:700;color:' + (done ? 'var(--ink-3)' : 'var(--task)') + ';font-variant-numeric:tabular-nums' + (done ? ';text-decoration:line-through' : '')
+    }));
+
+    const shares = [
+      ['D-DAY', BADGE.dday, 'var(--red)', 'var(--red-t)', '설비 교체 승인 요청', '문서번호 2026-0812 · 회신기한 08/27 · 이건우'],
+      ['D+2', BADGE.over, 'var(--red)', 'var(--panel-2)', '외주 견적 비교표 회신', '문서번호 2026-0779 · 회신기한 08/25 · 정하늘'],
+      ['D-3', BADGE.soon, 'var(--orange)', 'var(--panel-2)', '보안 점검 체크리스트', '문서번호 2026-0830 · 회신기한 08/30 · 김서연'],
+      ['D-10', BADGE.calm, 'var(--line-2)', 'var(--panel-2)', '4분기 예산 편성 안내', '문서번호 2026-0841 · 회신기한 09/06 · 박준영']
+    ].map(([dday, badgeStyle, bar, bg, title, meta], i) => ({
+      key: i, dday, badgeStyle, title, meta,
+      blockStyle: 'position:relative;display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:start;padding:11px 13px 11px 19px;border-radius:10px;overflow:hidden;background:' + bg + ';box-shadow:inset 4px 0 0 ' + bar,
+      blockStyleWide: 'position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px 12px 19px;border-radius:10px;overflow:hidden;background:' + bg + ';box-shadow:inset 4px 0 0 ' + bar
+    }));
+
+    const contacts = [
+      [false, '김도현 (기술지원팀)', '내선 1274', '10:20'],
+      [true, '이수경', '내선번호를 직접 입력하면 돼요', '15:40']
+    ].map(([done, name, ext, time], i) => ({
+      key: i, check: done ? '☑' : '☐', name, ext, time,
+      blockStyle: 'position:relative;display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;padding:11px 13px 11px 19px;border-radius:10px;overflow:hidden;background:var(--panel-2);box-shadow:inset 4px 0 0 ' + (done ? 'var(--line-2)' : 'var(--call)') + (done ? ';opacity:.65' : ''),
+      checkStyle: 'font-size:13px;color:' + (done ? 'var(--green)' : 'var(--ink-2)'),
+      nameStyle: 'font-size:13px;font-weight:700' + (done ? ';text-decoration:line-through;color:var(--ink-3)' : ''),
+      extStyle: ext.indexOf('내선 ') === 0
+        ? 'font-size:11px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums'
+        : 'font-size:11px;color:var(--orange);font-weight:700;margin-top:2px'
+    }));
+
+    const dow = ['일', '월', '화', '수', '목', '금', '토'];
+    const dowNames = dow.map((label, i) => ({
+      key: i, label,
+      style: 'padding:10px 0 12px;font-size:12px;font-weight:700;text-align:center;color:' +
+        (i === 0 ? 'var(--red)' : i === 6 ? '#3b6fb6' : 'var(--ink-3)')
+    }));
+
+    const counts = {
+      3: [['업무 4', 'task'], ['연락 1', 'call']], 4: [['업무 2', 'task'], ['점심 1', 'lunch']],
+      5: [['업무 3', 'task'], ['연락 2', 'call']], 6: [['업무 1', 'task'], ['공유 1', 'share']],
+      7: [['업무 5', 'task'], ['연락 1', 'call']], 10: [['업무 3', 'task'], ['점심 1', 'lunch']],
+      11: [['업무 2', 'task'], ['연락 1', 'call']], 12: [['업무 6', 'task'], ['공유 2', 'share']],
+      13: [['업무 3', 'task'], ['연락 2', 'call']], 14: [['업무 4', 'task'], ['점심 1', 'lunch']],
+      17: [['업무 2', 'task'], null], 18: [['업무 5', 'task'], ['공유 1', 'share']],
+      19: [['업무 3', 'task'], null], 20: [['업무 4', 'task'], ['공유 1 · 점심 1', 'share']],
+      21: [['업무 2', 'task'], null], 24: [['업무 6', 'task'], ['연락 1', 'call']],
+      25: [['업무 3', 'task'], ['공유 1 · 임박', 'due']], 26: [['업무 4', 'task'], ['연락 1', 'call']],
+      27: [['업무 8 · 연락 2', 'task'], ['공유 4 · 임박', 'due']], 28: [['업무 3', 'task'], ['공유 2 · 임박', 'due']],
+      30: [['업무 1', 'task'], ['공유 1 · 임박', 'due']], 31: [['업무 2', 'task'], null]
+    };
+    const chipStyles = {
+      task: 'font-size:10px;background:var(--task-t);color:var(--task);padding:2px 8px;border-radius:999px;font-weight:700;align-self:flex-start',
+      call: 'font-size:10px;background:var(--call-t);color:var(--call);padding:2px 8px;border-radius:999px;font-weight:700;align-self:flex-start',
+      share: 'font-size:10px;background:var(--share-t);color:var(--share);padding:2px 8px;border-radius:999px;font-weight:700;align-self:flex-start',
+      lunch: 'font-size:10px;background:var(--lunch-t);color:var(--lunch);padding:2px 8px;border-radius:999px;font-weight:700;align-self:flex-start',
+      due: 'font-size:10px;background:var(--red);color:#fff;padding:2px 8px;border-radius:999px;font-weight:700;align-self:flex-start'
+    };
+    const cal = [];
+    for (let i = 0; i < 42; i++) {
+      const dayNum = i - 5;
+      const inMonth = dayNum >= 1 && dayNum <= 31;
+      const num = inMonth ? dayNum : (dayNum < 1 ? 26 + (dayNum + 5) : dayNum - 31);
+      const col = i % 7;
+      const isToday = inMonth && dayNum === 27;
+      const c = (inMonth && counts[dayNum]) || [null, null];
+      let numColor = col === 0 ? 'var(--red)' : col === 6 ? '#3b6fb6' : 'var(--ink)';
+      if (!inMonth) numColor = 'var(--ink-3)';
+      cal.push({
+        key: i,
+        num: String(num),
+        cellStyle: 'display:flex;flex-direction:column;gap:4px;padding:9px 10px;min-height:112px;border-radius:12px;background:' +
+          (isToday ? '#fff' : inMonth ? 'var(--panel-2)' : '#fcfdfe') +
+          (isToday ? ';box-shadow:inset 0 0 0 2px var(--accent)' : '') + (inMonth ? '' : ';opacity:.6'),
+        numStyle: isToday
+          ? 'display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 8px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;border-radius:999px;font-variant-numeric:tabular-nums;align-self:flex-start'
+          : 'font-size:13px;font-weight:700;color:' + numColor + ';font-variant-numeric:tabular-nums;padding:3px 2px',
+        chipA: c[0] ? c[0][0] : '',
+        chipAStyle: c[0] ? chipStyles[c[0][1]] : 'display:none',
+        chipB: c[1] ? c[1][0] : '',
+        chipBStyle: c[1] ? chipStyles[c[1][1]] : 'display:none'
+      });
+    }
+
+    const exportPieces = [
+      ['done', '1/5 조각', '798자', '복사했어요'],
+      ['done', '2/5 조각', '800자', '복사했어요'],
+      ['now', '3/5 조각', '795자', '3/5 복사하기'],
+      ['todo', '4/5 조각', '789자', '다음 차례'],
+      ['todo', '5/5 조각', '660자', '다음 차례']
+    ].map(([state, label, size, btn], i) => {
+      const now = state === 'now', done = state === 'done';
+      return {
+        key: i, label, size, btn,
+        mark: done ? '✓' : now ? '●' : String(i + 1),
+        rowStyle: 'display:grid;grid-template-columns:26px 1fr auto auto;gap:12px;align-items:center;border-radius:12px;padding:' +
+          (now ? '14px 16px' : '11px 16px') + ';background:' + (now ? 'var(--accent-t)' : 'var(--panel-2)') +
+          (now ? ';box-shadow:inset 0 0 0 2px var(--accent)' : '') + (done ? ';opacity:.7' : ''),
+        markStyle: 'display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;background:' +
+          (done ? 'var(--green)' : now ? 'var(--accent)' : 'var(--line-2)'),
+        labelStyle: 'font-size:' + (now ? '14px' : '13px') + ';font-weight:700;color:' +
+          (done ? 'var(--ink-3)' : 'var(--ink)') + (done ? ';text-decoration:line-through' : ''),
+        sizeStyle: 'font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums',
+        btnStyle: now
+          ? 'padding:10px 22px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;border-radius:999px;box-shadow:0 4px 12px rgba(49,130,246,.34)'
+          : done
+            ? 'padding:6px 14px;background:#fff;color:var(--ink-3);font-size:12px;border-radius:999px'
+            : 'padding:6px 14px;background:#fff;color:var(--ink-3);font-size:12px;border-radius:999px;opacity:.7'
+      };
+    });
+
+    const importPieces = [1, 2, 3, 4, 5].map((n) => {
+      const got = n === 1 || n === 4;
+      return {
+        key: n, num: n + '번',
+        state: got ? '✓ 받았어요' : '기다리는 중',
+        boxStyle: 'border-radius:14px;padding:16px 8px;text-align:center;display:flex;flex-direction:column;gap:5px;background:' +
+          (got ? 'var(--green-t)' : '#fff') + (got ? '' : ';border:2px dashed var(--red)'),
+        numStyle: 'font-size:14px;font-weight:800;color:' + (got ? 'var(--green)' : 'var(--red)') + ';font-variant-numeric:tabular-nums',
+        stateStyle: 'font-size:11px;font-weight:700;color:' + (got ? 'var(--green)' : 'var(--red)')
+      };
+    });
+
+    const previewRows = [
+      ['새로 왔어요', tag('var(--accent-t)', 'var(--accent-d)'), '설비 교체 승인 요청', '이건우 · 회신기한 08/27'],
+      ['바뀌었어요', tag('var(--orange-t)', 'var(--orange)'), '외주 견적 비교표 회신', '정하늘 · 내용 2곳 달라요'],
+      ['그대로예요', tag('#fff', 'var(--ink-3)'), '보안 점검 체크리스트', '김서연 · 같은 내용'],
+      ['지워졌어요', tag('var(--red-t)', 'var(--red)'), '7월 정기점검 결과', '박준영 · 보낸 쪽에서 지웠어요']
+    ].map(([t, tagStyle, title, meta], i) => ({ key: i, tag: t, tagStyle, title, meta }));
+
+    const dupes = [
+      ['김도현', '기술지원팀', '과장', '1274'],
+      ['김도현', '생산관리팀', '대리', '2318'],
+      ['김도현', '품질보증팀', '사원', '2765']
+    ].map(([name, dept, rank, ext], i) => ({
+      key: i, name, dept, rank, ext,
+      rowStyle: 'display:grid;grid-template-columns:78px 1fr 80px 72px;gap:10px;align-items:center;padding:13px 14px;border-radius:12px;background:' +
+        (i === 0 ? 'var(--accent-t)' : 'var(--panel-2)') + (i === 0 ? ';box-shadow:inset 0 0 0 2px var(--accent)' : '')
+    }));
+
+    const tokens = [
+      ['--bg', '#f2f4f6', '본문 바탕'],
+      ['--panel', '#ffffff', '카드 면'],
+      ['--panel-2', '#f9fafb', '블록·입력 면'],
+      ['--line', '#e5e8eb', '구분선'],
+      ['--ink', '#191f28', '본문 글자'],
+      ['--ink-2', '#4e5968', '보조 글자'],
+      ['--ink-3', '#8b95a1', '흐린 글자'],
+      ['--accent', '#3182f6', '주요 동작 · 오늘'],
+      ['--accent-d', '#1b64da', '호버 · 눌림'],
+      ['--task', '#3182f6', '업무'],
+      ['--call', '#00b26b', '연락'],
+      ['--share', '#f04452', '공유'],
+      ['--lunch', '#ff8a00', '점심'],
+      ['--red', '#f04452', '기한 · 위험']
+    ].map(([name, value, use], i) => ({
+      key: i, name, value, use,
+      swatchStyle: 'height:46px;background:' + value
+    }));
+
+    const writing = [
+      ['해요체로 씁니다', '저장되었습니다', '저장했어요'],
+      ['능동형으로 씁니다', '변경이 반영됐어요', '3건을 반영했어요'],
+      ['긍정형으로 씁니다', '등록된 업무가 없습니다', '업무를 추가하면 여기에 보여요'],
+      ['모달 왼쪽은 [닫기]', '취소', '닫기'],
+      ['CTA에 다음 행동을 적습니다', '확인 · 반영', '파일로 저장하기 · 5건 반영하기'],
+      ['과한 경어를 뺍니다', '선택하시겠어요?', '연락할 분을 골라 주세요']
+    ].map(([rule, bad, good], i) => ({ key: i, rule, bad, good }));
+
+    const typeScale = [
+      ['26 / 700', 'font-size:26px;font-weight:700;letter-spacing:-.6px', '아트보드 제목'],
+      ['18 / 700', 'font-size:18px;font-weight:700;letter-spacing:-.5px', '모달·섹션 제목'],
+      ['17 / 700', 'font-size:17px;font-weight:700;letter-spacing:-.4px', '앱 이름'],
+      ['15 / 700', 'font-size:15px;font-weight:700', '보조 섹션 제목'],
+      ['13 / 700', 'font-size:13px;font-weight:700', '블록 제목'],
+      ['12 / 400', 'font-size:12px;color:var(--ink-2)', '라벨 · 상태 문구'],
+      ['11 / 400', 'font-size:11px;color:var(--ink-3)', '부제 · 메타 정보']
+    ].map(([label, style, sample], i) => ({ key: i, label, style, sample }));
+
+    const spacing = [
+      ['--s1', '4px', 4], ['--s2', '8px', 8], ['--s3', '12px', 12],
+      ['--s4', '16px', 16], ['--s5', '24px', 24], ['--s6', '32px', 32]
+    ].map(([name, value, w], i) => ({
+      key: i, name, value,
+      barStyle: 'height:12px;width:' + (w * 4) + 'px;background:var(--accent);opacity:.3;border-radius:999px'
+    }));
+
+    const ddayLegend = [
+      ['D-DAY', BADGE.dday, '오늘까지 회신해요 — 붉은 알약을 꽉 채워요'],
+      ['D+2', BADGE.over, '기한이 지났어요 — 연한 붉은 알약'],
+      ['D-3', BADGE.soon, '3일 안에 회신해요 — 주황 알약'],
+      ['D-10', BADGE.calm, '아직 여유가 있어요 — 회색 알약']
+    ].map(([label, badgeStyle, desc], i) => ({ key: i, label, badgeStyle, desc }));
+
+    const cssCode = [
+      ':root{',
+      '  /* 색 — 기존 이름 유지 + 카테고리 색 추가 (토스 팔레트 계열) */',
+      '  --bg:#f2f4f6; --panel:#ffffff; --panel-2:#f9fafb;',
+      '  --line:#e5e8eb; --line-2:#d1d6db;',
+      '  --ink:#191f28; --ink-2:#4e5968; --ink-3:#8b95a1;',
+      '  --accent:#3182f6; --accent-d:#1b64da; --accent-t:#e8f3ff;',
+      '  --task:#3182f6;  --task-t:#e8f3ff;   /* 업무 */',
+      '  --call:#00b26b;  --call-t:#e4f8ee;   /* 연락 */',
+      '  --share:#f04452; --share-t:#feecee;  /* 공유 */',
+      '  --lunch:#ff8a00; --lunch-t:#fff3e0;  /* 점심 */',
+      '  --red:#f04452; --red-t:#feecee;',
+      '  --orange:#ff8a00; --orange-t:#fff3e0;',
+      '  --green:#00b26b; --green-t:#e4f8ee;',
+      '  /* 형태 — 둥글게 */',
+      '  --radius:16px; --radius-sm:10px; --pill:999px;',
+      '  --shadow-1:0 1px 2px rgba(25,31,40,.05);',
+      '  --shadow-2:0 6px 18px rgba(25,31,40,.07);',
+      '  --shadow-3:0 20px 48px rgba(25,31,40,.20);',
+      '  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;',
+      '  --fs-11:11px; --fs-12:12px; --fs-13:13px; --fs-15:15px; --fs-17:17px;',
+      '  --font:"Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif;',
+      '}',
+      '',
+      'body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:var(--fs-13)}',
+      '*{box-sizing:border-box}',
+      '',
+      '/* ── 뼈대: 1440 기준, 1280~1920 대응 ── */',
+      '.wrap{max-width:1600px;min-width:1240px;margin:0 auto;padding:0 var(--s5)}',
+      '.today-grid{display:grid;grid-template-columns:8fr 4fr;gap:18px;align-items:start}  /* 배치안 A */',
+      '.side-col{display:flex;flex-direction:column;gap:var(--s4)}',
+      '.task-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}',
+      '@media (max-width:1360px){ .task-grid{grid-template-columns:1fr} }',
+      '@media (min-width:1760px){ .task-grid{grid-template-columns:1fr 1fr 1fr} }',
+      '.today-stack{display:flex;flex-direction:column;gap:var(--s4)}                      /* 배치안 B */',
+      '.sub-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:var(--s4);align-items:start}',
+      '',
+      '/* ── 헤더 / 탭 (알약 탭) ── */',
+      '.appbar{display:flex;align-items:center;gap:var(--s4);padding:16px var(--s5);',
+      '  background:var(--panel);border-bottom:1px solid var(--line)}',
+      '.appbar .logo{width:26px;height:26px;border-radius:9px;background:var(--accent);color:#fff;',
+      '  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}',
+      '.appbar .brand{font-size:var(--fs-17);font-weight:700;letter-spacing:-.4px}',
+      '.appbar .where{font-size:var(--fs-13);color:var(--ink-3)}',
+      '.appbar .spacer{margin-left:auto;display:flex;align-items:center;gap:var(--s3)}',
+      '.savestate{display:flex;align-items:center;gap:7px;font-size:var(--fs-12);color:var(--green);',
+      '  background:var(--green-t);padding:6px 13px;border-radius:var(--pill)}',
+      '.savestate.dirty{color:#fff;background:var(--red);font-weight:700}',
+      '.dirtybar{height:4px;background:var(--red)}          /* 저장 전 헤더 위 띠 */',
+      '.tabs{display:flex;gap:6px;padding:12px var(--s5);background:var(--panel);border-bottom:1px solid var(--line)}',
+      '.tab{padding:9px 22px;font-size:14px;color:var(--ink-2);background:none;border:0;',
+      '  border-radius:var(--pill);cursor:pointer;font-family:var(--font)}',
+      '.tab:hover{background:var(--panel-2);color:var(--ink)}',
+      '.tab.active{font-weight:700;color:#fff;background:var(--accent);box-shadow:0 3px 10px rgba(49,130,246,.3)}',
+      '.tab:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}',
+      '',
+      '/* ── 카드 (테두리 없이 그림자로) ── */',
+      '.card{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden}',
+      '.card.primary{box-shadow:var(--shadow-2)}',
+      '.card > .card-head{display:flex;align-items:center;gap:10px;padding:15px 18px 11px}',
+      '.card-head .dot{width:10px;height:10px;border-radius:var(--pill);background:var(--task)}',
+      '.card-head .dot.call{background:var(--call)} .card-head .dot.share{background:var(--share)}',
+      '.card-head .dot.lunch{background:var(--lunch)}',
+      '.card-head .count{font-size:var(--fs-12);color:var(--ink-3);background:var(--panel-2);',
+      '  padding:3px 10px;border-radius:var(--pill)}',
+      '.card-body{padding:0 14px 16px;display:flex;flex-direction:column;gap:var(--s2)}',
+      '',
+      '/* ── 목록 = 둥근 블록 (.row 이름 유지) ── */',
+      '.row{position:relative;display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;',
+      '  padding:11px 13px 11px 19px;background:var(--panel-2);border-radius:var(--radius-sm);',
+      '  overflow:hidden;cursor:pointer}',
+      '.row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--task)}',
+      '.row.call::before{background:var(--call)} .row.share::before{background:var(--share)}',
+      '.row.lunch::before{background:var(--lunch)}',
+      '.row:hover{background:var(--panel);box-shadow:var(--shadow-2)}',
+      '.row:hover .row-edit{visibility:visible}',
+      '.row-edit{visibility:hidden;padding:3px 10px;background:var(--panel-2);font-size:var(--fs-11);',
+      '  color:var(--ink-2);border:0;border-radius:var(--pill)}',
+      '.row .t{font-size:var(--fs-13);font-weight:700;line-height:1.45}',
+      '.row .s{font-size:var(--fs-11);color:var(--ink-3);margin-top:3px}',
+      '.row .time{font-size:var(--fs-12);font-weight:700;color:var(--task);font-variant-numeric:tabular-nums}',
+      '.row.done{opacity:.65}',
+      '.row.done::before{background:var(--line-2)}',
+      '.row.done .t,.row.done .s,.row.done .time{text-decoration:line-through;color:var(--ink-3)}',
+      '',
+      '/* ── 배지 · 딱지 (알약) ── */',
+      '.pill{display:inline-block;min-width:54px;text-align:center;font-size:var(--fs-11);font-weight:700;',
+      '  padding:4px 9px;border-radius:var(--pill);background:var(--panel-2);color:var(--ink-2);',
+      '  font-variant-numeric:tabular-nums}',
+      '.pill.red{background:var(--red);color:#fff;font-weight:800}              /* D-DAY */',
+      '.pill.overdue{background:var(--red-t);color:var(--red);font-weight:800}  /* D+n */',
+      '.pill.orange{background:var(--orange-t);color:var(--orange)}             /* D-3 */',
+      '.pill.green{background:var(--green-t);color:var(--green)}',
+      '.pill.accent{background:var(--accent-t);color:var(--accent-d)}           /* 새로 온 공유 */',
+      '',
+      '/* ── 버튼 (알약, 테두리 없음) ── */',
+      '.btn{padding:9px 17px;background:var(--panel-2);color:var(--ink-2);border:0;',
+      '  font-size:var(--fs-13);font-family:var(--font);border-radius:var(--pill);cursor:pointer}',
+      '.btn:hover{background:#eef1f4;color:var(--ink)}',
+      '.btn:active{background:#e5e9ee}',
+      '.btn:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}',
+      '.btn[disabled]{opacity:.5;cursor:default}   /* 라벨은 항상 읽히게 — 흰 글자 금지 */',
+      '.btn.primary{background:var(--accent);color:#fff;font-weight:700;box-shadow:0 3px 10px rgba(49,130,246,.3)}',
+      '.btn.primary:hover{background:var(--accent-d)}',
+      '.btn.danger{background:var(--red-t);color:var(--red);font-weight:700}',
+      '.btn.danger:hover{background:var(--red);color:#fff}',
+      '.btn.danger.solid{background:var(--red);color:#fff}   /* 저장 전 경고 상태의 저장 버튼 */',
+      '.btn.cat-call{background:var(--call-t);color:var(--call);font-weight:700}',
+      '.btn.cat-share{background:var(--share-t);color:var(--share);font-weight:700}',
+      '.btn.cat-lunch{background:var(--lunch-t);color:var(--lunch);font-weight:700}',
+      '.btn.sm{padding:5px 12px;font-size:var(--fs-12)}',
+      '',
+      '/* ── 날짜 바 / 입력 ── */',
+      '.datebar{display:flex;align-items:center;gap:var(--s3);padding:16px var(--s5)}',
+      '.datebar .nav{display:flex;align-items:center;background:var(--panel);',
+      '  border-radius:var(--pill);box-shadow:var(--shadow-1);overflow:hidden}',
+      '.datebar .nav b{padding:9px 14px;font-size:14px;font-weight:700}',
+      '.datebar .nav button{padding:9px 14px;border:0;background:none;color:var(--ink-2);cursor:pointer}',
+      '.datebar .nav button:hover{background:var(--panel-2)}',
+      '.field{width:100%;background:var(--panel-2);border:0;border-radius:var(--radius-sm);',
+      '  padding:11px 13px;font-size:var(--fs-13);font-family:var(--font);color:var(--ink)}',
+      '.field:focus{outline:none;background:var(--panel);box-shadow:inset 0 0 0 2px var(--accent)}',
+      '.field.error{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}',
+      '.frow{display:grid;grid-template-columns:110px 1fr;gap:var(--s3);align-items:center;padding:5px 0}',
+      '.frow > label{font-size:var(--fs-12);color:var(--ink-2)}',
+      '',
+      '/* ── 달력 (칸마다 둥근 블록) ── */',
+      '.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}',
+      '.cell{display:flex;flex-direction:column;gap:4px;padding:9px 10px;min-height:112px;',
+      '  border-radius:12px;background:var(--panel-2);cursor:pointer}',
+      '.cell:hover{background:var(--panel);box-shadow:var(--shadow-2)}',
+      '.cell.out{background:#fcfdfe;opacity:.6}',
+      '.cell .n{font-size:var(--fs-13);font-weight:700;padding:3px 2px;font-variant-numeric:tabular-nums}',
+      '.cell .n.sun{color:var(--red)} .cell .n.sat{color:#3b6fb6}',
+      '.cell.today{background:var(--panel);box-shadow:inset 0 0 0 2px var(--accent)}',
+      '.cell.today .n{display:inline-flex;align-items:center;justify-content:center;min-width:26px;',
+      '  height:26px;padding:0 8px;background:var(--accent);color:#fff;border-radius:var(--pill);',
+      '  font-weight:800;align-self:flex-start}',
+      '.chip{align-self:flex-start;font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--pill)}',
+      '.chip.task{background:var(--task-t);color:var(--task)}',
+      '.chip.call{background:var(--call-t);color:var(--call)}',
+      '.chip.share{background:var(--share-t);color:var(--share)}',
+      '.chip.lunch{background:var(--lunch-t);color:var(--lunch)}',
+      '.chip.due{background:var(--red);color:#fff}      /* 회신기한 3일 안 */',
+      '',
+      '/* ── 모달 (왼쪽 버튼 라벨은 항상 "닫기") ── */',
+      '.backdrop{position:fixed;inset:0;background:rgba(25,31,40,.45);display:flex;',
+      '  align-items:center;justify-content:center;z-index:50}',
+      '.modal{width:740px;max-width:92vw;max-height:88vh;overflow:auto;background:var(--panel);',
+      '  border-radius:22px;box-shadow:var(--shadow-3)}',
+      '.modal > header{display:flex;align-items:center;padding:20px 24px 14px}',
+      '.modal > header h2{margin:0;font-size:18px;font-weight:700;letter-spacing:-.5px}',
+      '.modal .x{width:30px;height:30px;border-radius:var(--pill);background:var(--panel-2);',
+      '  display:flex;align-items:center;justify-content:center;border:0;cursor:pointer}',
+      '.modal > footer{display:flex;align-items:center;gap:var(--s2);padding:16px 24px 24px;',
+      '  border-top:1px solid var(--line);margin-top:var(--s2)}',
+      '',
+      '/* ── 조각 복붙 흐름 ── */',
+      '.piece-list{display:flex;flex-direction:column;gap:var(--s2)}',
+      '.piece{display:grid;grid-template-columns:26px 1fr auto auto;gap:var(--s3);align-items:center;',
+      '  padding:11px 16px;background:var(--panel-2);border-radius:12px}',
+      '.piece .mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;',
+      '  border-radius:var(--pill);background:var(--line-2);color:#fff;font-size:11px;font-weight:700}',
+      '.piece.done{opacity:.7} .piece.done .mark{background:var(--green)}',
+      '.piece.done .label{color:var(--ink-3);text-decoration:line-through}',
+      '.piece.now{padding:14px 16px;background:var(--accent-t);box-shadow:inset 0 0 0 2px var(--accent)}',
+      '.piece.now .mark{background:var(--accent)}',
+      '.piece.now .label{font-size:14px;font-weight:700}',
+      '.progress{height:8px;background:var(--line);border-radius:var(--pill);overflow:hidden}',
+      '.progress > i{display:block;height:100%;background:var(--accent);border-radius:var(--pill)}',
+      '.slot-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}',
+      '.slot{border-radius:14px;padding:16px 8px;text-align:center;background:var(--panel);',
+      '  border:2px dashed var(--red)}',
+      '.slot.got{border:0;background:var(--green-t)}',
+      '.paste-box{border:2px dashed var(--line-2);border-radius:var(--radius);background:var(--panel-2);',
+      '  padding:18px;min-height:82px;font-size:var(--fs-12);color:var(--ink-3)}',
+      '',
+      '/* ── 안내 문구 (해요체 · 긍정형) ── */',
+      '.empty{padding:22px 14px;text-align:center;font-size:var(--fs-12);color:var(--ink-2);',
+      '  background:var(--panel-2);border-radius:var(--radius-sm)}',
+      '.hint{font-size:var(--fs-12);color:var(--ink-3);line-height:1.7}',
+      '',
+      '/* ── 인쇄: 오늘 화면만 ── */',
+      '@media print{',
+      '  .no-print,.tabs,.btn,.datebar .nav button,.row-edit{display:none !important}',
+      '  body{background:#fff}',
+      '  .card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}',
+      '  .row{background:#fff;border:1px solid #ddd}',
+      '  .today-grid{grid-template-columns:1fr}',
+      '}'
+    ].join('\n');
+
+    return { tasks, shares, contacts, dowNames, cal, exportPieces, importPieces, previewRows, dupes, tokens, writing, typeScale, spacing, ddayLegend, cssCode };
+  }
+}
+
+</script>
+</body>
+</html>

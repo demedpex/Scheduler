@@ -1,0 +1,96 @@
+Option Explicit
+' 업무공유 내보내기 폼
+' 메신저 글자수 제한 때문에 파트로 나눠 한 조각씩 클립보드에 넣어 준다.
+' 사용자는 [1/3 복사] -> 붙여넣기 -> [2/3 복사] -> 붙여넣기 ... 를 반복한다.
+
+Private mParts As Variant
+Private mIdx As Long
+Private mCount As Long
+
+Private Sub UserForm_Initialize()
+    Me.Caption = "업무공유 내보내기"
+    optAll.Caption = "전체"
+    optMine.Caption = "내가 등록한 것만"
+    optRecent.Caption = "최근 N일"
+    optOpen.Caption = "회신기한 미도래분만"
+    optAll.Value = True
+    txtDays.Text = "30"
+    Recalc
+End Sub
+
+Private Sub optAll_Click()
+    Recalc
+End Sub
+
+Private Sub optMine_Click()
+    Recalc
+End Sub
+
+Private Sub optRecent_Click()
+    Recalc
+End Sub
+
+Private Sub optOpen_Click()
+    Recalc
+End Sub
+
+Private Sub txtDays_Change()
+    If optRecent.Value Then Recalc
+End Sub
+
+Private Sub Recalc()
+    Dim scope As Long, days As Long
+    scope = SCOPE_ALL
+    If optMine.Value Then scope = SCOPE_MINE
+    If optRecent.Value Then scope = SCOPE_RECENT
+    If optOpen.Value Then scope = SCOPE_OPEN
+
+    days = 30
+    If IsNumeric(Trim$(txtDays.Text)) Then days = CLng(Val(txtDays.Text))
+    If days < 1 Then days = 1
+
+    mParts = SyncBuildParts(scope, days, mCount)
+    mIdx = 1
+
+    If IsEmpty(mParts) Then
+        lblInfo.Caption = "대상 0건 - 내보낼 것이 없습니다."
+        cmdCopy.Caption = "복사"
+        cmdCopy.Enabled = False
+    Else
+        lblInfo.Caption = "대상 " & mCount & "건 / 조각 " & UBound(mParts) & "개"
+        cmdCopy.Enabled = True
+        If UBound(mParts) = 1 Then
+            cmdCopy.Caption = "클립보드로 복사"
+        Else
+            cmdCopy.Caption = "[1/" & UBound(mParts) & " 복사]"
+        End If
+    End If
+End Sub
+
+Private Sub cmdCopy_Click()
+    Dim total As Long
+    If IsEmpty(mParts) Then Exit Sub
+    total = UBound(mParts)
+
+    If Not ClipSet(CStr(mParts(mIdx))) Then
+        Warn "클립보드에 복사하지 못했습니다. 다시 시도해 주세요."
+        Exit Sub
+    End If
+
+    If mIdx >= total Then
+        If total = 1 Then
+            lblInfo.Caption = "복사했습니다. 메신저 대화창에 붙여넣어 주세요."
+        Else
+            lblInfo.Caption = total & "/" & total & " 조각까지 복사했습니다. 마지막 조각을 붙여넣어 주세요."
+        End If
+        cmdCopy.Enabled = False
+    Else
+        lblInfo.Caption = mIdx & "/" & total & " 조각을 복사했습니다. 붙여넣은 뒤 다시 눌러 주세요."
+        mIdx = mIdx + 1
+        cmdCopy.Caption = "[" & mIdx & "/" & total & " 복사]"
+    End If
+End Sub
+
+Private Sub cmdClose_Click()
+    Unload Me
+End Sub

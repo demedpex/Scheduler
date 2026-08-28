@@ -1,0 +1,47 @@
+Option Explicit
+' 업무 등록/수정 폼
+
+Private mID As String
+
+Private Sub UserForm_Initialize()
+    Dim rec As Variant
+    mID = modMain.EditID
+    If Len(mID) = 0 Then
+        Me.Caption = "업무 등록"
+        txtDate.Text = DateStr(ViewDate())
+        cmdDelete.Visible = False
+    Else
+        Me.Caption = "업무 수정"
+        rec = LoadRecord(TBL_TASK, mID)
+        If Not IsEmpty(rec) Then
+            txtTitle.Text = RecGet(rec, TBL_TASK, "제목")
+            txtContent.Text = RecGet(rec, TBL_TASK, "내용")
+            txtDate.Text = RecGet(rec, TBL_TASK, "날짜")
+            txtTime.Text = RecGet(rec, TBL_TASK, "시간")
+        End If
+        cmdDelete.Visible = True
+    End If
+End Sub
+
+Private Sub cmdOK_Click()
+    Dim msg As String
+    msg = SaveTask(mID, txtTitle.Text, txtContent.Text, txtDate.Text, txtTime.Text)
+    If msg = "-" Then Exit Sub
+    If Len(msg) > 0 Then
+        Warn msg
+        Exit Sub
+    End If
+    Unload Me
+    modMain.RenderAll
+End Sub
+
+Private Sub cmdCancel_Click()
+    Unload Me
+End Sub
+
+Private Sub cmdDelete_Click()
+    If DeleteRecord(TBL_TASK, mID) Then
+        Unload Me
+        modMain.RenderAll
+    End If
+End Sub

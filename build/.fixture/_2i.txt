@@ -1,0 +1,56 @@
+id="2i" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2i</div>
+      <div style="font-size:15px;font-weight:700">헤더 / 탭 — 기본 상태와 미저장 경고 상태</div>
+    </div>
+    <div style="width:1440px;display:flex;flex-direction:column;gap:24px">
+      <div style="background:var(--panel);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-2)">
+        <div style="font-size:11px;color:var(--ink-3);padding:10px 20px;background:var(--panel-2)">기본 — 저장을 마친 상태</div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 24px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-27 (목)</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px">
+<span>●</span>
+<span>14:02에 저장했어요</span>
+</div>
+            <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.32)">파일로 저장하기</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:0 24px 14px">
+          <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">오늘</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">달력</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">설정</div>
+        </div>
+      </div>
+      <div style="background:var(--panel);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-2)">
+        <div style="font-size:11px;color:var(--ink-3);padding:10px 20px;background:var(--panel-2)">경고 — 아직 저장하지 않은 상태: 헤더 위 붉은 띠 + 붉은 알약 + 저장 버튼이 붉게</div>
+        <div style="height:4px;background:var(--red)">
+</div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 24px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-27 (목)</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#fff;background:var(--red);padding:7px 14px;border-radius:999px">
+              <span>●</span>
+<span>저장하지 않은 변경 3건이 있어요</span>
+            </div>
+            <div style="padding:9px 18px;background:var(--red);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(240,68,82,.32)">지금 저장하기</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:0 24px 14px">
+          <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px">오늘</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">달력</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">설정</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ─────────── 2j 토큰/컴포넌트 ─────────── -->
+  <div 

@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AX금융혁신팀 업무스케줄러</title>
+<style>
+/* ============================================================
+   업무 스케줄러 — 단일 파일 앱
+   외부 리소스 일절 없음 (망분리 내부망 전제)
+   ============================================================ */
+:root{
+  --bg:#f4f5f7; --panel:#fff; --line:#dfe1e6; --line2:#ebecf0;
+  --ink:#172b4d; --ink2:#5e6c84; --ink3:#97a0af;
+  --accent:#0052cc; --accent-soft:#e6effc;
+  --red:#de350b; --red-soft:#ffebe6;
+  --orange:#ff8b00; --green:#00875a; --green-soft:#e3fcef;
+  --btn:#f1f2f4; --btn-h:#e4e6ea;
+  --radius:6px;
+  --sat:#0747a6; --sun:#bf2600;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:14px/1.5 "Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- 상단 ---------- */
+header{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:10px 16px; display:flex; align-items:center; gap:12px;
+  position:sticky; top:0; z-index:50;
+}
+header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.2px}
+header .spacer{flex:1}
+.saveState{font-size:12px;color:var(--ink2)}
+.saveState.dirty{color:var(--red);font-weight:700}
+
+.btn{
+  background:var(--btn); border:1px solid transparent; border-radius:var(--radius);
+  padding:6px 12px; font-size:13px; font-weight:600; color:var(--ink);
+}
+.btn:hover{background:var(--btn-h)}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:#0747a6}
+.btn.danger{background:var(--red-soft);color:var(--red)}
+.btn.danger:hover{background:#ffd5cc}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- 탭 ---------- */
+nav.tabs{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:0 16px; display:flex; gap:2px;
+  position:sticky; top:47px; z-index:49;
+}
+nav.tabs button{
+  background:none;border:none;border-bottom:2px solid transparent;
+  padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink2);
+}
+nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+main{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+section[hidden]{display:none}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px}
+.card h2{font-size:13px;margin:0 0 10px;color:var(--ink2);font-weight:700;letter-spacing:.02em}
+
+/* ---------- 날짜 이동 ---------- */
+.datebar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.datebar .today-label{font-size:19px;font-weight:700;min-width:210px;text-align:center}
+.datebar .spacer{flex:1}
+
+/* ---------- 목록 ---------- */
+.rows{display:flex;flex-direction:column}
+.row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 6px;border-bottom:1px solid var(--line2);
+}
+.row:last-child{border-bottom:none}
+.row:hover{background:#fafbfc}
+.row .chk{margin-top:2px;width:16px;height:16px;flex:none;cursor:pointer;accent-color:var(--accent)}
+.row .main{flex:1;min-width:0}
+.row .title{cursor:pointer}
+.row .title:hover{text-decoration:underline;text-decoration-color:var(--ink3)}
+.row .sub{font-size:12px;color:var(--ink2);margin-top:2px}
+.row .acts{display:flex;gap:4px;opacity:0;transition:opacity .12s;flex:none}
+.row:hover .acts{opacity:1}
+.row.done .title,.row.done .sub{text-decoration:line-through;color:var(--ink3)}
+.empty{color:var(--ink3);padding:10px 6px;font-size:13px}
+
+/* ---------- 업무 카드 그리드 ----------
+   업무는 이 앱의 주역이다. 건수가 적으면 크게 펼쳐 보여주고,
+   많아지면 자동으로 조밀해진다 (d1 -> d2 -> d3). */
+.taskgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.taskgrid .row{
+  display:block;border:1px solid var(--line);border-radius:8px;
+  background:var(--panel);position:relative;transition:border-color .12s,box-shadow .12s;
+}
+.taskgrid .row:hover{background:var(--panel);border-color:var(--accent);box-shadow:0 2px 8px rgba(9,30,66,.08)}
+.taskgrid .row .head{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.taskgrid .row .chk{margin:0;flex:none}
+.taskgrid .row .time{margin-left:auto;flex:none}
+.taskgrid .row .title{font-weight:600;line-height:1.35;overflow:hidden;word-break:break-all}
+.taskgrid .row .sub{
+  color:var(--ink2);overflow:hidden;word-break:break-all;
+  display:-webkit-box;-webkit-box-orient:vertical;
+}
+.taskgrid .row .acts{position:absolute;right:8px;bottom:8px}
+
+/* 4건 이하 — 크게 */
+.taskgrid.d1 .row{padding:14px;min-height:136px}
+.taskgrid.d1 .row .title{font-size:15px;max-height:4.1em;-webkit-line-clamp:3}
+.taskgrid.d1 .row .sub{font-size:12.5px;margin-top:6px;max-height:4.7em;-webkit-line-clamp:3}
+
+/* 5~8건 — 중간 */
+.taskgrid.d2 .row{padding:11px;min-height:104px}
+.taskgrid.d2 .row .title{font-size:14px;max-height:2.7em;-webkit-line-clamp:2}
+.taskgrid.d2 .row .sub{font-size:12px;margin-top:4px;max-height:3.1em;-webkit-line-clamp:2}
+
+/* 9건 이상 — 조밀하게 */
+.taskgrid.d3 .row{padding:8px 10px;min-height:0}
+.taskgrid.d3 .row .head{margin-bottom:2px}
+.taskgrid.d3 .row .title{font-size:13px;max-height:2.7em;-webkit-line-clamp:2}
+.taskgrid.d3 .row .sub{display:none}
+.taskgrid.d3 .row .acts{position:static;margin-top:4px}
+
+/* 화면이 좁아지면 열을 줄인다 */
+@media (max-width:1180px){ .taskgrid{grid-template-columns:repeat(3,1fr)} }
+@media (max-width:900px){  .taskgrid{grid-template-columns:repeat(2,1fr)} }
+
+.pill{
+  display:inline-block;padding:1px 7px;border-radius:10px;
+  font-size:11px;font-weight:700;margin-right:6px;
+}
+.pill.gray{background:var(--line2);color:var(--ink2)}
+.pill.red{background:var(--red-soft);color:var(--red)}
+.pill.orange{background:#fff4e5;color:#974f00}
+.pill.blue{background:var(--accent-soft);color:var(--accent)}
+.pill.green{background:var(--green-soft);color:var(--green)}
+.time{font-variant-numeric:tabular-nums;color:var(--ink2);font-size:12px}
+
+/* ---------- 달력 ---------- */
+.calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.calhead div{text-align:center;font-size:12px;font-weight:700;color:var(--ink2);padding:4px 0}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cell{
+  min-height:86px;background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;padding:6px;cursor:pointer;overflow:hidden;
+}
+.cell:hover{border-color:var(--accent)}
+.cell.out{background:#fafbfc;color:var(--ink3)}
+.cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.cell.urgent{background:var(--red-soft)}
+.cell .d{font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.cell.sun .d{color:var(--sun)} .cell.sat .d{color:var(--sat)}
+.cell.out .d{color:var(--ink3)}
+.cell .tag{display:block;font-size:11px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- 설정 ---------- */
+.field{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.field:last-child{border-bottom:none}
+.field label{width:150px;flex:none;font-weight:600;font-size:13px}
+.field .val{flex:1;min-width:200px;color:var(--ink2);font-size:13px}
+input[type=text],input[type=date],input[type=time],input[type=number],textarea,select{
+  border:1px solid var(--line);border-radius:var(--radius);padding:6px 9px;background:#fff;width:100%;
+}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+textarea{resize:vertical;min-height:90px;line-height:1.55}
+
+/* ---------- 모달 ---------- */
+.backdrop{
+  position:fixed;inset:0;background:rgba(9,30,66,.5);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:40px 16px;overflow:auto;z-index:100;
+}
+.modal{background:var(--panel);border-radius:8px;width:100%;max-width:560px;box-shadow:0 8px 32px rgba(9,30,66,.3)}
+.modal.wide{max-width:760px}
+.modal h3{margin:0;padding:16px 20px;font-size:15px;border-bottom:1px solid var(--line)}
+.modal .body{padding:16px 20px}
+.modal .foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.modal .foot .spacer{flex:1}
+.frow{margin-bottom:12px}
+.frow:last-child{margin-bottom:0}
+.frow label{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:4px}
+.frow.two{display:flex;gap:12px}
+.frow.two>div{flex:1}
+.hint{font-size:12px;color:var(--ink2);margin-top:4px}
+.hint.warn{color:var(--red)}
+.hint.ok{color:var(--green)}
+.errbox{background:var(--red-soft);color:var(--red);padding:8px 10px;border-radius:var(--radius);font-size:13px;margin-bottom:12px}
+
+.picklist{border:1px solid var(--line);border-radius:var(--radius);max-height:260px;overflow:auto}
+.picklist .p{padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--line2);display:flex;gap:10px;align-items:baseline}
+.picklist .p:last-child{border-bottom:none}
+.picklist .p:hover{background:var(--accent-soft)}
+.picklist .p b{min-width:80px}
+.picklist .p span{color:var(--ink2);font-size:12px}
+
+.pre{
+  background:#f7f8f9;border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px;font:12px/1.5 Consolas,"D2Coding",monospace;
+  white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto;
+}
+.detailBody{white-space:pre-wrap;word-break:break-word;line-height:1.65}
+
+table.mini{width:100%;border-collapse:collapse;font-size:13px}
+table.mini th,table.mini td{padding:6px 8px;border-bottom:1px solid var(--line2);text-align:left}
+table.mini th{font-size:12px;color:var(--ink2)}
+
+/* ---------- 알림 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:10px 18px;border-radius:20px;
+  font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:opacity .18s;
+}
+#toast.on{opacity:1}
+
+/* ---------- 인쇄 ---------- */
+@media print{
+  header,nav.tabs,.datebar .btn,.row .acts,.card h2 .btn,#toast{display:none!important}
+  body{background:#fff}
+  main{max-width:none;padding:0}
+  .card{border:none;padding:0 0 14px;break-inside:avoid}
+  .row:hover{background:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AX금융혁신팀 업무스케줄러</h1>
+  <span class="saveState" id="saveState"></span>
+  <span class="spacer"></span>
+  <button class="btn primary" id="btnSaveFile">파일로 저장</button>
+</header>
+
+<nav class="tabs">
+  <button data-view="today" class="on">오늘</button>
+  <button data-view="cal">달력</button>
+  <button data-view="setup">설정</button>
+</nav>
+
+<main>
+  <!-- ===== 오늘 ===== -->
+  <section id="view-today">
+    <div class="datebar">
+      <button class="btn" id="dPrev" title="어제">◀</button>
+      <span class="today-label" id="dLabel"></span>
+      <button class="btn" id="dNext" title="내일">▶</button>
+      <button class="btn" id="dToday">오늘로</button>
+      <span class="spacer"></span>
+      <button class="btn" id="btnAddTask">업무 등록</button>
+      <button class="btn" id="btnAddContact">연락 등록</button>
+      <button class="btn" id="btnAddShare">공유 등록</button>
+      <button class="btn" id="btnAddLunch">점심 등록</button>
+    </div>
+
+    <div class="card">
+      <h2>업무</h2>
+      <div class="rows" id="listTask"></div>
+    </div>
+
+    <div class="card">
+      <h2>유관부서 연락하기</h2>
+      <div class="rows" id="listContact"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="display:flex;align-items:center;gap:8px">
+        업무공유
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn sm" id="btnExport">공유 내보내기</button>
+        <button class="btn sm" id="btnImport">공유 가져오기</button>
+      </h2>
+      <div class="rows" id="listShare"></div>
+    </div>
+
+    <div class="card">
+      <h2>점심약속</h2>
+      <div class="rows" id="listLunch"></div>
+    </div>
+  </section>
+
+  <!-- ===== 달력 ===== -->
+  <section id="view-cal" hidden>
+    <div class="datebar">
+      <button class="btn" id="mPrev" title="지난달">◀</button>
+      <span class="today-label" id="mLabel"></span>
+      <button class="btn" id="mNext" title="다음달">▶</button>
+      <button class="btn" id="mToday">이번 달로</button>
+    </div>
+    <div class="calhead">
+      <div style="color:var(--sun)">일</div><div>월</div><div>화</div><div>수</div>
+      <div>목</div><div>금</div><div style="color:var(--sat)">토</div>
+    </div>
+    <div class="calgrid" id="calGrid"></div>
+  </section>
+
+  <!-- ===== 설정 ===== -->
+  <section id="view-setup" hidden>
+    <div class="card">
+      <h2>내 정보</h2>
+      <div class="field">
+        <label for="cfgName">내 이름</label>
+        <div class="val"><input type="text" id="cfgName" placeholder="업무공유에 작성자로 기록됩니다"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>직원 명부</h2>
+      <div class="field">
+        <label>명부 불러오기</label>
+        <div class="val">
+          <input type="file" id="empFile" accept=".xlsx,.xlsm,.csv,.txt">
+          <div class="hint">엑셀(.xlsx) 파일을 그대로 올리면 됩니다. CSV 도 됩니다.<br>
+            첫 줄에 <b>이름, 내선번호, 부서, 직급</b> 머리글이 있으면 순서가 달라도 알아서 찾습니다.
+            부서·직급은 비워도 됩니다.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>현재 명부</label>
+        <div class="val" id="empInfo">-</div>
+      </div>
+      <div class="field">
+        <label>양식 받기</label>
+        <div class="val"><button class="btn sm" id="btnEmpTemplate">명부 양식 CSV 내려받기</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>업무공유</h2>
+      <div class="field">
+        <label for="cfgPartMax">조각당 글자 수</label>
+        <div class="val">
+          <input type="number" id="cfgPartMax" min="200" step="100" style="max-width:140px">
+          <div class="hint">메신저 대화창에 한 번에 붙여넣을 수 있는 글자 수입니다.
+            크게 잡을수록 나눠 보낼 조각이 줄어듭니다. 모르면 1500 그대로 두세요.<br>
+            <span id="partHint"></span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>마지막 동기화</label>
+        <div class="val" id="lastSync">-</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>데이터</h2>
+      <div class="field">
+        <label>보관 중인 건수</label>
+        <div class="val" id="countInfo">-</div>
+      </div>
+      <div class="field">
+        <label>백업</label>
+        <div class="val">
+          <button class="btn sm" id="btnExportJson">데이터만 내보내기 (.json)</button>
+          <button class="btn sm" id="btnImportJson">데이터 가져오기 (.json)</button>
+          <input type="file" id="jsonFile" accept=".json" hidden>
+          <div class="hint">프로그램을 새 버전으로 옮길 때 쓰는 통로입니다.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>병합 기록</label>
+        <div class="val"><button class="btn sm" id="btnShowLog">병합 로그 보기</button></div>
+      </div>
+      <div class="field">
+        <label>전체 삭제</label>
+        <div class="val"><button class="btn sm danger" id="btnWipe">모든 데이터 지우기</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>도움말</h2>
+      <div style="font-size:13px;line-height:1.8;color:var(--ink2)">
+        <b style="color:var(--ink)">저장은 두 겹입니다.</b><br>
+        입력하는 즉시 브라우저에 자동 저장됩니다. 다만 브라우저 저장소는 캐시 삭제나
+        정책 초기화로 날아갈 수 있으니, 하루에 한 번쯤 상단 <b>[파일로 저장]</b>을 눌러
+        HTML 파일을 내려받아 두세요. 그 파일이 곧 프로그램이자 백업본입니다.<br><br>
+
+        <b style="color:var(--ink)">공유되는 건 업무공유뿐입니다.</b><br>
+        업무·연락하기·점심약속은 이 브라우저에만 있습니다.<br><br>
+
+        <b style="color:var(--ink)">엑셀 버전과 호환됩니다.</b><br>
+        공유 텍스트 형식(<code>###WSCH1</code>)이 같아서, 상대가 엑셀 버전을 써도
+        내보내기·가져오기가 그대로 통합니다.
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="modalRoot"></div>
+<div id="toast"></div>
+
+<script id="wsch-data" type="application/json">{}</script>
+<script>
+'use strict';
+/* ============================================================
+   0. 원본 HTML 보관
+      [파일로 저장] 은 이 원본의 데이터 블록만 갈아끼워 새 파일을 만든다.
+      화면을 그리기 전에 잡아 둬야 렌더링 결과가 섞이지 않는다.
+   ============================================================ */
+const PRISTINE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+/* ============================================================
+   1. 유틸 — 엑셀 버전 modUtil.bas 와 같은 규칙
+   ============================================================ */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+const pad = (n, w) => String(n).padStart(w || 2, '0');
+
+function dateStr(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function todayStr(){ return dateStr(new Date()); }
+function nowStamp(){
+  const d = new Date();
+  return dateStr(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+function parseDate(s){
+  s = (s || '').trim();
+  if(!/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+  const d = new Date(+s.slice(0,4), +s.slice(5,7) - 1, +s.slice(8,10));
+  return isNaN(d) ? null : d;
+}
+function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function daysBetween(a, b){ return Math.round((a - b) / 86400000); }
+// 날짜 비교에 쓰는 값은 반드시 자정으로 맞춘다.
+// 시각이 붙어 있으면 daysBetween 이 반올림되면서 D-DAY 가 D+1 로 보이는 등 하루씩 틀어진다.
+function startOfDay(d){ const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+const WD = ['일','월','화','수','목','금','토'];
+
+function normTime(s){
+  s = (s || '').trim();
+  if(!s) return '';
+  let m = s.match(/^(\d{1,2}):(\d{1,2})$/);
+  if(!m) m = s.match(/^(\d{2})(\d{2})$/);
+  if(!m && /^\d{1,2}$/.test(s)) m = [null, s, '0'];
+  if(!m) return null;
+  const h = +m[1], mi = +m[2];
+  if(h < 0 || h > 23 || mi < 0 || mi > 59) return null;
+  return pad(h) + ':' + pad(mi);
+}
+
+// ID: 작성자-yyyymmdd-hhnnss-4자리난수
+// 자동증가 숫자는 PC마다 따로 증가해 반드시 충돌하므로 쓰지 않는다.
+function newId(author){
+  const d = new Date();
+  const key = (author || '사용자').replace(/[|\\\t\r\n]/g, '') || '사용자';
+  return key + '-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate())
+       + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds())
+       + '-' + pad(Math.floor(Math.random() * 10000), 4);
+}
+
+/* --- 이스케이프: 반드시 이 순서 --- */
+function esc(s){
+  return String(s == null ? '' : s)
+    .split('\\').join('\\\\')
+    .split('|').join('\\p')
+    .split('\r').join('')
+    .split('\n').join('\\n')
+    .split('\t').join('\\t');
+}
+// 단순 역순 치환은 "\\p" 같은 입력에서 깨진다. 한 문자씩 훑는다.
+function unesc(s){
+  s = String(s == null ? '' : s);
+  let out = '', i = 0;
+  while(i < s.length){
+    const ch = s[i];
+    if(ch === '\\' && i < s.length - 1){
+      const nx = s[i+1];
+      out += nx === '\\' ? '\\' : nx === 'p' ? '|' : nx === 'n' ? '\n' : nx === 't' ? '\t' : nx;
+      i += 2;
+    } else { out += ch; i++; }
+  }
+  return out;
+}
+// sum = (sum*31 + 문자코드) % 65536 → 4자리 대문자 16진수
+function checksum4(s){
+  let sum = 0;
+  for(let i = 0; i < s.length; i++) sum = (sum * 31 + s.charCodeAt(i)) % 65536;
+  return sum.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function escHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function ellipsis(s, n){
+  s = String(s || '').replace(/[\r\n]+/g, ' ');
+  return s.length <= n ? s : s.slice(0, n) + '…';
+}
+
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+}
+
+async function copyText(text){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch(e){ /* file:// 에서 막히면 아래로 */ }
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){ return false; }
+}
+
+function download(filename, content, mime){
+  const blob = new Blob([content], {type: (mime || 'text/plain') + ';charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+/* ============================================================
+   2. 데이터
+   ============================================================ */
+const LS_KEY = 'wsch.db.v1';
+
+function emptyDB(){
+  return { v:1, savedAt:'', cfg:{}, task:[], contact:[], share:[], lunch:[], emp:[], log:[] };
+}
+let DB = emptyDB();
+let dirty = false;              // 파일로 저장하지 않은 변경이 있는가
+let viewDate = startOfDay(new Date());
+let calMonth = new Date();
+
+function myName(){ return (DB.cfg.name || '').trim() || '사용자'; }
+function alive(list){ return list.filter(r => !r.del); }
+
+function markDirty(){
+  dirty = true;
+  saveLocal();
+  paintSaveState();
+}
+function saveLocal(){
+  try{
+    DB.savedAt = nowStamp();
+    localStorage.setItem(LS_KEY, JSON.stringify(DB));
+  }catch(e){
+    console.warn('로컬 저장 실패', e);
+  }
+}
+function paintSaveState(){
+  const el = $('#saveState');
+  if(dirty){
+    el.textContent = '● 파일로 저장하지 않은 변경 있음';
+    el.className = 'saveState dirty';
+  }else{
+    el.textContent = DB.savedAt ? '자동 저장됨 ' + DB.savedAt.slice(11) : '';
+    el.className = 'saveState';
+  }
+}
+
+function readEmbedded(){
+  try{
+    const raw = $('#wsch-data').textContent.trim();
+    if(!raw || raw === '{}') return null;
+    const o = JSON.parse(raw);
+    return (o && o.v) ? o : null;
+  }catch(e){ return null; }
+}
+function readLocal(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    const o = JSON.parse(raw);
+    return (o && o.v) ? o : null;
+  }catch(e){ return null; }
+}
+function normalizeDB(o){
+  const d = emptyDB();
+  ['task','contact','share','lunch','emp','log'].forEach(k => { if(Array.isArray(o[k])) d[k] = o[k]; });
+  if(o.cfg && typeof o.cfg === 'object') d.cfg = o.cfg;
+  d.savedAt = o.savedAt || '';
+  return d;
+}
+
+/* --- 파일로 저장: 원본 HTML 의 데이터 블록만 갈아끼운다 --- */
+function saveToFile(){
+  const json = JSON.stringify(DB).split('<').join('\\u003c');
+  const open = '<script id="wsch-data" type="application/json">';
+  const close = '<\/script>';
+  const i = PRISTINE.indexOf(open);
+  if(i < 0){ alert('원본 데이터 블록을 찾지 못했습니다.'); return; }
+  const j = PRISTINE.indexOf(close, i);
+  const html = PRISTINE.slice(0, i + open.length) + json + PRISTINE.slice(j);
+
+  const d = new Date();
+  download('업무스케줄러_' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.html', html, 'text/html');
+  dirty = false;
+  paintSaveState();
+  toast('파일을 내려받았습니다. 다음부터 그 파일을 여세요.');
+}
+
+/* ============================================================
+   3. 명부 (엑셀 버전 modEmployee.bas 와 같은 규칙)
+   ============================================================ */
+function empSearch(q){
+  q = (q || '').trim();
+  if(!q) return [];
+  const exact = DB.emp.filter(e => (e.name || '').trim() === q);
+  if(exact.length) return exact;
+  return DB.emp.filter(e => (e.name || '').includes(q));
+}
+// 내선번호는 저장하지 않고 이름+부서로 매번 명부에서 끌어온다.
+// 그래서 명부를 갱신하면 등록된 연락 건의 번호도 자동으로 최신이 된다.
+function empExt(name, dept){
+  name = (name || '').trim(); dept = (dept || '').trim();
+  let hit = DB.emp.find(e => (e.name || '').trim() === name && (e.dept || '').trim() === dept);
+  if(!hit) hit = DB.emp.find(e => (e.name || '').trim() === name);
+  return hit ? (hit.ext || '') : '';
+}
+
+// 머리글 이름 → 우리가 쓰는 4개 항목
+const EMP_HEAD = {
+  '이름':0,'성명':0,'사원명':0,
+  '내선번호':1,'내선':1,'전화번호':1,'연락처':1,'사내번호':1,'전화':1,
+  '부서':2,'부서명':2,'소속':2,'팀':2,
+  '직급':3,'직위':3
+};
+
+// 행 배열(문자열 2차원) → 명부 레코드
+// 머리글이 있으면 이름을 보고 열 위치를 잡고, 없으면 순서대로 본다.
+function rowsToEmp(rows){
+  let map = [0,1,2,3], start = 0;
+  const first = rows[0] || [];
+  if(first.some(c => EMP_HEAD[String(c).trim()] !== undefined)){
+    const m = [-1,-1,-1,-1];
+    first.forEach((c, i) => {
+      const k = EMP_HEAD[String(c).trim()];
+      if(k !== undefined && m[k] < 0) m[k] = i;
+    });
+    map = m.map((v, i) => v < 0 ? i : v);
+    start = 1;
+  }
+  const out = [];
+  for(let i = start; i < rows.length; i++){
+    const f = rows[i] || [];
+    if(f.every(c => !String(c == null ? '' : c).trim())) break;   // 중간 빈 행에서 멈춘다
+    const g = k => String(f[map[k]] == null ? '' : f[map[k]]).trim();
+    const rec = { name:g(0), ext:g(1), dept:g(2), rank:g(3) };
+    if(rec.name) out.push(rec);
+  }
+  return out;
+}
+
+function csvToRows(text){
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const head = lines[0] || '';
+  const sep = head.split('\t').length > head.split(',').length ? '\t' : ',';
+  return lines.map(l => splitCsvLine(l, sep));
+}
+function splitCsvLine(line, sep){
+  const out = []; let cur = '', q = false;
+  for(let i = 0; i < line.length; i++){
+    const ch = line[i];
+    if(q){
+      if(ch === '"'){ if(line[i+1] === '"'){ cur += '"'; i++; } else q = false; }
+      else cur += ch;
+    }else{
+      if(ch === '"') q = true;
+      else if(ch === sep){ out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+  }
+  out.push(cur.trim());
+  return out;
+}
+// BOM 이 있으면 UTF-8, 없으면 CP949(euc-kr) 로 읽는다.
+// 0212 같은 앞자리 0 은 문자열로 다루므로 그대로 보존된다.
+function decodeCsv(buf){
+  const b = new Uint8Array(buf);
+  if(b.length >= 3 && b[0] === 0xEF && b[1] === 0xBB && b[2] === 0xBF){
+    return new TextDecoder('utf-8').decode(b.subarray(3));
+  }
+  try{
+    const t = new TextDecoder('euc-kr', {fatal:false}).decode(b);
+    // euc-kr 로 읽었는데 대체문자가 많으면 utf-8 로 재시도
+    const bad = (t.match(/�/g) || []).length;
+    if(bad > t.length * 0.02) return new TextDecoder('utf-8').decode(b);
+    return t;
+  }catch(e){
+    return new TextDecoder('utf-8').decode(b);
+  }
+}
+
+/* ------------------------------------------------------------
+   엑셀(.xlsx) 직접 읽기
+   .xlsx 는 XML 몇 개를 담은 ZIP 이다. 외부 라이브러리 없이
+   ZIP 을 직접 풀고(브라우저 내장 DecompressionStream) XML 을 읽는다.
+   ------------------------------------------------------------ */
+function zipEntries(buf){
+  const u8 = new Uint8Array(buf);
+  const dv = new DataView(buf);
+  // 끝에서부터 중앙 디렉터리 끝(EOCD) 표식을 찾는다
+  let eocd = -1;
+  for(let i = u8.length - 22; i >= 0 && i >= u8.length - 22 - 65536; i--){
+    if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if(eocd < 0) throw new Error('ZIP 형식이 아닙니다');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+
+  const out = new Map();
+  const dec = new TextDecoder('utf-8');
+  for(let i = 0; i < count; i++){
+    if(dv.getUint32(p, true) !== 0x02014b50) break;
+    const method   = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen  = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const cmtLen   = dv.getUint16(p + 32, true);
+    const localOff = dv.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nameLen));
+
+    // 로컬 헤더에서 실제 데이터 시작 위치를 다시 계산한다
+    const lNameLen  = dv.getUint16(localOff + 26, true);
+    const lExtraLen = dv.getUint16(localOff + 28, true);
+    const dataOff = localOff + 30 + lNameLen + lExtraLen;
+
+    out.set(name, { method, data: u8.subarray(dataOff, dataOff + compSize) });
+    p += 46 + nameLen + extraLen + cmtLen;
+  }
+  return out;
+}
+
+async function unzipText(entry){
+  if(!entry) return '';
+  if(entry.method === 0) return new TextDecoder('utf-8').decode(entry.data);
+  if(entry.method !== 8) throw new Error('지원하지 않는 압축 방식입니다 (' + entry.method + ')');
+  if(typeof DecompressionStream === 'undefined'){
+    throw new Error('이 브라우저는 xlsx 를 직접 읽지 못합니다. 엑셀에서 CSV 로 저장해 주세요.');
+  }
+  const ds = new DecompressionStream('deflate-raw');
+  const stream = new Blob([entry.data]).stream().pipeThrough(ds);
+  return await new Response(stream).text();
+}
+
+function colIndex(ref){                       // "AB12" -> 27
+  let n = 0;
+  for(let i = 0; i < ref.length; i++){
+    const c = ref.charCodeAt(i);
+    if(c < 65 || c > 90) break;
+    n = n * 26 + (c - 64);
+  }
+  return n - 1;
+}
+
+// 태그를 이름만 보고 찾는다.
+// 엑셀은 <row> 로 쓰지만 한셀 등은 <x:row> 처럼 접두사를 붙인다.
+// getElementsByTagName 은 접두사까지 맞아야 해서 한쪽을 통째로 놓친다.
+function tags(node, name){
+  return Array.from(node.getElementsByTagNameNS('*', name));
+}
+
+async function xlsxToRows(buf){
+  const zip = zipEntries(buf);
+
+  // 첫 번째 시트가 실제로 어느 파일인지 관계 파일에서 찾는다
+  let sheetPath = 'xl/worksheets/sheet1.xml';
+  try{
+    const wbXml = await unzipText(zip.get('xl/workbook.xml'));
+    const relXml = await unzipText(zip.get('xl/_rels/workbook.xml.rels'));
+    const wb = new DOMParser().parseFromString(wbXml, 'application/xml');
+    const rel = new DOMParser().parseFromString(relXml, 'application/xml');
+    const s0 = tags(wb, 'sheet')[0];
+    const rid = s0 && (s0.getAttribute('r:id') || s0.getAttribute('id'));
+    if(rid){
+      for(const r of tags(rel, 'Relationship')){
+        if(r.getAttribute('Id') === rid){
+          let t = r.getAttribute('Target') || '';
+          if(t.startsWith('/')) t = t.slice(1);
+          else if(!t.startsWith('xl/')) t = 'xl/' + t;
+          if(zip.has(t)) sheetPath = t;
+          break;
+        }
+      }
+    }
+  }catch(e){ /* 못 찾으면 sheet1.xml 로 간다 */ }
+
+  // 공유 문자열 표
+  let shared = [];
+  if(zip.has('xl/sharedStrings.xml')){
+    const doc = new DOMParser().parseFromString(await unzipText(zip.get('xl/sharedStrings.xml')), 'application/xml');
+    shared = tags(doc, 'si').map(si => tags(si, 't').map(t => t.textContent).join(''));
+  }
+
+  const sheetXml = await unzipText(zip.get(sheetPath));
+  if(!sheetXml) throw new Error('시트를 찾지 못했습니다');
+  const doc = new DOMParser().parseFromString(sheetXml, 'application/xml');
+
+  const rows = [];
+  for(const row of tags(doc, 'row')){
+    const arr = [];
+    for(const c of tags(row, 'c')){
+      const ci = colIndex(c.getAttribute('r') || '');
+      const t = c.getAttribute('t');
+      let v = '';
+      if(t === 's'){
+        const iEl = tags(c, 'v')[0];
+        v = iEl ? (shared[+iEl.textContent] || '') : '';
+      }else if(t === 'inlineStr'){
+        v = tags(c, 't').map(x => x.textContent).join('');
+      }else{
+        const vEl = tags(c, 'v')[0];
+        v = vEl ? vEl.textContent : '';
+      }
+      if(ci >= 0) arr[ci] = v;
+    }
+    for(let i = 0; i < arr.length; i++) if(arr[i] == null) arr[i] = '';
+    rows.push(arr);
+  }
+  return rows;
+}
+
+/* ============================================================
+   4. 동기화 프로토콜 — 엑셀 버전 modSync.bas 와 완전히 동일
+      ###WSCH1|P1/3|N=5###
+      S|ID|문서번호|제목|내용|등록일|회신기한|작성자|수정시각|삭제여부
+      ###END|P1/3|C=A3F1###
+   ============================================================ */
+const PROTO = 'WSCH1';
+const PART_MAX_DEFAULT = 800;      // 사내 메신저 한 번에 붙여넣기 가능한 글자 수
+// 메신저가 한 번에 받아 주는 글자 수. 설정에서 바꾼다.
+// 이 값이 클수록 조각 수가 줄어든다 (압축보다 훨씬 큰 차이를 만든다).
+function partMax(){
+  const v = +(DB.cfg.partMax || PART_MAX_DEFAULT);
+  return (isFinite(v) && v >= 200) ? Math.floor(v) : PART_MAX_DEFAULT;
+}
+const FD = { NOHEADER:0, BADSUM:1, PARTIAL:2, COMPLETE:3, DUPLICATE:4 };
+
+function shareToLine(r){
+  return ['S', r.id, r.docNo, r.title, r.content, r.regDate, r.dueDate,
+          r.author, r.mtime, r.del ? '1' : '0'].map((v, i) => i === 0 ? v : esc(v)).join('|');
+}
+function lineToShare(ln){
+  const f = ln.split('|');
+  if(f.length < 10 || f[0] !== 'S') return null;
+  return {
+    id: unesc(f[1]), docNo: unesc(f[2]), title: unesc(f[3]), content: unesc(f[4]),
+    regDate: unesc(f[5]), dueDate: unesc(f[6]), author: unesc(f[7]),
+    mtime: unesc(f[8]), del: unesc(f[9]) === '1'
+  };
+}
+
+// 레코드 중간에서 자르지 않는다. 한 건이 1500자를 넘으면 그 건만 단독 파트.
+function buildParts(records){
+  const lines = records.map(shareToLine);
+  if(!lines.length) return [];
+  const max = partMax();
+  const parts = []; let cur = []; let len = 0;
+  for(const ln of lines){
+    const add = cur.length === 0 ? ln.length : ln.length + 1;
+    if(cur.length > 0 && len + add > max){ parts.push(cur); cur = [ln]; len = ln.length; }
+    else { cur.push(ln); len += add; }
+  }
+  if(cur.length) parts.push(cur);
+
+  return parts.map((body, i) => {
+    const b = body.join('\n');
+    return '###' + PROTO + '|P' + (i+1) + '/' + parts.length + '|N=' + body.length + '###\r\n'
+         + b.split('\n').join('\r\n') + '\r\n'
+         + '###END|P' + (i+1) + '/' + parts.length + '|C=' + checksum4(b) + '###';
+  });
+}
+
+function scopeFilter(scope, days){
+  const all = DB.share;
+  const today = new Date(); today.setHours(0,0,0,0);
+  // 지난번 내보낸 뒤로 바뀐 것만. 평소에는 이게 1~2건이라 조각도 1개로 끝난다.
+  if(scope === 'changed'){
+    const since = DB.cfg.lastExportAt || '';
+    return all.filter(r => (r.mtime || '') > since);
+  }
+  if(scope === 'mine')   return all.filter(r => (r.author || '') === myName());
+  if(scope === 'recent') return all.filter(r => { const d = parseDate(r.regDate); return d && daysBetween(d, today) >= -days; });
+  if(scope === 'open')   return all.filter(r => { const d = parseDate(r.dueDate); return d && d >= today && !r.del; });
+  return all;
+}
+
+/* --- 수신 버퍼 --- */
+let inbox = {};      // 파트번호 -> 본문
+let inboxTotal = 0;
+function resetInbox(){ inbox = {}; inboxTotal = 0; }
+function inboxCount(){ return Object.keys(inbox).length; }
+function missingList(){
+  const m = [];
+  for(let i = 1; i <= inboxTotal; i++) if(!inbox[i]) m.push(i);
+  return m.join(', ');
+}
+
+function parsePartNo(s){
+  if(s[0] !== 'P') return null;
+  const p = s.indexOf('/');
+  if(p < 0) return null;
+  const a = +s.slice(1, p), b = +s.slice(p + 1);
+  if(!Number.isInteger(a) || !Number.isInteger(b) || a < 1 || b < 1 || a > b) return null;
+  return {no:a, tot:b};
+}
+function parseHeader(ln){
+  if(!ln.endsWith('###')) return null;
+  const f = ln.slice(3, -3).split('|');
+  if(f.length !== 3 || f[0] !== PROTO) return null;
+  const pn = parsePartNo(f[1]);
+  if(!pn || !f[2].startsWith('N=')) return null;
+  const n = +f[2].slice(2);
+  if(!Number.isInteger(n)) return null;
+  return {no:pn.no, tot:pn.tot, n};
+}
+function parseFooter(ln){
+  if(!ln.endsWith('###')) return null;
+  const f = ln.slice(3, -3).split('|');
+  if(f.length !== 3 || f[0] !== 'END') return null;
+  const pn = parsePartNo(f[1]);
+  if(!pn || !f[2].startsWith('C=')) return null;
+  const sum = f[2].slice(2);
+  if(sum.length !== 4) return null;
+  return {no:pn.no, tot:pn.tot, sum};
+}
+
+// 붙여넣은 텍스트를 먹인다. 조각 순서 무관, 같은 조각 재투입 안전(멱등).
+function feed(text){
+  const lines = String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  let inPart = false, body = [], pNo = 0, pTot = 0, pN = 0;
+  let gotAny = false, gotNew = false, badSum = false, truncated = false;
+
+  for(const raw of lines){
+    const ln = raw.trim();
+    if(!ln) continue;
+
+    if(ln.startsWith('###' + PROTO + '|')){
+      if(inPart) truncated = true;
+      const h = parseHeader(ln);
+      if(h){ inPart = true; pNo = h.no; pTot = h.tot; pN = h.n; body = []; gotAny = true; }
+      else inPart = false;
+    }
+    else if(ln.startsWith('###END|')){
+      if(inPart){
+        const ft = parseFooter(ln);
+        if(!ft || ft.no !== pNo || ft.tot !== pTot) badSum = true;
+        else{
+          const b = body.join('\n');
+          if(checksum4(b) !== ft.sum || body.length !== pN) badSum = true;
+          else{
+            if(inboxTotal !== pTot){ resetInbox(); inboxTotal = pTot; }
+            if(!inbox[pNo]){ inbox[pNo] = b; gotNew = true; }
+          }
+        }
+        inPart = false;
+      }
+    }
+    else if(inPart) body.push(ln);
+  }
+  if(inPart) truncated = true;
+
+  if(!gotAny) return {st:FD.NOHEADER, msg:'인식할 수 없는 텍스트입니다. 머리말(###' + PROTO + ')이 포함됐는지 확인하세요.'};
+  if(truncated || badSum) return {st:FD.BADSUM, msg:'복사 중 텍스트가 잘렸거나 변형됐습니다. 다시 복사해 주세요.'};
+  if(inboxTotal > 0 && inboxCount() >= inboxTotal)
+    return {st:FD.COMPLETE, msg:'조각 ' + inboxTotal + '개를 모두 받았습니다. 아래 목록을 확인하고 [반영]을 누르세요.'};
+  if(!gotNew)
+    return {st:FD.DUPLICATE, msg:'이미 받은 조각입니다. ' + inboxCount() + '/' + inboxTotal + ' 보관 중 — 남은 조각(' + missingList() + ')을 이어서 붙여넣으세요.'};
+  return {st:FD.PARTIAL, msg:inboxCount() + '/' + inboxTotal + ' 조각까지 받았습니다. 남은 조각 ' + (inboxTotal - inboxCount()) + '개(' + missingList() + ')를 이어서 붙여넣으세요.'};
+}
+
+// 같은 ID 가 여러 번 나오면 수정시각이 최신인 것만 남긴다.
+function inboxRecords(){
+  const d = {};
+  for(let i = 1; i <= inboxTotal; i++){
+    if(!inbox[i]) continue;
+    for(const ln of inbox[i].split('\n')){
+      if(!ln.trim()) continue;
+      const r = lineToShare(ln);
+      if(!r || !r.id) continue;
+      if(!d[r.id] || r.mtime >= d[r.id].mtime) d[r.id] = r;
+    }
+  }
+  return d;
+}
+
+function mergeVerdict(r){
+  const cur = DB.share.find(x => x.id === r.id);
+  if(!cur) return r.del ? '삭제' : '신규';
+  if(cur.del) return '변화없음';                  // 내가 지운 건 되살리지 않는다
+  if(r.del) return '삭제';                        // 삭제는 수정시각보다 우선
+  if(r.mtime > cur.mtime) return '갱신';
+  return '변화없음';
+}
+
+function syncPreview(){
+  const d = inboxRecords();
+  return Object.keys(d).map(k => ({rec:d[k], verdict:mergeVerdict(d[k])}));
+}
+
+function syncApply(){
+  const d = inboxRecords();
+  let nAdd = 0, nUpd = 0, nSame = 0, nDel = 0;
+  const dupDocNo = new Set();
+  const docIndex = {};
+  alive(DB.share).forEach(r => { if(r.docNo && !docIndex[r.docNo]) docIndex[r.docNo] = r.id; });
+
+  Object.keys(d).forEach(id => {
+    const r = d[id];
+    const i = DB.share.findIndex(x => x.id === id);
+    if(i < 0){
+      DB.share.push(r);
+      if(r.del){ nDel++; addLog('삭제표식수신', id, '', shareSummary(r), r.author); }
+      else { nAdd++; addLog('신규', id, '', shareSummary(r), r.author); }
+    }else{
+      const cur = DB.share[i];
+      if(cur.del) nSame++;
+      else if(r.del){
+        addLog('삭제', id, shareSummary(cur), '', r.author);
+        cur.del = true; cur.mtime = r.mtime; nDel++;
+      }
+      else if(r.mtime > cur.mtime){
+        addLog('갱신', id, shareSummary(cur), shareSummary(r), r.author);
+        DB.share[i] = r; nUpd++;
+      }
+      else nSame++;
+    }
+    if(r.docNo){
+      if(docIndex[r.docNo] && docIndex[r.docNo] !== id) dupDocNo.add(r.docNo);
+      else docIndex[r.docNo] = id;
+    }
+  });
+
+  DB.cfg.lastSync = nowStamp();
+  markDirty();
+  resetInbox();
+
+  let msg = '신규 ' + nAdd + '건, 갱신 ' + nUpd + '건, 변화없음 ' + nSame + '건';
+  if(nDel) msg += ', 삭제 ' + nDel + '건';
+  msg += ' 반영했습니다.';
+  if(dupDocNo.size) msg += '\n\n※ 문서번호가 중복된 건이 있습니다: ' + Array.from(dupDocNo).join(', ')
+                         + '\n   (병합은 그대로 했습니다. 어느 쪽이 맞는지 확인해 주세요.)';
+  return msg;
+}
+
+function shareSummary(r){ return (r.docNo || '') + ' / ' + (r.title || '') + ' / 기한 ' + (r.dueDate || ''); }
+function addLog(action, id, before, after, src){
+  DB.log.unshift({time:nowStamp(), action, id, before:ellipsis(before,200), after:ellipsis(after,200), src:src||''});
+  if(DB.log.length > 500) DB.log.length = 500;
+}
+function docNoOwner(docNo, exceptId){
+  docNo = (docNo || '').trim();
+  if(!docNo) return '';
+  const hit = alive(DB.share).find(r => r.docNo === docNo && r.id !== exceptId);
+  return hit ? (hit.author || '(작성자 없음)') : '';
+}
+
+/* ============================================================
+   5. 모달
+   ============================================================ */
+function closeModal(){ $('#modalRoot').innerHTML = ''; }
+function openModal(html, opts){
+  opts = opts || {};
+  const root = $('#modalRoot');
+  root.innerHTML = '<div class="backdrop"><div class="modal ' + (opts.wide ? 'wide' : '') + '">' + html + '</div></div>';
+  const bd = $('.backdrop', root);
+  bd.addEventListener('mousedown', e => { if(e.target === bd && !opts.sticky) closeModal(); });
+  document.addEventListener('keydown', escOnce);
+  const f = $('[data-focus]', root);
+  if(f) setTimeout(() => f.focus(), 30);
+  return root;
+}
+function escOnce(e){
+  if(e.key === 'Escape'){ closeModal(); document.removeEventListener('keydown', escOnce); }
+}
+function confirmBox(msg){ return window.confirm(msg); }
+
+/* --- 업무 --- */
+function taskModal(id){
+  const r = id ? DB.task.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '업무 수정' : '업무 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow"><label>제목</label><input type="text" id="f_title" data-focus value="' + escHtml(r ? r.title : '') + '"></div>' +
+      '<div class="frow two">' +
+        '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '"></div>' +
+        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
+      '</div>' +
+      '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>');
+
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('task', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const title = $('#f_title').value.trim();
+    const date = $('#f_date').value;
+    const time = normTime($('#f_time').value);
+    if(!title) return showErr('제목을 입력해 주세요.');
+    if(!date)  return showErr('날짜를 입력해 주세요.');
+    if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+    const rec = r || {id:newId(myName()), author:myName(), done:false, doneAt:'', del:false};
+    Object.assign(rec, {title, date, time, content:$('#f_content').value, mtime:nowStamp()});
+    if(!r) DB.task.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+/* --- 연락하기 --- */
+function contactModal(id){
+  const r = id ? DB.contact.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '연락하기 수정' : '연락하기 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow two">' +
+        '<div><label>이름</label><input type="text" id="f_name" data-focus value="' + escHtml(r ? r.name : '') + '" placeholder="일부만 입력해도 찾습니다"></div>' +
+        '<div><label>부서</label><input type="text" id="f_dept" value="' + escHtml(r ? r.dept : '') + '"></div>' +
+      '</div>' +
+      '<div class="frow"><button class="btn sm" id="f_find">명부에서 찾기</button> <span id="f_extinfo" class="hint" style="display:inline"></span></div>' +
+      '<div class="frow"><label>내선 직접입력 (명부에 없을 때만)</label><input type="text" id="f_ext" value="' + escHtml(r ? r.extCache : '') + '"></div>' +
+      '<div class="frow two">' +
+        '<div><label>날짜 (선택)</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '"></div>' +
+        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>');
+
+  function refreshExt(){
+    const ext = empExt($('#f_name').value, $('#f_dept').value);
+    const box = $('#f_extinfo');
+    if(ext){ box.textContent = '명부: 내선 ' + ext; box.className = 'hint ok'; $('#f_ext').disabled = true; }
+    else { box.textContent = '명부에 없음 — 아래에 직접 입력'; box.className = 'hint'; $('#f_ext').disabled = false; }
+  }
+  $('#f_name').oninput = refreshExt;
+  $('#f_dept').oninput = refreshExt;
+  refreshExt();
+
+  // 0건 → 직접 입력 / 1건 → 팝업 없이 자동 세팅 / 2건 이상 → 선택 팝업
+  $('#f_find').onclick = () => {
+    const q = $('#f_name').value.trim();
+    if(!q) return showErr('이름을 먼저 입력해 주세요. 일부만 입력해도 찾습니다.');
+    const hits = empSearch(q);
+    if(!hits.length) return showErr("'" + q + "' 은(는) 명부에 없습니다. 내선번호를 직접 입력해 주세요.");
+    if(hits.length === 1){ applyPick(hits[0]); return; }
+    pickerModal(hits, applyPick);
+  };
+  function applyPick(e){
+    $('#f_name').value = e.name;
+    $('#f_dept').value = e.dept || '';
+    $('#f_ext').value = '';
+    refreshExt();
+    toast(e.name + (e.dept ? ' / ' + e.dept : '') + ' / 내선 ' + (e.ext || '-'));
+  }
+
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('contact', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const name = $('#f_name').value.trim();
+    const dept = $('#f_dept').value.trim();
+    const time = normTime($('#f_time').value);
+    if(!name) return showErr('이름을 입력해 주세요.');
+    if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+    let extCache = $('#f_ext').value.trim();
+    if(empExt(name, dept)) extCache = '';       // 명부가 항상 우선
+    const rec = r || {id:newId(myName()), author:myName(), done:false, del:false};
+    Object.assign(rec, {name, dept, extCache, date:$('#f_date').value, time, mtime:nowStamp()});
+    if(!r) DB.contact.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+/* --- 동명이인 선택 --- */
+function pickerModal(list, cb){
+  const root = document.createElement('div');
+  root.innerHTML =
+    '<div class="backdrop" style="z-index:110"><div class="modal">' +
+    '<h3>같은 이름이 ' + list.length + '명 있습니다</h3>' +
+    '<div class="body"><div class="picklist">' +
+      list.map((e, i) =>
+        '<div class="p" data-i="' + i + '"><b>' + escHtml(e.name) + '</b>' +
+        '<span>' + escHtml(e.dept || '-') + '</span>' +
+        '<span>' + escHtml(e.rank || '-') + '</span>' +
+        '<span style="margin-left:auto">내선 ' + escHtml(e.ext || '-') + '</span></div>'
+      ).join('') +
+    '</div></div>' +
+    '<div class="foot"><span class="spacer"></span><button class="btn" data-cancel>취소</button></div>' +
+    '</div></div>';
+  document.body.appendChild(root);
+  const kill = () => root.remove();
+  $('[data-cancel]', root).onclick = kill;
+  $$('.p', root).forEach(el => el.onclick = () => { kill(); cb(list[+el.dataset.i]); });
+}
+
+/* --- 업무공유 --- */
+function shareModal(id){
+  const r = id ? DB.share.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '업무공유 수정' : '업무공유 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow two">' +
+        '<div><label>문서번호</label><input type="text" id="f_doc" data-focus value="' + escHtml(r ? r.docNo : '') + '"></div>' +
+        '<div><label>&nbsp;</label><div class="hint" id="f_docwarn"></div></div>' +
+      '</div>' +
+      '<div class="frow"><label>제목</label><input type="text" id="f_title" value="' + escHtml(r ? r.title : '') + '"></div>' +
+      '<div class="frow two">' +
+        '<div><label>등록일</label><input type="date" id="f_reg" value="' + escHtml(r ? r.regDate : todayStr()) + '"></div>' +
+        '<div><label>회신기한</label><input type="date" id="f_due" value="' + escHtml(r ? r.dueDate : dateStr(addDays(new Date(), 3))) + '"></div>' +
+      '</div>' +
+      '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
+      '<div class="hint">이 항목만 팀원과 공유됩니다.</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>');
+
+  // 문서번호 중복은 막지 않고 미리 알려만 준다
+  $('#f_doc').oninput = () => {
+    const owner = docNoOwner($('#f_doc').value, r ? r.id : '');
+    const w = $('#f_docwarn');
+    w.textContent = owner ? '이미 등록된 문서번호입니다 (등록자: ' + owner + ')' : '';
+    w.className = owner ? 'hint warn' : 'hint';
+  };
+  $('#f_doc').oninput();
+
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('share', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const docNo = $('#f_doc').value.trim();
+    const title = $('#f_title').value.trim();
+    const due = $('#f_due').value;
+    if(!docNo) return showErr('문서번호를 입력해 주세요.');
+    if(!title) return showErr('제목을 입력해 주세요.');
+    if(!due)   return showErr('회신기한을 입력해 주세요. (필수 항목입니다)');
+    const owner = docNoOwner(docNo, r ? r.id : '');
+    if(owner && !confirmBox('문서번호 ' + docNo + ' 은(는) 이미 등록돼 있습니다.\n(등록자: ' + owner + ')\n\n그래도 등록할까요?')) return;
+    const rec = r || {id:newId(myName()), author:myName(), del:false};
+    Object.assign(rec, {docNo, title, content:$('#f_content').value,
+                        regDate:$('#f_reg').value || todayStr(), dueDate:due, mtime:nowStamp()});
+    if(!r) DB.share.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+/* --- 점심약속 --- */
+function lunchModal(id){
+  const r = id ? DB.lunch.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '점심약속 수정' : '점심약속 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow"><label>대상 이름</label><input type="text" id="f_target" data-focus value="' + escHtml(r ? r.target : '') + '"></div>' +
+      '<div class="frow two">' +
+        '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '"></div>' +
+        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
+      '</div>' +
+      '<div class="frow"><label>장소</label><input type="text" id="f_place" value="' + escHtml(r ? r.place : '') + '"></div>' +
+      '<div class="hint" id="f_same"></div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>');
+
+  function sameDay(){
+    const d = $('#f_date').value;
+    const other = alive(DB.lunch).find(x => x.date === d && x.id !== (r ? r.id : ''));
+    const box = $('#f_same');
+    box.textContent = other ? (d.slice(5).replace('-','/') + '에 ' + other.target + '님과 약속이 있습니다.') : '';
+    box.className = other ? 'hint warn' : 'hint';
+  }
+  $('#f_date').onchange = sameDay;
+  sameDay();
+
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('lunch', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const target = $('#f_target').value.trim();
+    const date = $('#f_date').value;
+    const time = normTime($('#f_time').value);
+    if(!target) return showErr('약속 대상 이름을 입력해 주세요.');
+    if(!date)   return showErr('날짜를 입력해 주세요.');
+    if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+
+    const myId = r ? r.id : '';
+    const dup = alive(DB.lunch).find(x => x.date === date && x.target === target && x.id !== myId);
+    if(dup){
+      if(!confirmBox(date.slice(5).replace('-','/') + '에 ' + target + '님과의 약속이 이미 등록돼 있습니다.\n중복 등록할까요?')) return;
+    }else{
+      const other = alive(DB.lunch).find(x => x.date === date && x.id !== myId);
+      if(other && !confirmBox(date.slice(5).replace('-','/') + '에 ' + other.target + '님과 약속이 있습니다.\n그래도 등록할까요?')) return;
+    }
+    const rec = r || {id:newId(myName()), author:myName(), del:false};
+    Object.assign(rec, {target, date, time, place:$('#f_place').value.trim(), mtime:nowStamp()});
+    if(!r) DB.lunch.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+function showErr(msg){
+  const box = $('#err');
+  if(box) box.innerHTML = '<div class="errbox">' + escHtml(msg) + '</div>';
+  return false;
+}
+function softDelete(kind, id){
+  if(!confirmBox('이 항목을 삭제할까요?\n(공유 건은 다음 내보내기 때 상대방에게도 삭제로 전달됩니다.)')) return false;
+  const r = DB[kind].find(x => x.id === id);
+  if(!r) return false;
+  r.del = true; r.mtime = nowStamp();
+  markDirty();
+  return true;
+}
+
+/* --- 내용 보기 --- */
+function detailModal(title, body){
+  openModal(
+    '<h3>' + escHtml(title) + '</h3>' +
+    '<div class="body"><div class="detailBody">' + escHtml(body) + '</div></div>' +
+    '<div class="foot"><span class="spacer"></span><button class="btn" id="d_close">닫기</button></div>',
+    {wide:true});
+  $('#d_close').onclick = closeModal;
+}
+
+/* ============================================================
+   6. 공유 내보내기 / 가져오기
+   ============================================================ */
+function exportModal(){
+  let parts = [], idx = 0, count = 0, sentAll = false;
+  const hasPrev = !!DB.cfg.lastExportAt;
+
+  openModal(
+    '<h3>업무공유 내보내기</h3>' +
+    '<div class="body">' +
+      '<div class="frow"><label>내보낼 범위</label>' +
+        '<select id="e_scope">' +
+          (hasPrev ? '<option value="changed">지난번 내보낸 뒤 바뀐 것만 (권장)</option>' : '') +
+          '<option value="all">전체</option>' +
+          '<option value="mine">내가 등록한 것만</option>' +
+          '<option value="open">회신기한 미도래분만</option>' +
+          '<option value="recent">최근 N일</option>' +
+        '</select>' +
+        (hasPrev ? '<div class="hint">지난번 내보낸 시각: ' + escHtml(DB.cfg.lastExportAt) + '</div>' : '') +
+      '</div>' +
+      '<div class="frow" id="e_daysrow" hidden><label>N일</label><input type="number" id="e_days" value="30" min="1"></div>' +
+      '<div class="hint" id="e_info" style="margin-bottom:8px"></div>' +
+      '<div id="e_steps" style="margin-bottom:10px"></div>' +
+      '<div class="pre" id="e_prev"></div>' +
+      '<div class="hint">자동 복사가 안 되면 위 상자의 내용을 직접 긁어서 복사하세요.</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn primary" id="e_copy">복사</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="e_close">닫기</button>' +
+    '</div>', {sticky:true});
+
+  // 조각 진행 표시: 보낸 것은 초록, 지금 것은 파랑, 남은 것은 회색
+  function drawSteps(){
+    if(parts.length <= 1){ $('#e_steps').innerHTML = ''; return; }
+    $('#e_steps').innerHTML = parts.map((_, i) =>
+      '<span class="pill ' + (i < idx ? 'green' : i === idx && !sentAll ? 'blue' : 'gray') + '">' +
+      (i < idx ? '✓ ' : '') + (i+1) + '</span>').join('');
+  }
+
+  function recalc(){
+    const scope = $('#e_scope').value;
+    $('#e_daysrow').hidden = scope !== 'recent';
+    const days = Math.max(1, +($('#e_days').value || 30));
+    const recs = scopeFilter(scope, days);
+    count = recs.length;
+    parts = buildParts(recs);
+    idx = 0; sentAll = false;
+
+    if(!parts.length){
+      $('#e_info').textContent = scope === 'changed'
+        ? '지난번 내보낸 뒤로 바뀐 건이 없습니다. 보낼 것이 없습니다.'
+        : '대상 0건 — 내보낼 것이 없습니다.';
+      $('#e_prev').textContent = '';
+      $('#e_copy').disabled = true;
+      $('#e_copy').textContent = '복사';
+    }else{
+      $('#e_info').textContent = '대상 ' + count + '건 · 조각 ' + parts.length + '개'
+        + (parts.length > 1 ? ' — 아래 버튼을 누르고 메신저에 붙여넣기를 ' + parts.length + '번 반복하세요.' : '');
+      $('#e_prev').textContent = parts[0];
+      $('#e_copy').disabled = false;
+      $('#e_copy').textContent = parts.length === 1 ? '복사하기' : '1 / ' + parts.length + ' 복사';
+    }
+    drawSteps();
+  }
+  $('#e_scope').onchange = recalc;
+  $('#e_days').oninput = recalc;
+  recalc();
+
+  $('#e_copy').onclick = async () => {
+    if(!parts.length) return;
+    const ok = await copyText(parts[idx]);
+    if(!ok){
+      $('#e_info').innerHTML = '<span style="color:var(--red)">자동 복사가 막혀 있습니다. 아래 상자의 내용을 직접 선택해 복사해 주세요.</span>';
+      return;
+    }
+    if(idx >= parts.length - 1){
+      idx = parts.length; sentAll = true;
+      $('#e_info').textContent = parts.length === 1
+        ? '복사했습니다. 메신저 대화창에 붙여넣어 주세요.'
+        : '조각 ' + parts.length + '개를 모두 복사했습니다. 마지막 조각을 붙여넣어 주세요.';
+      $('#e_copy').disabled = true;
+      // 여기까지 왔으면 다음부터는 "바뀐 것만" 으로 좁힐 수 있다
+      DB.cfg.lastExportAt = nowStamp();
+      markDirty();
+    }else{
+      idx++;
+      $('#e_info').textContent = idx + '/' + parts.length + ' 조각을 복사했습니다. 붙여넣은 뒤 다시 눌러 주세요.';
+      $('#e_prev').textContent = parts[idx];
+      $('#e_copy').textContent = (idx+1) + ' / ' + parts.length + ' 복사';
+    }
+    drawSteps();
+  };
+  $('#e_close').onclick = closeModal;
+}
+
+function importModal(){
+  resetInbox();
+  openModal(
+    '<h3>업무공유 가져오기</h3>' +
+    '<div class="body">' +
+      '<div class="frow"><label>받은 텍스트를 붙여넣으세요 (Ctrl+V)</label>' +
+        '<textarea id="i_paste" data-focus style="min-height:110px" placeholder="###WSCH1|P1/1|N=1###&#10;S|...&#10;###END|P1/1|C=XXXX###"></textarea></div>' +
+      '<div class="hint" id="i_status">붙여넣는 순간 자동으로 읽습니다. 조각 순서는 상관없습니다.</div>' +
+      '<div id="i_steps" style="margin-top:8px"></div>' +
+      '<div id="i_prevwrap" hidden style="margin-top:12px">' +
+        '<table class="mini"><thead><tr><th style="width:70px">상태</th><th style="width:130px">문서번호</th><th>제목</th></tr></thead>' +
+        '<tbody id="i_prev"></tbody></table>' +
+      '</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn primary" id="i_apply" disabled>반영</button>' +
+      '<button class="btn" id="i_reset">받은 조각 버리기</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="i_close">닫기</button>' +
+    '</div>', {wide:true, sticky:true});
+
+  let busy = false;
+  const ta = $('#i_paste');
+  ta.addEventListener('input', () => {
+    if(busy) return;
+    const t = ta.value;
+    if(!t.trim()) return;
+    const res = feed(t);
+    $('#i_status').textContent = res.msg;
+    $('#i_status').className = (res.st === FD.BADSUM || res.st === FD.NOHEADER) ? 'hint warn' : 'hint';
+    drawSteps();
+
+    if(res.st === FD.COMPLETE){
+      clearBox();
+      fillPreview();
+      $('#i_apply').disabled = !syncPreview().length;
+    }else if(res.st === FD.PARTIAL || res.st === FD.DUPLICATE){
+      clearBox();                       // 다음 조각을 바로 붙여넣게 비운다
+      $('#i_apply').disabled = true;
+    }else{
+      $('#i_apply').disabled = true;    // 형식/체크섬 오류는 내용을 볼 수 있게 지우지 않는다
+    }
+  });
+  function clearBox(){ busy = true; ta.value = ''; busy = false; }
+
+  // 받은 조각 / 남은 조각을 한눈에
+  function drawSteps(){
+    const tot = inboxTotal;
+    if(tot <= 1){ $('#i_steps').innerHTML = ''; return; }
+    let h = '';
+    for(let i = 1; i <= tot; i++){
+      const got = !!inbox[i];
+      h += '<span class="pill ' + (got ? 'green' : 'gray') + '">' + (got ? '✓ ' : '') + i + '</span>';
+    }
+    $('#i_steps').innerHTML = h;
+  }
+  drawSteps();
+
+  function fillPreview(){
+    const rows = syncPreview();
+    $('#i_prevwrap').hidden = !rows.length;
+    const cls = {'신규':'green','갱신':'blue','삭제':'red','변화없음':'gray'};
+    $('#i_prev').innerHTML = rows.map(x =>
+      '<tr><td><span class="pill ' + cls[x.verdict] + '">' + x.verdict + '</span></td>' +
+      '<td>' + escHtml(x.rec.docNo) + '</td><td>' + escHtml(x.rec.title) + '</td></tr>').join('');
+  }
+
+  $('#i_apply').onclick = () => {
+    const msg = syncApply();
+    closeModal();
+    renderAll();
+    alert(msg);
+  };
+  $('#i_reset').onclick = () => {
+    resetInbox(); clearBox(); drawSteps();
+    $('#i_prevwrap').hidden = true;
+    $('#i_apply').disabled = true;
+    $('#i_status').textContent = '받은 조각을 모두 버렸습니다. 처음부터 다시 붙여넣으세요.';
+    $('#i_status').className = 'hint';
+  };
+  $('#i_close').onclick = closeModal;
+}
+
+/* ============================================================
+   7. 화면 그리기
+   ============================================================ */
+function renderAll(){ renderToday(); renderCal(); renderSetup(); paintSaveState(); }
+
+function sortByTime(list){
+  const withT = list.filter(r => r.time).sort((a,b) => a.time < b.time ? -1 : a.time > b.time ? 1 : 0);
+  return withT.concat(list.filter(r => !r.time));
+}
+
+function renderToday(){
+  const d = viewDate, ds = dateStr(d);
+  const isToday = ds === todayStr();
+  const diff = daysBetween(d, startOfDay(new Date()));
+  let suffix = '';
+  if(diff === 0) suffix = ' · 오늘';
+  else if(diff === 1) suffix = ' · 내일';
+  else if(diff === -1) suffix = ' · 어제';
+  else suffix = diff > 0 ? ' · ' + diff + '일 뒤' : ' · ' + (-diff) + '일 전';
+  $('#dLabel').textContent = ds + ' (' + WD[d.getDay()] + ')' + suffix;
+  $('#dToday').disabled = isToday;
+
+  /* 1) 업무 */
+  const tasks = sortByTime(alive(DB.task).filter(r => r.date === ds));
+  $('#listTask').innerHTML = tasks.length ? tasks.map(r =>
+    '<div class="row' + (r.done ? ' done' : '') + '" data-kind="task" data-id="' + escHtml(r.id) + '">' +
+      '<input type="checkbox" class="chk"' + (r.done ? ' checked' : '') + '>' +
+      '<div class="main"><div class="title">' + escHtml(r.title) + '</div>' +
+        (r.content ? '<div class="sub">' + escHtml(ellipsis(r.content, 90)) + '</div>' : '') + '</div>' +
+      (r.time ? '<span class="time">' + escHtml(r.time) + '</span>' : '') +
+      '<div class="acts"><button class="btn sm" data-edit>수정</button></div>' +
+    '</div>').join('') : '<div class="empty">등록된 업무가 없습니다.</div>';
+
+  /* 2) 연락하기 — 날짜를 안 정한 건은 오늘 화면에서만 보여준다 */
+  const contacts = sortByTime(alive(DB.contact).filter(r =>
+    r.date === ds || (!r.date && isToday && !r.done)));
+  $('#listContact').innerHTML = contacts.length ? contacts.map(r => {
+    let ext = empExt(r.name, r.dept) || r.extCache;
+    const label = ext ? '내선 ' + ext : '(명부 없음)';
+    return '<div class="row' + (r.done ? ' done' : '') + '" data-kind="contact" data-id="' + escHtml(r.id) + '">' +
+      '<input type="checkbox" class="chk"' + (r.done ? ' checked' : '') + '>' +
+      '<div class="main"><div class="title">' + escHtml(r.name) + (r.dept ? '<span class="sub" style="display:inline;margin-left:6px">' + escHtml(r.dept) + '</span>' : '') + '</div>' +
+        '<div class="sub">' + escHtml(label) + (r.date ? '' : ' · 날짜 미정') + '</div></div>' +
+      (r.time ? '<span class="time">' + escHtml(r.time) + '</span>' : '') +
+      '<div class="acts"><button class="btn sm" data-edit>수정</button></div>' +
+    '</div>';
+  }).join('') : '<div class="empty">연락할 건이 없습니다.</div>';
+
+  /* 3) 업무공유 — 회신기한이 (조회날짜 - 7일) 이후인 건 */
+  const shares = alive(DB.share)
+    .filter(r => { const due = parseDate(r.dueDate); return !due || daysBetween(due, d) >= -7; })
+    .sort((a,b) => (a.dueDate || '') < (b.dueDate || '') ? -1 : 1);
+  $('#listShare').innerHTML = shares.length ? shares.map(r => {
+    const due = parseDate(r.dueDate);
+    let pill = '';
+    if(due){
+      const dd = daysBetween(due, d);
+      if(dd === 0) pill = '<span class="pill red">D-DAY</span>';
+      else if(dd < 0) pill = '<span class="pill red">D+' + (-dd) + '</span>';
+      else if(dd <= 3) pill = '<span class="pill orange">D-' + dd + '</span>';
+      else pill = '<span class="pill gray">D-' + dd + '</span>';
+    }
+    return '<div class="row" data-kind="share" data-id="' + escHtml(r.id) + '">' +
+      '<div class="main"><div class="title">' + pill + escHtml(r.title) + '</div>' +
+        '<div class="sub">' + escHtml(r.docNo) + ' · 회신기한 ' + escHtml(r.dueDate) + ' · ' + escHtml(r.author || '') + '</div></div>' +
+      '<div class="acts"><button class="btn sm" data-edit>수정</button></div>' +
+    '</div>';
+  }).join('') : '<div class="empty">공유된 업무가 없습니다.</div>';
+
+  /* 4) 점심약속 */
+  const lunches = sortByTime(alive(DB.lunch).filter(r => r.date === ds));
+  $('#listLunch').innerHTML = lunches.length ? lunches.map(r =>
+    '<div class="row" data-kind="lunch" data-id="' + escHtml(r.id) + '">' +
+      '<div class="main"><div class="title">' + escHtml(r.target) + '</div>' +
+        (r.place ? '<div class="sub">' + escHtml(r.place) + '</div>' : '') + '</div>' +
+      (r.time ? '<span class="time">' + escHtml(r.time) + '</span>' : '') +
+      '<div class="acts"><button class="btn sm" data-edit>수정</button></div>' +
+    '</div>').join('') : '<div class="empty">점심약속이 없습니다.</div>';
+}
+
+function renderCal(){
+  const first = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1);
+  const now = new Date();
+  $('#mLabel').textContent = first.getFullYear() + '년 ' + (first.getMonth() + 1) + '월';
+  $('#mToday').disabled = (first.getFullYear() === now.getFullYear() && first.getMonth() === now.getMonth());
+
+  // 각 표를 한 번씩만 순회해 날짜별로 집계한다
+  const cnt = {};
+  const bump = (k, f) => { if(!k) return; (cnt[k] = cnt[k] || {t:0,c:0,s:0,l:0})[f]++; };
+  alive(DB.task).forEach(r => bump(r.date, 't'));
+  alive(DB.contact).forEach(r => bump(r.date, 'c'));
+  alive(DB.lunch).forEach(r => bump(r.date, 'l'));
+  const urgent = {};
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  alive(DB.share).forEach(r => {
+    bump(r.dueDate, 's');
+    const due = parseDate(r.dueDate);
+    if(due && due >= today0 && daysBetween(due, today0) <= 3) urgent[r.dueDate] = true;
+  });
+
+  let cur = addDays(first, -first.getDay());
+  const ts = todayStr();
+  let html = '';
+  for(let i = 0; i < 42; i++){
+    const k = dateStr(cur);
+    const out = cur.getMonth() !== first.getMonth();
+    const c = cnt[k];
+    const l1 = c && (c.t || c.c) ? [c.t ? '업무 ' + c.t : '', c.c ? '연락 ' + c.c : ''].filter(Boolean).join(' · ') : '';
+    const l2 = c && (c.s || c.l) ? [c.s ? '공유 ' + c.s : '', c.l ? '점심 ' + c.l : ''].filter(Boolean).join(' · ') : '';
+    html += '<div class="cell' + (out ? ' out' : '') + (k === ts ? ' today' : '')
+          + (!out && urgent[k] ? ' urgent' : '')
+          + (cur.getDay() === 0 ? ' sun' : cur.getDay() === 6 ? ' sat' : '')
+          + '" data-date="' + k + '">'
+          + '<span class="d">' + cur.getDate() + '</span>'
+          + (l1 ? '<span class="tag">' + l1 + '</span>' : '')
+          + (l2 ? '<span class="tag">' + l2 + '</span>' : '')
+          + '</div>';
+    cur = addDays(cur, 1);
+  }
+  $('#calGrid').innerHTML = html;
+}
+
+function renderSetup(){
+  $('#cfgName').value = DB.cfg.name || '';
+  $('#cfgPartMax').value = partMax();
+  $('#empInfo').textContent = DB.emp.length
+    ? DB.emp.length + '명' + (DB.cfg.empAt ? '  (갱신 ' + DB.cfg.empAt + ')' : '')
+    : '아직 명부를 불러오지 않았습니다.';
+
+  // 지금 데이터로 실제 몇 조각이 되는지 바로 보여 준다
+  const n = alive(DB.share).length;
+  $('#partHint').textContent = n
+    ? '지금 공유 ' + n + '건을 전체로 내보내면 ' + buildParts(DB.share).length + '조각입니다.'
+    : '';
+
+  $('#lastSync').textContent = DB.cfg.lastSync || '(없음)';
+  $('#countInfo').textContent =
+    '업무 ' + alive(DB.task).length + ' · 연락 ' + alive(DB.contact).length +
+    ' · 공유 ' + alive(DB.share).length + ' · 점심 ' + alive(DB.lunch).length;
+}
+
+/* ============================================================
+   8. 이벤트
+   ============================================================ */
+$$('nav.tabs button').forEach(b => b.onclick = () => {
+  $$('nav.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  ['today','cal','setup'].forEach(v => $('#view-' + v).hidden = (v !== b.dataset.view));
+});
+
+$('#dPrev').onclick  = () => { viewDate = addDays(viewDate, -1); renderToday(); };
+$('#dNext').onclick  = () => { viewDate = addDays(viewDate, 1); renderToday(); };
+$('#dToday').onclick = () => { viewDate = startOfDay(new Date()); renderToday(); };
+$('#mPrev').onclick  = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()-1, 1); renderCal(); };
+$('#mNext').onclick  = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1); renderCal(); };
+$('#mToday').onclick = () => { calMonth = new Date(); renderCal(); };
+
+$('#btnAddTask').onclick    = () => taskModal();
+$('#btnAddContact').onclick = () => contactModal();
+$('#btnAddShare').onclick   = () => shareModal();
+$('#btnAddLunch').onclick   = () => lunchModal();
+$('#btnExport').onclick     = exportModal;
+$('#btnImport').onclick     = importModal;
+$('#btnSaveFile').onclick   = saveToFile;
+
+// 달력 칸 클릭 → 그 날짜의 오늘 화면으로
+$('#calGrid').addEventListener('click', e => {
+  const cell = e.target.closest('.cell');
+  if(!cell) return;
+  viewDate = parseDate(cell.dataset.date) || startOfDay(new Date());
+  renderToday();
+  $$('nav.tabs button').forEach(x => x.classList.toggle('on', x.dataset.view === 'today'));
+  ['today','cal','setup'].forEach(v => $('#view-' + v).hidden = (v !== 'today'));
+  window.scrollTo(0, 0);
+});
+
+// 목록: 체크박스 = 완료 토글, 제목 = 내용 보기, 수정 버튼 = 편집
+$('#view-today').addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if(!row) return;
+  const kind = row.dataset.kind, id = row.dataset.id;
+  const rec = DB[kind].find(x => x.id === id);
+  if(!rec) return;
+
+  if(e.target.classList.contains('chk')){
+    rec.done = e.target.checked;
+    if(kind === 'task') rec.doneAt = rec.done ? nowStamp() : '';
+    rec.mtime = nowStamp();
+    markDirty(); renderToday();
+    return;
+  }
+  if(e.target.closest('[data-edit]')){
+    ({task:taskModal, contact:contactModal, share:shareModal, lunch:lunchModal})[kind](id);
+    return;
+  }
+  if(e.target.closest('.title')){
+    if(kind === 'task'){
+      detailModal(rec.title, '날짜: ' + rec.date + (rec.time ? ' ' + rec.time : '') + '\n' + '─'.repeat(24) + '\n' + (rec.content || '(내용 없음)'));
+    }else if(kind === 'share'){
+      detailModal(rec.title,
+        '문서번호: ' + rec.docNo + '\n등록일: ' + rec.regDate + '   회신기한: ' + rec.dueDate +
+        '\n작성자: ' + (rec.author || '') + '\n' + '─'.repeat(24) + '\n' + (rec.content || '(내용 없음)'));
+    }else if(kind === 'contact'){
+      const ext = empExt(rec.name, rec.dept) || rec.extCache || '(명부에 없음)';
+      detailModal(rec.name, '부서: ' + (rec.dept || '-') + '\n내선: ' + ext + '\n일시: ' + (rec.date || '미정') + ' ' + (rec.time || ''));
+    }else{
+      detailModal(rec.target, '날짜: ' + rec.date + ' ' + (rec.time || '') + '\n장소: ' + (rec.place || '-'));
+    }
+  }
+});
+
+$('#cfgName').addEventListener('change', () => { DB.cfg.name = $('#cfgName').value.trim(); markDirty(); });
+$('#cfgPartMax').addEventListener('change', () => {
+  const v = Math.max(200, Math.floor(+$('#cfgPartMax').value || PART_MAX_DEFAULT));
+  DB.cfg.partMax = v;
+  markDirty(); renderSetup();
+});
+
+$('#empFile').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const buf = await f.arrayBuffer();
+    const isXlsx = /\.(xlsx|xlsm)$/i.test(f.name);
+    const rows = isXlsx ? await xlsxToRows(buf) : csvToRows(decodeCsv(buf));
+    const emp = rowsToEmp(rows);
+    if(!emp.length){ alert('명부 파일에서 읽을 행이 없습니다.\n첫 줄이 머리글(이름, 내선번호, ...)인지 확인해 주세요.'); return; }
+    DB.emp = emp;
+    DB.cfg.empAt = nowStamp();
+    DB.cfg.empFile = f.name;
+    markDirty(); renderAll();
+    toast('명부 ' + emp.length + '명을 불러왔습니다.');
+  }catch(err){
+    alert('명부를 읽지 못했습니다.\n\n' + err.message);
+  }
+  e.target.value = '';
+});
+
+$('#btnEmpTemplate').onclick = () => {
+  const csv = '﻿이름,내선번호,부서,직급\r\n홍길동,1234,기획팀,과장\r\n김영희,02-1234-5678,총무팀,대리\r\n';
+  download('직원명부_양식.csv', csv, 'text/csv');
+};
+
+$('#btnExportJson').onclick = () => {
+  const d = new Date();
+  download('스케줄러데이터_' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.json',
+           JSON.stringify(DB, null, 2), 'application/json');
+};
+$('#btnImportJson').onclick = () => $('#jsonFile').click();
+$('#jsonFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const o = JSON.parse(rd.result);
+      if(!o || !o.v) throw new Error('형식이 다릅니다');
+      if(!confirmBox('현재 데이터를 전부 지우고 파일 내용으로 덮어씁니다.\n계속할까요?')) return;
+      DB = normalizeDB(o);
+      markDirty(); renderAll();
+      toast('데이터를 가져왔습니다.');
+    }catch(err){ alert('가져오지 못했습니다: ' + err.message); }
+    e.target.value = '';
+  };
+  rd.readAsText(f, 'utf-8');
+});
+
+$('#btnShowLog').onclick = () => {
+  if(!DB.log.length) return alert('병합 기록이 없습니다.');
+  detailModal('병합 로그 (최근 ' + DB.log.length + '건)',
+    DB.log.map(l => '[' + l.time + '] ' + l.action + '  ' + l.id +
+      (l.before ? '\n   이전: ' + l.before : '') +
+      (l.after ? '\n   이후: ' + l.after : '') +
+      (l.src ? '\n   출처: ' + l.src : '')).join('\n\n'));
+};
+
+$('#btnWipe').onclick = () => {
+  if(!confirmBox('모든 데이터를 지웁니다. 되돌릴 수 없습니다.\n계속할까요?')) return;
+  if(!confirmBox('정말로 지울까요? 파일로 저장해 둔 백업이 없으면 복구할 수 없습니다.')) return;
+  DB = emptyDB();
+  localStorage.removeItem(LS_KEY);
+  dirty = false;
+  renderAll();
+  toast('모두 지웠습니다.');
+};
+
+window.addEventListener('beforeunload', e => {
+  if(!dirty) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+/* ============================================================
+   9. 시작
+   ============================================================ */
+(function boot(){
+  const emb = readEmbedded();
+  const ls = readLocal();
+
+  if(emb && ls && (ls.savedAt || '') > (emb.savedAt || '')){
+    if(confirm('이 브라우저에 더 최근 작업이 있습니다.\n\n  파일 안: ' + (emb.savedAt || '(시각 없음)') +
+               '\n  브라우저: ' + ls.savedAt + '\n\n브라우저 쪽을 불러올까요?')){
+      DB = normalizeDB(ls);
+      dirty = true;
+    } else {
+      DB = normalizeDB(emb);
+    }
+  } else if(emb){
+    DB = normalizeDB(emb);
+  } else if(ls){
+    DB = normalizeDB(ls);
+  } else {
+    DB = emptyDB();
+  }
+
+  if(!DB.cfg.name){
+    const n = prompt('이름을 입력해 주세요.\n업무공유를 주고받을 때 작성자로 기록됩니다.', '');
+    if(n && n.trim()){ DB.cfg.name = n.trim(); saveLocal(); }
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

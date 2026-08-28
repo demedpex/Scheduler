@@ -1,0 +1,11 @@
+Option Explicit
+
+' UserForm 을 만들 수 없는 환경에서 입력 폼 역할을 하는 시트
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    If Target.Cells.Count > 1 Then Exit Sub
+    Application.EnableEvents = False
+    On Error Resume Next
+    modPanel.PanelClick Target.Row, Target.Column
+    On Error GoTo 0
+    Application.EnableEvents = True
+End Sub

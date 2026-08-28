@@ -1,0 +1,4904 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AX금융혁신팀 업무스케줄러</title>
+<style>
+/* ============================================================
+   AX금융혁신팀 업무스케줄러 — 단일 파일 앱
+   외부 리소스 일절 없음 (망분리 내부망 전제)
+   디자인: Claude Design "업무 스케줄러 개편 v2" A안
+   ============================================================ */
+:root{
+  --bg:#f2f4f6; --panel:#ffffff; --panel-2:#f9fafb;
+  --line:#e5e8eb; --line-2:#d1d6db;
+  --ink:#191f28; --ink-2:#4e5968; --ink-3:#8b95a1;
+  --accent:#3182f6; --accent-d:#1b64da; --accent-t:#e8f3ff;
+  /* 카테고리 색 — 지금은 화면에 쓰지 않는다.
+     색은 상태(기한·완료·저장·진행)에만 쓰고, 구분은 위치와 제목으로 한다.
+     나중에 카테고리를 색으로 나누고 싶으면 여기서 다시 꺼내 쓰면 된다. */
+  --task:#3182f6;  --task-t:#e8f3ff;
+  --call:#00b26b;  --call-t:#e4f8ee;
+  /* 공유는 남색. 빨강은 기한(D-DAY·초과) 전용으로 비워 둔다.
+     같은 카드 안에서 빨간 제목 띠와 빨간 D-DAY 배지가 겹치면
+     무엇이 급한지 눈에 안 들어온다. */
+  --share:#4c5bd4; --share-t:#eceefc;
+  --lunch:#ff8a00; --lunch-t:#fff3e0;
+  --trip:#7a5af8;  --trip-t:#f0ecfe;
+  --red:#f04452;   --red-t:#feecee;
+  --orange:#ff8a00;--orange-t:#fff3e0;
+  --green:#00b26b; --green-t:#e4f8ee;
+  --radius:16px; --radius-sm:10px; --pill:999px;
+  --shadow-1:0 1px 2px rgba(25,31,40,.05);
+  --shadow-2:0 6px 18px rgba(25,31,40,.07);
+  --shadow-3:0 20px 48px rgba(25,31,40,.20);
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:14px/1.5 "Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- 상단 ---------- */
+header{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:14px 24px; display:flex; align-items:center; gap:14px;
+  position:sticky; top:0; z-index:50;
+}
+header .logo{
+  width:28px;height:28px;border-radius:9px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:14px;font-weight:800;flex:none;
+}
+header h1{
+  font-size:17px;margin:0;font-weight:700;letter-spacing:-.4px;white-space:nowrap;
+  padding:2px 6px;border-radius:6px;cursor:default;
+}
+header h1:hover{background:var(--panel-2)}
+header h1.editing{
+  background:#fff;cursor:text;outline:2px solid var(--accent);outline-offset:0;
+}
+header .spacer{flex:1}
+
+/* 백업 남은 시간이 위, 저장 상태가 그 밑에 작게 */
+.statusbox{
+  display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+  line-height:1.15;white-space:nowrap;
+}
+.saveState{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;color:var(--green);
+}
+.saveState span:first-child{font-size:9px}
+.saveState.dirty{color:var(--red)}
+
+/* 상단 검색 — 설정의 큰 검색으로 보내는 지름길. 돋보기를 넣어 검색임을 드러낸다. */
+.gsearch{
+  width:230px;padding:8px 13px 8px 34px;border-radius:var(--pill);
+  border:1.5px solid var(--accent);background:var(--accent-t);font-size:13px;font-weight:600;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233182f6' stroke-width='2.6' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 L21 21'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:11px 50%;background-size:15px 15px;
+}
+.gsearch::placeholder{color:var(--accent-d);opacity:.75}
+.gsearch:focus{background-color:#fff;outline:2px solid var(--accent);outline-offset:1px}
+@media (max-width:1240px){ .gsearch{width:160px} }
+
+/* 큰 검색 — 지난 기록을 찾는 유일한 통로다.
+   다른 카드와 같은 크기면 묻히니, 배경째로 다르게 만들어 한눈에 띄게 한다. */
+.bigsearch{
+  padding:26px 24px 22px;
+  background:linear-gradient(180deg, var(--accent-t) 0%, #fff 62%);
+  border-color:var(--accent);
+  box-shadow:0 8px 24px rgba(49,130,246,.16);
+}
+.bigsearch .bs-head{
+  display:flex;align-items:center;gap:9px;
+  font-size:24px;font-weight:800;letter-spacing:-.8px;margin-bottom:6px;color:var(--ink);
+}
+.bigsearch .bs-head svg{width:24px;height:24px;flex:none}
+.bigsearch .bs-sub{font-size:13px;color:var(--ink-2);margin-bottom:17px}
+.bigsearch .bs-row{
+  display:flex;border:3px solid var(--accent);border-radius:16px;overflow:hidden;
+  background:#fff;box-shadow:0 4px 14px rgba(49,130,246,.18);
+}
+.bigsearch .bs-row:focus-within{box-shadow:0 0 0 5px rgba(49,130,246,.2)}
+.bigsearch input{
+  flex:1;border:none;outline:none;padding:18px 20px;font-size:17px;
+  background:transparent;font-weight:600;
+}
+.bigsearch input::placeholder{color:var(--ink-3);font-size:15px;font-weight:400}
+.bigsearch button{
+  border:none;background:var(--accent);color:#fff;
+  padding:0 30px;font-size:16px;font-weight:800;cursor:pointer;
+  display:flex;align-items:center;gap:7px;
+}
+.bigsearch button svg{width:18px;height:18px}
+.bigsearch button:hover{background:var(--accent-d)}
+.bigsearch .bs-count{font-size:13px;color:var(--ink-2);margin:15px 2px 10px;min-height:17px}
+.bigsearch .bs-count b{color:var(--accent-d);font-size:15px}
+.bigsearch .hitbox{max-height:420px;background:#fff}
+.bigsearch .bs-ex{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}
+.bigsearch .bs-ex span{
+  font-size:11.5px;color:var(--ink-2);background:#fff;border:1px solid var(--line-2);
+  padding:4px 11px;border-radius:var(--pill);cursor:pointer;
+}
+.bigsearch .bs-ex span:hover{border-color:var(--accent);color:var(--accent-d)}
+
+/* 검색 결과 / 목록 행 */
+.hitrow{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;
+  border-top:1px solid var(--line);cursor:pointer;
+}
+.hitrow:first-child{border-top:none}
+.hitrow:hover{background:var(--accent-t)}
+.hitrow .kind{
+  font-size:11px;font-weight:800;padding:3px 9px;border-radius:var(--pill);
+  background:var(--panel-2);color:var(--ink-2);flex:none;min-width:52px;text-align:center;
+}
+.hitrow .ttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:13px}
+.hitrow .sub2{font-size:11px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.hitrow.done .ttl{text-decoration:line-through;color:var(--ink-3)}
+.hitbox{border:1px solid var(--line);border-radius:var(--radius-sm);max-height:460px;overflow:auto}
+.filterbar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.filterbar .btn.on{background:var(--accent);border-color:transparent;color:#fff}
+
+/* 다음 백업까지 남은 시간 */
+.countdown{
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  font-size:12px;font-weight:700;padding:6px 13px;border-radius:var(--pill);
+  background:var(--panel-2);color:var(--ink-2);border:1px solid var(--line);
+}
+.countdown .cd-lab{color:var(--ink-3);font-weight:700}
+.countdown .cd-t{font-variant-numeric:tabular-nums;color:var(--ink)}
+.countdown.soon{background:var(--orange-t);border-color:transparent;color:var(--orange)}
+.countdown.soon .cd-lab,.countdown.soon .cd-t{color:var(--orange)}
+.countdown.over{background:var(--red-t);border-color:transparent;color:var(--red)}
+.countdown.over .cd-lab,.countdown.over .cd-t{color:var(--red)}
+.countdown[hidden]{display:none}
+
+.btn{
+  background:var(--panel-2); border:1px solid var(--line);
+  border-radius:var(--pill); padding:8px 16px;
+  font-size:13px; font-weight:700; color:var(--ink-2);
+  transition:background .12s,border-color .12s,color .12s;
+}
+.btn:hover{background:#eef0f3;border-color:var(--line-2);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(49,130,246,.3)}
+.btn.primary:hover{background:var(--accent-d)}
+.btn.danger{background:var(--red-t);border-color:transparent;color:var(--red)}
+.btn.danger:hover{background:#fdd8dc}
+.btn.sm{padding:5px 12px;font-size:12px}
+/* 등록 버튼 — 색으로 구분하지 않고 테두리·굵기로 또렷하게 */
+.btn.add{
+  background:#fff;border:1.5px solid var(--line-2);color:var(--ink);
+  font-weight:800;padding:9px 17px;
+}
+.btn.add:hover{background:var(--ink);border-color:var(--ink);color:#fff}
+/* 영역 머리 오른쪽에 붙는 추가 버튼 */
+.btn.addsm{
+  background:#fff;border:1.5px solid var(--line-2);color:var(--ink);
+  font-weight:800;padding:6px 14px;font-size:12.5px;letter-spacing:0;
+}
+.btn.addsm:hover{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.addsm.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 2px 8px rgba(49,130,246,.28)}
+.btn.addsm.primary:hover{background:var(--accent-d);border-color:transparent;color:#fff}
+/* 업무는 주역이라 추가 버튼도 강조한다 */
+.btn.add.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(49,130,246,.3)}
+.btn.add.primary:hover{background:var(--accent-d);border-color:transparent;color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:disabled:hover{background:var(--panel-2);border-color:var(--line);color:var(--ink-2)}
+
+/* ---------- 탭 ---------- */
+nav.tabs{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:11px 24px; display:flex; gap:6px;
+  position:sticky; top:57px; z-index:49;
+}
+nav.tabs button{
+  background:none;border:none;border-radius:var(--pill);
+  padding:9px 22px;font-size:14px;font-weight:700;color:var(--ink-2);
+  transition:background .12s,color .12s;
+}
+nav.tabs button:hover{background:var(--panel-2);color:var(--ink)}
+nav.tabs button.on{color:#fff;background:var(--accent);box-shadow:0 3px 10px rgba(49,130,246,.3)}
+.tabspacer{flex:1}
+
+/* 화면 모드 전환 — 두 칸짜리 스위치.
+   지금 어느 모드인지, 무엇으로 바꿀 수 있는지가 한눈에 보인다. */
+.modeswitch{
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--panel-2);border:1.5px solid var(--line-2);
+  border-radius:var(--pill);padding:4px;
+}
+.modeswitch button{
+  display:inline-flex;align-items:center;gap:8px;
+  border:none;background:none;border-radius:var(--pill);
+  padding:9px 20px;font-size:13.5px;font-weight:800;color:var(--ink-3);
+  transition:background .14s,color .14s,box-shadow .14s;white-space:nowrap;
+}
+.modeswitch button svg{width:17px;height:17px;flex:none}
+.modeswitch button:hover{color:var(--ink-2)}
+.modeswitch button[data-mode="full"].on{
+  background:#fff;color:var(--ink);box-shadow:0 2px 7px rgba(25,31,40,.13);
+}
+.modeswitch button[data-mode="simple"].on{
+  background:var(--accent);color:#fff;box-shadow:0 3px 11px rgba(49,130,246,.38);
+}
+@media (max-width:1100px){
+  .modeswitch button{padding:9px 13px}
+  .modeswitch button:not(.on) span.lbl{display:none}
+}
+
+/* 자동 저장이 아예 불가능한 환경일 때의 경고 띠 */
+#noStore{
+  background:var(--red);color:#fff;font-size:13px;font-weight:700;
+  padding:11px 24px;line-height:1.6;
+}
+#noStore b{text-decoration:underline}
+
+main{max-width:1440px;margin:0 auto;padding:16px 24px 48px}
+section[hidden]{display:none}
+
+/* 영역 경계를 확실히: 흰 배경 + 테두리 + 그림자 */
+.card{
+  background:var(--panel);border:1px solid var(--line-2);
+  border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden;
+}
+.card.flat{box-shadow:var(--shadow-1)}
+/* 섹션 제목 — 색을 쓰지 않고 크기·굵기·잉크 바·구분선으로 존재감을 준다 */
+.card > h2{
+  display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  margin:0;padding:17px 18px 14px;
+  font-size:21px;font-weight:800;letter-spacing:-.7px;
+  border-bottom:1px solid var(--line);
+}
+.card > h2::before{
+  content:'';width:5px;height:21px;border-radius:3px;
+  background:var(--ink-3);flex:none;
+}
+.card.sub > h2{padding:15px 16px 12px;font-size:17px;letter-spacing:-.5px;gap:9px}
+.card.sub > h2::before{width:4px;height:17px}
+.card > h2 .count{
+  font-size:12px;font-weight:700;color:var(--ink-2);letter-spacing:0;
+  background:#fff;border:1px solid rgba(25,31,40,.09);
+  padding:3px 11px;border-radius:var(--pill);
+}
+
+/* 진행 표시 — "8건 중 2건" 을 한눈에 */
+.prog{
+  display:inline-flex;align-items:center;gap:11px;letter-spacing:0;
+  background:#fff;border:1px solid rgba(25,31,40,.09);
+  padding:5px 13px;border-radius:var(--pill);
+}
+.prog .num{font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap}
+.prog .num b{font-size:20px;font-weight:800;color:var(--accent-d)}
+.prog .num i{font-style:normal;font-size:14px;font-weight:700;color:var(--ink-3);margin-left:1px}
+.prog .lab{font-size:12px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.prog .bar{width:104px;height:8px;background:var(--line);border-radius:var(--pill);overflow:hidden;flex:none}
+.prog .bar i{display:block;height:100%;background:var(--accent);border-radius:var(--pill);transition:width .25s}
+.prog.done-all .num b{color:var(--green)}
+.prog.done-all .bar i{background:var(--green)}
+.prog.none .num b{color:var(--ink-3)}
+@media (max-width:1280px){ .prog .bar{width:72px} }
+
+/* 제목 띠에만 색을 쓴다. 본문(행·칩·버튼)은 중립으로 두어
+   섹션 구분은 되면서 화면이 알록달록해지지는 않게 한다. */
+.card > h2{background:var(--panel-2)}
+.card.c-task  > h2{background:var(--task-t); border-bottom-color:#cfe4fd}
+.card.c-task  > h2::before{background:var(--task)}
+.card.c-share > h2{background:var(--share-t);border-bottom-color:#d3d8f6}
+.card.c-share > h2::before{background:var(--share)}
+.card.c-call  > h2{background:var(--call-t); border-bottom-color:#c9eedd}
+.card.c-call  > h2::before{background:var(--call)}
+.card.c-lunch > h2{background:var(--lunch-t);border-bottom-color:#ffe2b8}
+.card.c-trip  > h2{background:var(--trip-t); border-bottom-color:#ded5fc}
+.card.c-trip  > h2::before{background:var(--trip)}
+.card.c-lunch > h2::before{background:var(--lunch)}
+.card.c-set   > h2{background:var(--accent-t);border-bottom-color:#cfe4fd}
+.card.c-set   > h2::before{background:var(--accent)}
+.card > h2 .spacer{flex:1}
+.card .body{padding:14px}
+/* 카드 아래 도구 줄 — 머리에 버튼을 몰아넣으면 지저분해진다.
+   머리는 [＋ 추가] 하나만 두고 부가 동작은 여기로 내린다. */
+.cardfoot{
+  display:flex;align-items:center;
+  border-top:1px solid var(--line);background:var(--panel-2);padding:3px 6px;
+}
+.cardfoot button{
+  flex:1;min-width:0;background:none;border:none;
+  padding:9px 4px;border-radius:8px;
+  font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap;
+}
+.cardfoot button:hover{background:#fff;color:var(--accent-d);box-shadow:var(--shadow-1)}
+.cardfoot .sep{width:1px;height:13px;background:var(--line-2);flex:none}
+
+/* ---------- 지난 미완료 이월 배너 ----------
+   어제 못 끝낸 업무가 어제 날짜에 남아 시야에서 사라지면 스케줄러 구실을 못 한다. */
+.carry{
+  background:var(--orange-t);border:1px solid #ffe2b8;border-radius:var(--radius);
+  padding:12px 16px;margin-bottom:14px;
+}
+.carry-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.carry-head .spacer{flex:1}
+.carry-head b{font-size:14px;color:#8a4b00}
+.carry-ico{
+  width:20px;height:20px;border-radius:50%;background:var(--orange);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;flex:none;
+}
+.carry-list{margin-top:11px;display:flex;flex-direction:column;gap:6px}
+.carry-row{
+  display:flex;align-items:center;gap:10px;background:#fff;
+  border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;
+}
+.carry-row .when{
+  font-size:11px;font-weight:700;color:var(--orange);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.carry-row .what{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+
+/* ---------- 간편 모드 ----------
+   오늘 할 일에만 집중한다. 한 줄 입력과 업무 목록만 남기고 나머지는 전부 걷어낸다.
+   날짜도 오늘로 고정해서 "어느 날을 보고 있지?" 를 생각할 일이 없게 한다. */
+/* 모드 스위치가 헤더에 있으므로 탭은 통째로 접어도 돌아올 수 있다 */
+body.simple nav.tabs{display:none}
+body.simple header .gsearch,
+body.simple #backupCd{display:none}
+body.simple main{max-width:820px;padding-top:22px}
+body.simple #view-cal,
+body.simple #view-setup{display:none !important}
+body.simple .today-grid{grid-template-columns:1fr}
+body.simple .today-side{display:none}
+body.simple .datebar{display:none}
+body.simple .taskgrid{grid-template-columns:1fr !important}
+body.simple .taskgrid .row{padding:15px 18px 15px 28px}
+body.simple .taskgrid .row .title{font-size:17px;line-height:1.4}
+body.simple .taskgrid .row .sub{font-size:12.5px;-webkit-line-clamp:2;max-height:3.7em;display:-webkit-box}
+body.simple .quickadd input{padding:16px 22px;font-size:16px}
+body.simple #btnSimple{background:var(--accent);border-color:transparent;color:#fff}
+body.simple .card > h2{font-size:20px}
+.simple-note{
+  font-size:12px;color:var(--ink-3);text-align:center;margin-top:18px;
+}
+body:not(.simple) .simple-note{display:none}
+
+/* ---------- 한 줄 빠른 입력 ----------
+   포스트잇은 생각난 순간 바로 적는다. 창 열고 버튼 누르고 모달 띄우면 그걸 못 이긴다.
+   Enter 한 번으로 끝나야 한다. */
+/* 스크롤해도 한 줄 입력은 따라온다. 생각난 순간 바로 적을 수 있어야 한다.
+   헤더·탭 높이는 화면마다 달라지므로 JS 가 실측해 --hdrH / --tabH 로 넣어 준다. */
+.qa-sticky{
+  position:sticky;top:calc(var(--hdrH,58px) + var(--tabH,58px));
+  z-index:40;background:var(--bg);padding:10px 0 2px;margin-bottom:6px;
+}
+.qa-sticky::after{
+  content:'';position:absolute;left:0;right:0;bottom:-10px;height:10px;
+  background:linear-gradient(180deg,rgba(242,244,246,1),rgba(242,244,246,0));
+  pointer-events:none;opacity:0;transition:opacity .15s;
+}
+.qa-sticky.stuck::after{opacity:1}
+
+.quickadd{display:flex;gap:8px}
+.quickadd input{
+  flex:1;padding:13px 18px;font-size:15px;
+  border:1.5px solid var(--line-2);border-radius:var(--pill);background:#fff;
+}
+.quickadd input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.quickadd input::placeholder{color:var(--ink-3);font-size:14px}
+.quickadd .btn{padding:0 22px;flex:none}
+.qahint{
+  font-size:12px;color:var(--ink-3);min-height:18px;margin:6px 0 0 18px;
+}
+.qahint b{color:var(--accent-d);font-weight:800}
+.qahint .tag{
+  display:inline-block;background:var(--accent-t);color:var(--accent-d);
+  padding:1px 8px;border-radius:var(--pill);font-weight:700;margin-right:5px;
+}
+
+/* ---------- 날짜 이동 ---------- */
+.datebar{display:flex;align-items:center;gap:12px;padding:4px 0 16px;flex-wrap:wrap}
+.datebar .nav{
+  display:flex;align-items:center;background:var(--panel);
+  border-radius:var(--pill);box-shadow:var(--shadow-1);overflow:hidden;
+}
+.datebar .nav button{background:none;border:none;padding:9px 14px;font-size:13px;color:var(--ink-2)}
+.datebar .nav button:hover{background:var(--panel-2);color:var(--ink)}
+.datebar .today-label{
+  padding:8px 16px;font-size:17px;font-weight:800;letter-spacing:-.4px;
+  min-width:205px;text-align:center;
+}
+.datebar .progress{
+  display:flex;align-items:center;gap:9px;padding:7px 14px;
+  background:var(--accent-t);border-radius:var(--pill);
+  font-size:12px;color:var(--accent-d);font-weight:700;
+}
+.datebar .progress .bar{width:76px;height:6px;background:#fff;border-radius:var(--pill);overflow:hidden}
+.datebar .progress .bar i{display:block;height:100%;background:var(--accent);border-radius:var(--pill)}
+.datebar .spacer{flex:1}
+
+/* ---------- 오늘 화면 배치 (A안: 주 영역 8 + 보조 열 4) ---------- */
+.today-grid{display:grid;grid-template-columns:8fr 4fr;gap:22px;align-items:start}
+.today-side{display:flex;flex-direction:column;gap:18px}
+#btnSideToggle{display:none}
+@media (max-width:1180px){ .today-grid{grid-template-columns:1fr} }
+
+/* 창을 좁게 띄워 흘끗 보는 용도(Win+숫자 등)일 때.
+   업무만 남기고 보조 열은 접는다. 필요하면 버튼으로 펼친다. */
+@media (max-width:700px){
+  main{padding:10px 12px 32px}
+  header{padding:10px 12px;gap:8px}
+  header h1{font-size:15px}
+  header .gsearch,#backupCd{display:none}
+  .modeswitch button:not(.on){display:none}
+  nav.tabs{padding:8px 12px;top:49px}
+  nav.tabs button{padding:7px 16px;font-size:13px}
+  .today-side{display:none}
+  #view-today.side-open .today-side{display:flex;margin-top:16px}
+  #btnSideToggle{display:inline-flex}
+  .datebar{gap:7px}
+  .datebar .today-label{min-width:0;font-size:15px;padding:8px 10px}
+  .datebar .btn{padding:7px 12px;font-size:12px}
+  .card > h2{font-size:18px;padding:14px 14px 11px}
+  .quickadd input{padding:11px 15px;font-size:14px}
+  .calgrid{height:auto;min-height:0;grid-auto-rows:minmax(74px,auto)}
+  .cell .d{font-size:15px}
+  .cell .tasks{display:none}
+  .setup-grid{grid-template-columns:1fr}
+}
+
+/* ---------- 블록 목록 공통 ---------- */
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{
+  position:relative;border-radius:var(--radius-sm);overflow:hidden;
+  background:var(--panel-2);transition:box-shadow .12s;
+}
+.row .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--line-2)}
+.row.done{opacity:.6}
+.row .chk{width:18px;height:18px;margin:0;flex:none;cursor:pointer;accent-color:var(--accent)}
+/* 클릭 판정을 넉넉히. 16px 짜리는 자꾸 빗나간다 */
+.taskgrid .row .chk,.calllist .row .chk{margin:-6px;padding:6px;box-sizing:content-box}
+.row .title{font-size:13px;font-weight:700;line-height:1.45;letter-spacing:-.2px;cursor:pointer;word-break:break-all}
+.row .title:hover{text-decoration:underline;text-decoration-color:var(--ink-3)}
+.row .sub{font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.45;word-break:break-all}
+.row.done .title{text-decoration:line-through;color:var(--ink-3)}
+.row.done .sub{text-decoration:line-through}
+.row .time{font-size:12px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums;flex:none}
+.row.done .time{color:var(--ink-3);text-decoration:line-through}
+/* 수정 버튼 — 평소엔 숨기고 마우스를 올렸을 때만.
+   대신 나타날 땐 크고 진한 사각 버튼이라 확실히 보인다. */
+.row .acts{opacity:0;transition:opacity .12s;flex:none;pointer-events:none}
+.row:hover .acts{opacity:1;pointer-events:auto}
+.row .acts .btn{
+  padding:8px 20px;font-size:13px;font-weight:800;border-radius:8px;
+  background:var(--ink);color:#fff;border-color:transparent;
+  box-shadow:0 2px 8px rgba(25,31,40,.22);
+}
+.row .acts .btn:hover{background:var(--accent);color:#fff}
+.empty{
+  color:var(--ink-3);padding:22px 6px;font-size:13px;text-align:center;line-height:1.7;
+}
+.empty b{display:block;color:var(--ink-2);font-size:14px;margin-bottom:3px}
+
+/* ---------- 업무 블록 (주역) ----------
+   건수가 적으면 크게 펼쳐 보여주고, 많아지면 자동으로 조밀해진다. */
+.taskgrid{display:grid;gap:8px}
+.taskgrid .row{
+  display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;
+  padding:11px 13px 11px 19px;
+}
+.taskgrid .row:hover{box-shadow:inset 0 0 0 1px var(--line-2)}
+/* 끌어다 놓아 순서 바꾸기 — 왼쪽 바를 손잡이로 */
+.taskgrid .row{cursor:default;padding-left:24px}
+.taskgrid .row .bar{
+  width:13px;background:var(--line);cursor:grab;
+  border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+}
+.taskgrid .row .bar::after{
+  content:'';position:absolute;left:4px;top:50%;transform:translateY(-50%);
+  width:5px;height:20px;opacity:.5;
+  background-image:radial-gradient(circle at 1px 1px, var(--ink-3) 1px, transparent 1.3px);
+  background-size:3px 5px;
+}
+.taskgrid .row .bar:hover{background:var(--line-2)}
+.taskgrid .row .bar:active{cursor:grabbing}
+.taskgrid .row.done .bar{cursor:default}
+.taskgrid .row.done .bar::after{display:none}
+.taskgrid .row.dragging{opacity:.35}
+.taskgrid .row.drop-before{box-shadow:inset 3px 0 0 var(--accent),inset 0 0 0 1px var(--accent)}
+.taskgrid .row.drop-after{box-shadow:inset -3px 0 0 var(--accent),inset 0 0 0 1px var(--accent)}
+.taskgrid.d1 .row.drop-before{box-shadow:inset 0 3px 0 var(--accent),inset 0 0 0 1px var(--accent)}
+.taskgrid.d1 .row.drop-after{box-shadow:inset 0 -3px 0 var(--accent),inset 0 0 0 1px var(--accent)}
+.taskgrid .row .acts{grid-column:1/-1;justify-self:end;margin-top:2px}
+.taskgrid .row .sub{
+  display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;
+  white-space:pre-wrap;   /* 연속 공백과 줄바꿈을 적은 그대로 */
+}
+/* 5건 이하 — 1열로 넓게 펼친다 */
+.taskgrid.d1{grid-template-columns:1fr}
+.taskgrid.d1 .row{padding:15px 18px 15px 28px}
+.taskgrid.d1 .row .title{font-size:16.5px;line-height:1.4}
+.taskgrid.d1 .row .sub{font-size:12.5px;-webkit-line-clamp:2;max-height:3.7em}
+.taskgrid.d1 .row .time{font-size:13px}
+/* 6~12건 — 2열 */
+.taskgrid.d2{grid-template-columns:1fr 1fr}
+.taskgrid.d2 .row{min-height:86px}
+.taskgrid.d2 .row .title{font-size:15px;line-height:1.4}
+.taskgrid.d2 .row .sub{-webkit-line-clamp:2;max-height:3.2em}
+/* 13건 이상 — 2열 유지, 조밀하게 */
+.taskgrid.d3{grid-template-columns:1fr 1fr;gap:7px}
+.taskgrid.d3 .row{padding:9px 11px 9px 24px}
+.taskgrid.d3 .row .title{font-size:13.5px}
+.taskgrid.d3 .row .sub{display:none}
+@media (max-width:820px){ .taskgrid.d2,.taskgrid.d3{grid-template-columns:1fr} }
+
+/* ---------- 업무공유 블록 ---------- */
+.sharelist .row{
+  display:grid;grid-template-columns:auto auto 1fr;gap:9px;align-items:start;
+  padding:11px 13px 11px 19px;box-shadow:inset 4px 0 0 var(--line-2);
+}
+/* 내가 회신했는지 표시. 이 값은 내 컴퓨터에만 있고 공유되지 않는다. */
+.repbtn{
+  flex:none;width:19px;height:19px;margin-top:1px;border-radius:5px;
+  border:1.5px solid var(--line-2);background:#fff;
+  font-size:11px;font-weight:800;color:#fff;line-height:1;padding:0;
+}
+.repbtn:hover{border-color:var(--green)}
+.repbtn.on{background:var(--green);border-color:var(--green)}
+.sharelist .row.due-now{background:var(--red-t);box-shadow:inset 4px 0 0 var(--red)}
+.sharelist .row.due-over{box-shadow:inset 4px 0 0 var(--red)}
+.sharelist .row.due-soon{box-shadow:inset 4px 0 0 var(--orange)}
+.sharelist .row .acts{position:absolute;right:10px;bottom:9px}
+/* 회신 방식 꼬리표 — 문서인지 메일인지 제목 앞에서 바로 보이게 */
+.sharelist .rt{
+  display:inline-block;font-size:10.5px;font-weight:800;
+  padding:2px 7px;border-radius:5px;margin-right:6px;vertical-align:1px;
+  background:var(--panel-2);color:var(--ink-2);border:1px solid var(--line-2);
+}
+.sharelist .rt-mail{background:var(--accent-t);color:var(--accent-d);border-color:transparent}
+/* 한 줄에 몰아넣으니 안 읽혀서 여러 줄로 나눈다. 회신기한이 제일 중요하다. */
+.sharelist .smeta{
+  display:flex;flex-direction:column;gap:2px;margin-top:5px;
+  font-size:11.5px;color:var(--ink-2);line-height:1.5;
+}
+.sharelist .smeta i{
+  font-style:normal;display:inline-block;min-width:54px;
+  color:var(--ink-3);font-weight:700;
+}
+.sharelist .smeta .due{
+  font-size:13px;font-weight:800;color:var(--ink);
+  margin:1px 0;font-variant-numeric:tabular-nums;
+}
+.sharelist .smeta .due i{color:var(--ink-3);font-size:11.5px;font-weight:700;vertical-align:1px}
+.sharelist .row.due-now .smeta .due,
+.sharelist .row.due-over .smeta .due{color:var(--red)}
+.sharelist .row.due-soon .smeta .due{color:var(--orange)}
+
+/* ---------- 연락 / 점심 블록 ---------- */
+.calllist .row{
+  display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;
+  padding:11px 13px 11px 19px;box-shadow:inset 4px 0 0 var(--line-2);
+}
+.calllist .row .time{color:var(--ink-3)}
+.calllist .ext{font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.calllist .ext.missing{color:var(--ink-2);font-weight:700}
+/* 동명이인이라 번호를 확정 못 한 상태 — 눌러서 부서를 고르게 한다 */
+.calllist .ext.warn{
+  color:var(--orange);font-weight:800;cursor:pointer;
+  background:var(--orange-t);padding:2px 8px;border-radius:var(--pill);
+}
+.calllist .ext.warn:hover{background:#ffe2b8}
+
+.lunchlist .row{
+  display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;
+  padding:11px 13px 11px 19px;box-shadow:inset 4px 0 0 var(--line-2);
+}
+.lunchlist .row .time{color:var(--ink-2)}
+.lunchlist .place{font-size:12px;color:var(--ink-3)}
+/* ---- 다가올 점심 약속 ----
+   오늘 것과 확실히 나뉘되, 언제·누구·어디가 두 줄로 정리돼 읽히게 */
+.lunchlist .soonwrap{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.lunchlist .soonhead{
+  display:flex;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:800;color:var(--ink-2);
+  letter-spacing:-.1px;margin:0 0 9px 1px;
+}
+.lunchlist .soonhead::before{
+  content:'';width:3px;height:12px;border-radius:2px;background:var(--lunch);flex:none;
+}
+.lunchlist .row.soon{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:"dd when time" "dd who who";
+  gap:3px 11px;align-items:center;
+  background:#fff;border:1px solid var(--line);box-shadow:none;
+  border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:7px;
+  transition:border-color .12s,box-shadow .12s;
+}
+.lunchlist .row.soon:last-child{margin-bottom:0}
+.lunchlist .row.soon:hover{border-color:var(--lunch);box-shadow:var(--shadow-1)}
+.lunchlist .row.soon .dd{
+  grid-area:dd;align-self:center;
+  min-width:42px;text-align:center;
+  font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--ink-2);background:var(--panel-2);
+  border-radius:8px;padding:7px 8px;
+}
+.lunchlist .row.soon .dd.near{background:var(--lunch-t);color:var(--lunch)}
+.lunchlist .row.soon .when{
+  grid-area:when;font-size:12px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.lunchlist .row.soon .when b{color:var(--ink);font-weight:800;margin-right:2px}
+.lunchlist .row.soon .time{
+  grid-area:time;font-size:12.5px;font-weight:800;color:var(--ink-2);
+}
+.lunchlist .row.soon .who{
+  grid-area:who;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+}
+.lunchlist .row.soon .who b{font-size:13.5px;font-weight:700;color:var(--ink)}
+.lunchlist .row.soon .who em{font-style:normal;font-size:12px;color:var(--ink-3)}
+
+/* ---------- 알약 / 배지 ---------- */
+.pill{
+  display:inline-block;min-width:54px;text-align:center;
+  font-size:11px;font-weight:700;padding:4px 9px;border-radius:var(--pill);
+  font-variant-numeric:tabular-nums;
+}
+.pill.gray{background:var(--panel-2);color:var(--ink-2)}
+.pill.red{background:var(--red-t);color:var(--red);font-weight:800}
+.pill.red-solid{background:var(--red);color:#fff;font-weight:800}
+.pill.orange{background:var(--orange-t);color:var(--orange)}
+.pill.blue{background:var(--accent-t);color:var(--accent-d)}
+.pill.green{background:var(--green-t);color:var(--green)}
+.pill.step{min-width:34px;margin-right:5px}
+
+/* ---------- 달력 ----------
+   숫자를 크게, 칸은 화면 높이를 채우도록. */
+.calhead{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
+.calhead div{
+  text-align:center;font-size:12px;font-weight:700;color:var(--ink-3);padding:10px 0 12px;
+}
+.calhead div.sun{color:var(--red)} .calhead div.sat{color:#3b6fb6}
+.calgrid{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:5px;
+  grid-auto-rows:1fr;
+  height:calc(100vh - 268px); min-height:540px;
+}
+.cell{
+  display:flex;flex-direction:column;gap:4px;padding:10px 11px;
+  border-radius:12px;background:var(--panel-2);cursor:pointer;overflow:hidden;
+  transition:box-shadow .12s,background .12s;
+}
+.cell:hover{background:#fff;box-shadow:inset 0 0 0 2px var(--line-2)}
+.cell.out{background:#fcfdfe;opacity:.55}
+.cell.today{background:#fff;box-shadow:inset 0 0 0 2px var(--accent)}
+.cell .d{
+  font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;
+  line-height:1.15;padding:1px 2px;align-self:flex-start;color:var(--ink);
+}
+.cell.sun .d{color:var(--red)} .cell.sat .d{color:#3b6fb6}
+.cell.out .d{color:var(--ink-3);font-weight:700}
+.cell.today .d{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:34px;height:34px;padding:0 9px;
+  background:var(--accent);color:#fff;border-radius:var(--pill);
+}
+/* 업무 제목을 칸 안에 직접 띄운다. 건수만 보는 것보다 훨씬 쓸모 있다. */
+.cell .tasks{display:flex;flex-direction:column;gap:2px;flex:1;min-height:0;overflow:hidden}
+.cell .t{
+  font-size:12px;line-height:1.35;color:var(--ink);font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding-left:7px;position:relative;
+}
+.cell .t::before{
+  content:'';position:absolute;left:0;top:6px;
+  width:3px;height:3px;border-radius:50%;background:var(--ink-3);
+}
+.cell .t.done{color:var(--ink-3);text-decoration:line-through;font-weight:400}
+.cell .t.done::before{background:var(--line-2)}
+/* 보조 정보는 칸 맨 아래에 조용히 */
+.cell .meta{
+  flex:none;display:flex;gap:5px;flex-wrap:wrap;align-items:center;
+  font-size:11px;color:var(--ink-3);
+}
+.cell .meta .more{font-weight:800;color:var(--ink-2)}
+.cell .chip{
+  font-size:11px;padding:3px 9px;border-radius:var(--pill);font-weight:700;
+  align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* 건수는 중립. 색은 기한 임박(상태)에만 쓴다. */
+.cell .chip.task,.cell .chip.call,.cell .chip.share,.cell .chip.lunch{
+  background:#fff;color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line);
+}
+.cell.today .chip.task,.cell.today .chip.call,
+.cell.today .chip.share,.cell.today .chip.lunch{background:var(--panel-2)}
+.cell .chip.due{background:var(--red);color:#fff;box-shadow:none}
+@media (max-height:820px){ .calgrid{height:calc(100vh - 250px);min-height:440px} .cell .d{font-size:17px} }
+
+/* ---------- 설정 ---------- */
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+/* 명부가 없으면 연락하기가 반쪽이 된다. 다른 카드보다 위에, 전폭으로. */
+#setupEmpSlot{margin-bottom:16px}
+#setupEmpSlot .card > h2{font-size:22px}
+#setupEmpSlot .field label{width:170px}
+@media (max-width:1000px){ .setup-grid{grid-template-columns:1fr} }
+.field{
+  display:flex;align-items:center;gap:14px;padding:11px 18px;
+  border-top:1px solid var(--line);flex-wrap:wrap;
+}
+.card .body > .field:first-child{border-top:none}
+.field label{width:150px;flex:none;font-weight:700;font-size:13px}
+.field .val{flex:1;min-width:220px;color:var(--ink-2);font-size:13px}
+.card .body.fields{padding:0 0 6px}
+.card .body.fields > .field:first-child{border-top:none}
+input[type=text],input[type=date],input[type=time],input[type=number],textarea,select{
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:9px 12px;background:#fff;width:100%;
+}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+textarea{resize:vertical;min-height:96px;line-height:1.6}
+/* 내용이 주인공인 폼(업무·공유)은 넓게, 입력칸도 크게 */
+.modal.wide textarea{min-height:170px}
+
+/* ---------- 모달 ---------- */
+.backdrop{
+  position:fixed;inset:0;background:rgba(25,31,40,.45);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:56px 16px;overflow:auto;z-index:100;
+}
+.modal{
+  background:var(--panel);border-radius:20px;width:100%;max-width:560px;
+  box-shadow:var(--shadow-3);overflow:hidden;
+  /* 내용이 길어도 [저장]·[닫기] 가 화면 밖으로 밀려나지 않게 */
+  max-height:calc(100vh - 112px);display:flex;flex-direction:column;
+}
+.modal.wide{max-width:780px}
+.modal h3{margin:0;padding:20px 24px 16px;font-size:17px;font-weight:700;letter-spacing:-.4px;flex:none}
+.modal .body{padding:0 24px 4px;overflow:auto;flex:1 1 auto;min-height:0}
+.modal .foot{padding:16px 24px 20px;display:flex;gap:8px;align-items:center;flex:none;border-top:1px solid var(--line);background:var(--panel)}
+.modal .foot .spacer{flex:1}
+.frow{margin-bottom:14px}
+.frow:last-child{margin-bottom:0}
+.frow label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
+.frow.two{display:flex;gap:12px}
+.frow.two>div{flex:1}
+.quickdate{display:flex;gap:5px;margin-top:6px}
+.quickdate .btn{padding:4px 10px;font-size:11.5px}
+/* 둘 중 하나 고르는 버튼 묶음 */
+.segbtns{display:flex;gap:3px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:3px}
+.segbtns button{
+  flex:1;background:none;border:none;border-radius:7px;padding:8px 6px;
+  font-size:13px;font-weight:700;color:var(--ink-3);white-space:nowrap;
+}
+.segbtns button:hover{color:var(--ink-2)}
+.segbtns button.on{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(49,130,246,.28)}
+.hint{font-size:12px;color:var(--ink-3);margin-top:5px;line-height:1.55}
+.hint.warn{color:var(--red);font-weight:700}
+.hint.ok{color:var(--green);font-weight:700}
+.errbox{
+  background:var(--red-t);color:var(--red);font-weight:700;
+  padding:11px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;
+}
+/* 안내 상자 — 오류가 아니라 다음에 할 일을 알려줄 때 */
+.notebox{
+  background:var(--accent-t);color:var(--accent-d);
+  padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;line-height:1.6;
+  margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.notebox .spacer{flex:1}
+.notebox b{font-weight:800}
+.guide-list{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--ink-2);line-height:1.9}
+.checkline{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin-top:16px}
+.checkline input{width:15px;height:15px;accent-color:var(--accent)}
+
+/* 자주 쓰는 연락처 알약 */
+.favlist{display:flex;flex-wrap:wrap;gap:6px}
+.favchip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:var(--pill);
+  padding:6px 8px 6px 13px;font-size:12px;cursor:pointer;
+}
+.favchip:hover{background:var(--accent-t);border-color:var(--accent)}
+.favchip b{font-weight:700}
+.favchip em{font-style:normal;color:var(--ink-3)}
+.favchip .x{
+  color:var(--ink-3);font-weight:800;line-height:1;
+  padding:2px 5px;border-radius:var(--pill);
+}
+.favchip .x:hover{color:#fff;background:var(--red)}
+
+.picklist{border:1px solid var(--line);border-radius:var(--radius-sm);max-height:280px;overflow:auto}
+.picklist .p{
+  padding:12px 14px;cursor:pointer;border-top:1px solid var(--line);
+  display:flex;gap:10px;align-items:baseline;
+}
+.picklist .p:first-child{border-top:none}
+.picklist .p:hover{background:var(--accent-t)}
+.picklist .p b{min-width:84px;font-size:13px}
+.picklist .p span{color:var(--ink-3);font-size:12px}
+
+.pre{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:12px;font:12px/1.5 Consolas,"D2Coding",monospace;
+  white-space:pre-wrap;word-break:break-all;max-height:170px;overflow:auto;color:var(--ink-2);
+}
+/* 사람이 읽는 글(메일 본문, 출장 공유)은 낱말이 중간에서 안 잘리게 */
+.pre.prose{
+  font:13.5px/1.85 inherit;word-break:keep-all;overflow-wrap:break-word;
+  max-height:320px;color:var(--ink);background:#fff;
+}
+.detailBody{white-space:pre-wrap;word-break:break-word;line-height:1.7;font-size:13.5px}
+
+table.mini{width:100%;border-collapse:collapse;font-size:13px}
+table.mini th,table.mini td{padding:8px 10px;border-top:1px solid var(--line);text-align:left}
+table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weight:700}
+
+
+/* ---------- 출장 ---------- */
+.segbtns.multi{flex-wrap:wrap}
+.segbtns.multi button{flex:0 0 auto;padding:8px 14px}
+.segetc{margin-top:7px}
+.lhint{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:5px}
+.mcount{font-size:11px;font-weight:800;color:var(--ink-3);margin-left:5px}
+.memadd{display:flex;gap:7px}
+.memadd input{flex:1}
+.memadd .btn{flex:none;padding:0 16px}
+.memlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.memchip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--trip-t);color:var(--ink);border-radius:var(--pill);
+  padding:5px 7px 5px 12px;font-size:12.5px;font-weight:700;
+}
+.memchip .x{
+  color:var(--ink-3);font-weight:800;line-height:1;
+  padding:2px 5px;border-radius:var(--pill);cursor:pointer;
+}
+.memchip .x:hover{color:#fff;background:var(--red)}
+
+.triplist .row{
+  display:block;position:relative;padding:11px 13px 11px 19px;
+  box-shadow:inset 4px 0 0 var(--trip);
+}
+.triplist .row .acts{position:absolute;right:10px;top:9px}
+.triplist .row .title{padding-right:62px}
+.triplist .tmeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;align-items:center}
+.triplist .tmeta span{
+  font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--pill);
+}
+.triplist .place{background:var(--trip-t);color:var(--trip)}
+.triplist .via{background:var(--panel-2);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}
+.triplist .at{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);font-variant-numeric:tabular-nums}
+.triplist .tmem{font-size:11.5px;color:var(--ink-3);margin-top:5px}
+.triplist .tmem em{font-style:normal;font-weight:800;color:var(--ink-2)}
+
+/* ---- 다가올 출장 ---- 점심약속과 같은 모양으로 눈이 익게 */
+.triplist .soonwrap{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.triplist .soonhead{
+  display:flex;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:800;color:var(--ink-2);
+  letter-spacing:-.1px;margin:0 0 9px 1px;
+}
+.triplist .soonhead::before{
+  content:'';width:3px;height:12px;border-radius:2px;background:var(--trip);flex:none;
+}
+.triplist .row.soon{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:"dd when time" "dd who who";
+  gap:3px 11px;align-items:center;
+  background:#fff;border:1px solid var(--line);box-shadow:none;
+  border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:7px;
+  transition:border-color .12s,box-shadow .12s;
+}
+.triplist .row.soon:last-child{margin-bottom:0}
+.triplist .row.soon:hover{border-color:var(--trip);box-shadow:var(--shadow-1)}
+.triplist .row.soon .dd{
+  grid-area:dd;align-self:center;
+  min-width:42px;text-align:center;
+  font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--ink-2);background:var(--panel-2);
+  border-radius:8px;padding:7px 8px;
+}
+.triplist .row.soon .dd.near{background:var(--trip-t);color:var(--trip)}
+.triplist .row.soon .when{
+  grid-area:when;font-size:12px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.triplist .row.soon .when b{color:var(--ink);font-weight:800;margin-right:2px}
+.triplist .row.soon .time{grid-area:time;font-size:12.5px;font-weight:800;color:var(--ink-2)}
+.triplist .row.soon .who{
+  grid-area:who;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+}
+.triplist .row.soon .who b{font-size:13.5px;font-weight:700;color:var(--ink);padding-right:0}
+.triplist .row.soon .who em{font-style:normal;font-size:12px;color:var(--ink-3)}
+
+/* ---------- 두 갈래 고르기 ---------- */
+.pick2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){ .pick2{grid-template-columns:1fr} }
+.pickcard{
+  text-align:center;background:var(--panel-2);border:0;cursor:pointer;
+  border-radius:var(--r);padding:22px 16px 20px;
+  box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .12s,background .12s;
+}
+.pickcard:hover{background:var(--panel);box-shadow:inset 0 0 0 2px var(--accent),var(--shadow-2)}
+.pickcard:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}
+.pickcard .ic{
+  width:44px;height:44px;margin:0 auto 11px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--accent-t);color:var(--accent-d);font-size:20px;line-height:1;
+}
+.pickcard .nm{font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+.pickcard .ds{font-size:12.5px;line-height:1.7;color:var(--ink-3);margin-top:7px}
+.pickcard:hover .nm{color:var(--accent-d)}
+.pickcard:hover .ic{background:var(--accent);color:#fff}
+.lead{text-align:center;font-size:13.5px;color:var(--ink-2);margin:2px 0 16px}
+
+/* ---------- 알림 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:12px 22px;border-radius:var(--pill);
+  font-size:13px;font-weight:700;z-index:200;opacity:0;pointer-events:none;
+  transition:opacity .18s;box-shadow:var(--shadow-3);
+}
+#toast.on{opacity:1}
+
+/* ---------- 첫 실행 온보딩 (Claude Design 3a) ----------
+   처음 열었을 때 한 번만. 이름과 화면 모드를 정하고 시작한다. */
+#onboard{
+  position:fixed;inset:0;z-index:300;background:var(--bg);
+  overflow:auto;display:block;
+}
+#onboard[hidden]{display:none}
+.onboard{
+  width:720px;max-width:calc(100% - 32px);margin:0 auto;
+  padding:56px 0 64px;display:flex;flex-direction:column;gap:28px;
+}
+.onboard .ob-top{display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center}
+.onboard .ob-brand{display:flex;align-items:center;gap:9px}
+.onboard .ob-brand .logo{
+  width:30px;height:30px;border-radius:10px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;
+}
+.onboard h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.4px;text-align:center}
+.onboard .lead{font-size:14px;color:var(--ink-2);text-align:center;line-height:1.7}
+
+/* 이름 */
+.ob-name{
+  display:flex;flex-direction:column;gap:9px;background:var(--panel);
+  border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow-1);
+}
+.ob-name label{font-size:13px;font-weight:700;color:var(--ink-2)}
+.ob-name input{
+  height:52px;padding:0 18px;border:0;border-radius:12px;background:var(--panel-2);
+  font-family:inherit;font-size:17px;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);width:100%;
+}
+.ob-name input::placeholder{color:var(--ink-3)}
+.ob-name input:focus{outline:0;box-shadow:inset 0 0 0 2px var(--accent)}
+.ob-name .hint{font-size:12px;color:var(--ink-3);margin:0}
+
+/* 모드 선택 카드 */
+.ob-modes{display:flex;gap:16px;align-items:stretch}
+.ob-card{
+  flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;padding:22px;cursor:pointer;
+  background:var(--panel);border:0;border-radius:var(--radius);text-align:left;
+  box-shadow:inset 0 0 0 1px var(--line),var(--shadow-1);
+  transition:box-shadow .12s,background .12s;font-family:inherit;color:inherit;
+}
+.ob-card:hover{box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow-2)}
+.ob-card:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}
+.ob-card.on{background:var(--accent-t);box-shadow:inset 0 0 0 2px var(--accent)}
+
+.ob-card .head{display:flex;align-items:flex-start;gap:10px}
+.ob-card .check{
+  flex:none;width:22px;height:22px;border-radius:var(--pill);
+  background:var(--panel-2);box-shadow:inset 0 0 0 1.5px var(--line-2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:transparent;
+}
+.ob-card.on .check{background:var(--accent);box-shadow:none;color:#fff}
+.ob-card .name{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.ob-card .one{font-size:13px;color:var(--ink-3);margin-top:3px}
+.ob-card.on .one{color:var(--accent-d)}
+
+/* 미리보기 도식 */
+.ob-preview{background:var(--panel-2);border-radius:var(--radius-sm);padding:12px}
+.ob-card.on .ob-preview{background:var(--panel)}
+.ob-preview svg{display:block;width:100%;height:132px}
+
+/* 특징 목록 */
+.ob-feat{
+  display:flex;flex-direction:column;gap:7px;font-size:13px;
+  color:var(--ink-2);line-height:1.6;margin:0;padding:0;
+}
+.ob-feat li{display:flex;gap:8px;list-style:none}
+.ob-feat li::before{content:"·";color:var(--ink-3);flex:none}
+.ob-card.on .ob-feat li::before{color:var(--accent)}
+.ob-card .who{
+  margin-top:auto;padding-top:12px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-3);
+}
+.ob-card.on .who{border-top-color:rgba(49,130,246,.18);color:var(--accent-d)}
+
+/* 마무리 */
+.onboard .ob-foot{display:flex;flex-direction:column;gap:14px;align-items:center}
+.onboard .later{font-size:12px;color:var(--ink-3);text-align:center}
+.ob-start{
+  width:100%;height:56px;border:0;border-radius:14px;background:var(--accent);
+  color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 16px rgba(49,130,246,.32);
+}
+.ob-start:hover{background:var(--accent-d)}
+.ob-start:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}
+.ob-start[disabled]{opacity:.5;cursor:default;box-shadow:none}
+
+@media (max-width:700px){
+  .onboard{padding:28px 0 40px;gap:20px}
+  .ob-modes{flex-direction:column}
+}
+
+/* ---------- 인쇄 ---------- */
+@media print{
+  #onboard,
+  header,nav.tabs,.datebar .nav,.datebar .btn,.datebar .progress,
+  .row .acts,.card > h2 .btn,#toast{display:none!important}
+  body{background:#fff}
+  main{max-width:none;padding:0}
+  .card{box-shadow:none;border:1px solid var(--line);break-inside:avoid;margin-bottom:12px}
+  .today-grid{grid-template-columns:1fr}
+  .row:hover{box-shadow:none}
+}
+
+</style>
+</head>
+<body>
+
+<div id="onboard" hidden>
+  <div class="onboard">
+    <div class="ob-top">
+      <div class="ob-brand">
+        <span class="logo">업</span>
+        <h1 id="obTitle">AX금융혁신팀 업무스케줄러</h1>
+      </div>
+      <p class="lead">처음 오셨네요. 두 가지만 정하면 바로 시작해요.</p>
+    </div>
+
+    <div class="ob-name">
+      <label for="obName">이름</label>
+      <input type="text" id="obName" placeholder="홍길동" autocomplete="off">
+      <p class="hint">업무공유를 주고받을 때 작성자로 기록돼요.</p>
+    </div>
+
+    <div class="ob-modes" id="obModes">
+      <button type="button" class="ob-card on" data-mode="simple">
+        <span class="head">
+          <span class="check">✓</span>
+          <span>
+            <span class="name">간편 모드</span>
+            <span class="one" style="display:block">오늘 할 일에만 집중해요</span>
+          </span>
+        </span>
+        <span class="ob-preview">
+          <svg viewBox="0 0 280 168" role="img" aria-label="간편 모드 화면 축소판 — 위에 입력창 하나, 아래에 세로 목록 하나">
+            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
+            <rect x="16" y="14" width="248" height="26" rx="7" fill="#fff" stroke="#3182f6" stroke-width="1.5"/>
+            <rect x="26" y="24" width="86" height="6" rx="3" fill="#d1d6db"/>
+            <rect x="222" y="20" width="32" height="14" rx="7" fill="#3182f6"/>
+            <g fill="#fff">
+              <rect x="16" y="52" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+              <rect x="16" y="78" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+              <rect x="16" y="104" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+              <rect x="16" y="130" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+            </g>
+            <g fill="#3182f6">
+              <rect x="22" y="56" width="3" height="12" rx="1.5"/>
+              <rect x="22" y="82" width="3" height="12" rx="1.5"/>
+              <rect x="22" y="108" width="3" height="12" rx="1.5"/>
+              <rect x="22" y="134" width="3" height="12" rx="1.5"/>
+            </g>
+            <g fill="#d1d6db">
+              <rect x="34" y="59" width="130" height="6" rx="3"/>
+              <rect x="34" y="85" width="96" height="6" rx="3"/>
+              <rect x="34" y="111" width="142" height="6" rx="3"/>
+              <rect x="34" y="137" width="110" height="6" rx="3"/>
+            </g>
+          </svg>
+        </span>
+        <ul class="ob-feat">
+          <li><span>한 줄 입력과 업무 목록만 보여줍니다</span></li>
+          <li><span>날짜는 오늘로 고정됩니다</span></li>
+          <li><span>달력·공유·출장·설정은 숨겨집니다</span></li>
+        </ul>
+        <span class="who">이런 분께 · 포스트잇 대신 쓰고 싶은 분</span>
+      </button>
+
+      <button type="button" class="ob-card" data-mode="full">
+        <span class="head">
+          <span class="check">✓</span>
+          <span>
+            <span class="name">전체 화면</span>
+            <span class="one" style="display:block">업무·공유·출장·연락·점심을 한 화면에</span>
+          </span>
+        </span>
+        <span class="ob-preview">
+          <svg viewBox="0 0 280 168" role="img" aria-label="전체 화면 축소판 - 탭, 왼쪽 큰 업무 목록, 오른쪽 카드 4개">
+            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
+            <rect x="16" y="14" width="34" height="13" rx="6.5" fill="#3182f6"/>
+            <g fill="#e5e8eb">
+              <rect x="56" y="14" width="30" height="13" rx="6.5"/>
+              <rect x="92" y="14" width="30" height="13" rx="6.5"/>
+            </g>
+            <rect x="16" y="36" width="164" height="118" rx="7" fill="#fff" stroke="#e5e8eb"/>
+            <g fill="#f9fafb" stroke="#e5e8eb">
+              <rect x="24" y="46" width="70" height="16" rx="5"/>
+              <rect x="102" y="46" width="70" height="16" rx="5"/>
+              <rect x="24" y="68" width="70" height="16" rx="5"/>
+              <rect x="102" y="68" width="70" height="16" rx="5"/>
+              <rect x="24" y="90" width="70" height="16" rx="5"/>
+              <rect x="102" y="90" width="70" height="16" rx="5"/>
+              <rect x="24" y="112" width="70" height="16" rx="5"/>
+              <rect x="102" y="112" width="70" height="16" rx="5"/>
+              <rect x="24" y="134" width="70" height="14" rx="5"/>
+              <rect x="102" y="134" width="70" height="14" rx="5"/>
+            </g>
+            <g fill="#3182f6">
+              <rect x="28" y="49" width="2.5" height="10" rx="1.25"/>
+              <rect x="106" y="49" width="2.5" height="10" rx="1.25"/>
+              <rect x="28" y="71" width="2.5" height="10" rx="1.25"/>
+              <rect x="106" y="71" width="2.5" height="10" rx="1.25"/>
+            </g>
+            <g fill="#d1d6db">
+              <rect x="36" y="52" width="34" height="4" rx="2"/>
+              <rect x="114" y="52" width="28" height="4" rx="2"/>
+              <rect x="36" y="74" width="40" height="4" rx="2"/>
+              <rect x="114" y="74" width="24" height="4" rx="2"/>
+              <rect x="30" y="96" width="36" height="4" rx="2"/>
+              <rect x="108" y="96" width="42" height="4" rx="2"/>
+              <rect x="30" y="118" width="44" height="4" rx="2"/>
+              <rect x="108" y="118" width="32" height="4" rx="2"/>
+              <rect x="30" y="139" width="30" height="4" rx="2"/>
+              <rect x="108" y="139" width="38" height="4" rx="2"/>
+            </g>
+            <g fill="#fff" stroke="#d1d6db">
+              <rect x="188" y="36" width="76" height="27" rx="6"/>
+              <rect x="188" y="66" width="76" height="27" rx="6"/>
+              <rect x="188" y="96" width="76" height="27" rx="6"/>
+              <rect x="188" y="126" width="76" height="28" rx="6"/>
+            </g>
+            <g fill="#d1d6db">
+              <rect x="196" y="43" width="28" height="4" rx="2"/>
+              <rect x="196" y="52" width="52" height="4" rx="2"/>
+              <rect x="196" y="73" width="28" height="4" rx="2"/>
+              <rect x="196" y="82" width="46" height="4" rx="2"/>
+              <rect x="196" y="103" width="28" height="4" rx="2"/>
+              <rect x="196" y="112" width="50" height="4" rx="2"/>
+              <rect x="196" y="133" width="28" height="4" rx="2"/>
+              <rect x="196" y="142" width="42" height="4" rx="2"/>
+            </g>
+          </svg>
+        </span>
+        <ul class="ob-feat">
+          <li><span>업무를 크게, 오른쪽에 공유·출장·연락·점심</span></li>
+          <li><span>달력에서 한 달을 한눈에</span></li>
+          <li><span>회신기한·출장 D-DAY 를 미리 챙겨줍니다</span></li>
+        </ul>
+        <span class="who">이런 분께 · 일정을 두루 챙겨야 하는 분</span>
+      </button>
+    </div>
+
+    <div class="ob-foot">
+      <p class="later">나중에 화면 위쪽에서 언제든 바꿀 수 있어요</p>
+      <button type="button" class="ob-start" id="obStart">간편 모드로 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">업</div>
+  <h1 id="appTitle" title="더블클릭하면 이름을 바꿀 수 있어요">AX금융혁신팀 업무스케줄러</h1>
+  <span class="modeswitch" id="modeSwitch">
+    <button data-mode="full" class="on" title="달력·업무공유·설정까지 모두 보기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7.5" height="7.5" rx="2"></rect>
+        <rect x="13.5" y="3" width="7.5" height="7.5" rx="2"></rect>
+        <rect x="3" y="13.5" width="7.5" height="7.5" rx="2"></rect>
+        <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"></rect>
+      </svg>
+      전체 화면
+    </button>
+    <button data-mode="simple" title="오늘 할 일에만 집중합니다">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6.5h16M4 12h16M4 17.5h9"></path>
+      </svg>
+      간편 모드
+    </button>
+  </span>
+  <span class="spacer"></span>
+  <input type="search" id="globalSearch" class="gsearch" placeholder="제목·문서번호·이름으로 찾기">
+  <span class="statusbox">
+    <span class="countdown" id="backupCd" hidden></span>
+    <span class="saveState" id="saveState"></span>
+  </span>
+  <button class="btn primary" id="btnSaveFile">파일로 저장하기</button>
+</header>
+
+<nav class="tabs">
+  <button data-view="today" class="on">오늘</button>
+  <button data-view="cal">달력</button>
+  <button data-view="setup">설정</button>
+</nav>
+
+<div id="noStore" hidden>
+  이 브라우저에서는 자동 저장이 안 돼요. 창을 닫으면 입력한 내용이 사라집니다.
+  작업을 마치면 반드시 <b>[파일로 저장하기]</b>를 눌러 파일을 내려받아 주세요.
+</div>
+
+<main>
+  <!-- ===== 오늘 ===== -->
+  <section id="view-today">
+    <div class="carry" id="carryBox" hidden>
+      <div class="carry-head">
+        <span class="carry-ico">!</span>
+        <b id="carryTitle"></b>
+        <span class="spacer"></span>
+        <button class="btn sm" id="carryToggle">펼쳐보기 ▾</button>
+        <button class="btn sm primary" id="carryAll">모두 오늘로</button>
+      </div>
+      <div class="carry-list" id="carryList" hidden></div>
+    </div>
+
+    <div class="qa-sticky" id="qaSticky">
+      <div class="quickadd">
+        <input type="text" id="qaInput" autocomplete="off"
+               placeholder="할 일을 적고 Enter — 예: 보고서 초안 14:00 · 내일 팀 회의">
+        <button class="btn add primary" id="qaBtn">추가</button>
+      </div>
+      <div class="qahint" id="qaHint"></div>
+    </div>
+
+    <div class="datebar">
+      <div class="nav">
+        <button id="dPrev" title="어제">◀</button>
+        <span class="today-label" id="dLabel"></span>
+        <button id="dNext" title="내일">▶</button>
+      </div>
+      <button class="btn" id="dToday">오늘로 가기</button>
+      <button class="btn" id="btnSideToggle">공유·연락·점심 ▾</button>
+      <span class="spacer"></span>
+    </div>
+
+    <div class="today-grid">
+      <!-- 주 영역: 업무 -->
+      <div class="card c-task">
+        <h2>
+          업무
+          <span class="count" id="taskCount"></span>
+          <span class="spacer"></span>
+          <button class="btn addsm primary" id="btnAddTask">＋ 추가</button>
+        </h2>
+        <div class="body"><div class="rows taskgrid" id="listTask"></div></div>
+      </div>
+
+      <!-- 보조 열: 공유 → 연락 → 점심 (위계순) -->
+      <div class="today-side">
+        <div class="card sub c-share">
+          <h2>
+            업무공유
+            <span class="count" id="shareCount"></span>
+            <span class="spacer"></span>
+            <button class="btn addsm" id="btnAddShare">＋ 추가</button>
+          </h2>
+          <div class="body"><div class="rows sharelist" id="listShare"></div></div>
+          <div class="cardfoot">
+            <button id="btnShareAll">전체 목록</button>
+            <span class="sep"></span>
+            <button id="btnExport">내보내기</button>
+            <span class="sep"></span>
+            <button id="btnImport">가져오기</button>
+          </div>
+        </div>
+
+        <div class="card sub flat c-trip">
+          <h2>
+            출장
+            <span class="count" id="tripCount"></span>
+            <span class="spacer"></span>
+            <button class="btn sm" id="btnTripShare">출장공유하기</button>
+            <button class="btn addsm" id="btnAddTrip">＋ 추가</button>
+          </h2>
+          <div class="body"><div class="rows triplist" id="listTrip"></div></div>
+        </div>
+
+        <div class="card sub flat c-call">
+          <h2>
+            유관부서 연락하기
+            <span class="count" id="contactCount"></span>
+            <span class="spacer"></span>
+            <button class="btn addsm" id="btnAddContact">＋ 추가</button>
+          </h2>
+          <div class="body"><div class="rows calllist" id="listContact"></div></div>
+        </div>
+
+        <div class="card sub flat c-lunch">
+          <h2>
+            점심약속
+            <span class="count" id="lunchCount"></span>
+            <span class="spacer"></span>
+            <button class="btn addsm" id="btnAddLunch">＋ 추가</button>
+          </h2>
+          <div class="body"><div class="rows lunchlist" id="listLunch"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="simple-note">
+      간편 모드예요. 오늘 할 일만 보여줍니다.
+      달력·업무공유·설정을 보려면 오른쪽 위 <b>[전체 화면]</b>을 누르세요.
+    </div>
+  </section>
+
+  <!-- ===== 달력 ===== -->
+  <section id="view-cal" hidden>
+    <div class="datebar">
+      <div class="nav">
+        <button id="mPrev" title="지난달">◀</button>
+        <span class="today-label" id="mLabel"></span>
+        <button id="mNext" title="다음달">▶</button>
+      </div>
+      <button class="btn" id="mToday">이번 달로 가기</button>
+    </div>
+    <div class="calhead">
+      <div class="sun">일</div><div>월</div><div>화</div><div>수</div>
+      <div>목</div><div>금</div><div class="sat">토</div>
+    </div>
+    <div class="calgrid" id="calGrid"></div>
+  </section>
+
+  <!-- ===== 설정 ===== -->
+  <section id="view-setup" hidden>
+    <div id="setupEmpSlot"></div>
+    <div class="setup-grid">
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <div class="card c-set">
+          <h2>내 정보</h2>
+          <div class="body fields">
+            <div class="field">
+              <label for="cfgName">내 이름</label>
+              <div class="val"><input type="text" id="cfgName" placeholder="업무공유에 작성자로 기록돼요"></div>
+            </div>
+            <div class="field">
+              <label>처음 안내</label>
+              <div class="val">
+                <button class="btn sm" id="btnOnboard">처음 안내 다시 보기</button>
+                <div class="hint">간편 모드와 전체 화면이 어떻게 다른지 다시 봅니다.</div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="cfgTitle">프로그램 이름</label>
+              <div class="val">
+                <input type="text" id="cfgTitle" placeholder="AX금융혁신팀 업무스케줄러">
+                <div class="hint">화면 맨 위 제목을 <b>더블클릭해서</b> 바로 고칠 수도 있어요.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card c-set">
+          <h2>직원 명부</h2>
+          <div class="body fields">
+            <div class="field">
+              <label>명부 불러오기</label>
+              <div class="val">
+                <input type="file" id="empFile" accept=".xlsx,.xlsm,.csv,.txt">
+                <div class="hint">엑셀(.xlsx)·CSV 둘 다 됩니다.<br>
+                  첫 줄 머리글이 <b>이름 · 내선번호 · 부서 · 직급</b> 이면 순서는 상관없어요.<br>
+                  부서와 직급은 비워도 됩니다.</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>지금 명부</label>
+              <div class="val" id="empInfo">-</div>
+            </div>
+            <div class="field">
+              <label>확인 · 양식</label>
+              <div class="val">
+                <button class="btn sm primary" id="btnEmpList">명부 보기</button>
+                <button class="btn sm" id="btnEmpTemplate">빈 양식 CSV 내려받기</button>
+                <div class="hint">[명부 보기] - 몇 명이 들어갔는지 확인합니다.<br>
+                  [빈 양식] - 명부를 새로 만들 때 쓰는 견본이에요.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card c-set">
+          <h2>업무공유</h2>
+          <div class="body fields">
+            <div class="field">
+              <label for="cfgPartMax">조각당 글자 수</label>
+              <div class="val">
+                <input type="number" id="cfgPartMax" min="200" step="100" style="max-width:150px">
+                <div class="hint">메신저에 한 번에 붙여넣을 수 있는 글자 수입니다.<br>
+                  크게 잡을수록 조각이 줄어요. 모르면 800 그대로 두세요.<br>
+                  <span id="partHint"></span></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>마지막 동기화</label>
+              <div class="val" id="lastSync">-</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <div class="card bigsearch">
+          <div class="bs-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                 stroke-linecap="round" style="color:var(--accent)">
+              <circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 L21 21"></path>
+            </svg>
+            지난 기록 찾기
+          </div>
+          <div class="bs-sub">업무 · 업무공유 · 연락처 · 점심약속을 한 번에 훑어요.
+            달력을 한 달씩 넘길 필요 없습니다.</div>
+          <div class="bs-row">
+            <input type="text" id="bsInput" autocomplete="off"
+                   placeholder="제목 · 내용 · 문서번호 · 이름">
+            <button id="bsBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"
+                   stroke-linecap="round">
+                <circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 L21 21"></path>
+              </svg>
+              찾기
+            </button>
+          </div>
+          <div class="bs-ex" id="bsEx"></div>
+          <div class="bs-count" id="bsCount"></div>
+          <div class="hitbox" id="bsBox" hidden></div>
+        </div>
+
+        <div class="card c-set">
+          <h2>데이터</h2>
+          <div class="body fields">
+            <div class="field">
+              <label>보관 중인 건수</label>
+              <div class="val" id="countInfo">-</div>
+            </div>
+            <div class="field">
+              <label for="cfgBkMode">자동 백업</label>
+              <div class="val">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <select id="cfgBkMode" style="max-width:180px">
+                    <option value="auto">자동으로 내려받기</option>
+                    <option value="notify">알림만 띄우기</option>
+                    <option value="off">끄기</option>
+                  </select>
+                  <input type="number" id="cfgBkMin" min="5" step="10" style="max-width:110px">
+                  <span style="font-size:13px;color:var(--ink-2)">분마다</span>
+                </div>
+                <div class="hint" id="bkHint"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>백업</label>
+              <div class="val">
+                <button class="btn sm" id="btnExportJson">데이터만 내려받기 (.json)</button>
+                <button class="btn sm" id="btnImportJson">데이터 가져오기 (.json)</button>
+                <input type="file" id="jsonFile" accept=".json" hidden>
+                <div class="hint">프로그램을 새 버전으로 옮길 때 쓰는 통로예요.</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>지운 항목</label>
+              <div class="val">
+                <button class="btn sm" id="btnTrash">휴지통 열기</button>
+                <div class="hint">지운 것은 바로 없어지지 않아요. 여기서 되살릴 수 있습니다.</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>병합 기록</label>
+              <div class="val"><button class="btn sm" id="btnShowLog">병합 기록 보기</button></div>
+            </div>
+            <div class="field">
+              <label>전체 삭제</label>
+              <div class="val"><button class="btn sm danger" id="btnWipe">모든 데이터 지우기</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card flat">
+          <h2>도움말</h2>
+          <div class="body" style="padding:16px 18px 18px;font-size:13px;line-height:1.85;color:var(--ink-2)">
+            <b style="color:var(--ink)">저장은 두 겹이에요.</b><br>
+            입력하는 즉시 브라우저에 자동 저장됩니다. 다만 브라우저 저장소는 캐시 삭제나
+            정책 초기화로 날아갈 수 있으니, 하루에 한 번쯤 위쪽 <b>[파일로 저장하기]</b>를 눌러
+            HTML 파일을 내려받아 두세요. 그 파일이 곧 프로그램이자 백업본이에요.<br><br>
+
+            <b style="color:var(--ink)">공유되는 건 업무공유뿐이에요.</b><br>
+            업무·연락하기·점심약속은 이 브라우저에만 있습니다.<br><br>
+
+            <b style="color:var(--ink)">조각으로 나눠 보내요.</b><br>
+            메신저가 한 번에 받는 글자 수가 정해져 있어서, 내용이 길면 여러 조각으로 나눠
+            복사·붙여넣기를 반복합니다. 받는 쪽은 순서에 상관없이 붙여넣으면 되고,
+            같은 조각을 두 번 넣어도 안전해요.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<datalist id="empNames"></datalist>
+<div id="modalRoot"></div>
+<div id="toast"></div>
+
+<script id="wsch-data" type="application/json">{}</script>
+<script>
+'use strict';
+/* ============================================================
+   0. 원본 HTML 보관
+      [파일로 저장] 은 이 원본의 데이터 블록만 갈아끼워 새 파일을 만든다.
+      화면을 그리기 전에 잡아 둬야 렌더링 결과가 섞이지 않는다.
+   ============================================================ */
+const PRISTINE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+/* ============================================================
+   1. 유틸 — 엑셀 버전 modUtil.bas 와 같은 규칙
+   ============================================================ */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+const pad = (n, w) => String(n).padStart(w || 2, '0');
+
+function dateStr(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function todayStr(){ return dateStr(new Date()); }
+function nowStamp(){
+  const d = new Date();
+  return dateStr(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+function parseDate(s){
+  s = (s || '').trim();
+  if(!/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+  const d = new Date(+s.slice(0,4), +s.slice(5,7) - 1, +s.slice(8,10));
+  return isNaN(d) ? null : d;
+}
+function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function daysBetween(a, b){ return Math.round((a - b) / 86400000); }
+// 날짜 비교에 쓰는 값은 반드시 자정으로 맞춘다.
+// 시각이 붙어 있으면 daysBetween 이 반올림되면서 D-DAY 가 D+1 로 보이는 등 하루씩 틀어진다.
+function startOfDay(d){ const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+const WD = ['일','월','화','수','목','금','토'];
+
+function normTime(s){
+  s = (s || '').trim();
+  if(!s) return '';
+  let m = s.match(/^(\d{1,2}):(\d{1,2})$/);
+  if(!m) m = s.match(/^(\d{2})(\d{2})$/);
+  if(!m && /^\d{1,2}$/.test(s)) m = [null, s, '0'];
+  if(!m) return null;
+  const h = +m[1], mi = +m[2];
+  if(h < 0 || h > 23 || mi < 0 || mi > 59) return null;
+  return pad(h) + ':' + pad(mi);
+}
+
+// ID: 작성자-yyyymmdd-hhnnss-4자리난수
+// 자동증가 숫자는 PC마다 따로 증가해 반드시 충돌하므로 쓰지 않는다.
+function newId(author){
+  const d = new Date();
+  const key = (author || '사용자').replace(/[|\\\t\r\n]/g, '') || '사용자';
+  return key + '-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate())
+       + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds())
+       + '-' + pad(Math.floor(Math.random() * 10000), 4);
+}
+
+/* --- 이스케이프: 반드시 이 순서 --- */
+function esc(s){
+  return String(s == null ? '' : s)
+    .split('\\').join('\\\\')
+    .split('|').join('\\p')
+    .split('\r').join('')
+    .split('\n').join('\\n')
+    .split('\t').join('\\t');
+}
+// 단순 역순 치환은 "\\p" 같은 입력에서 깨진다. 한 문자씩 훑는다.
+function unesc(s){
+  s = String(s == null ? '' : s);
+  let out = '', i = 0;
+  while(i < s.length){
+    const ch = s[i];
+    if(ch === '\\' && i < s.length - 1){
+      const nx = s[i+1];
+      out += nx === '\\' ? '\\' : nx === 'p' ? '|' : nx === 'n' ? '\n' : nx === 't' ? '\t' : nx;
+      i += 2;
+    } else { out += ch; i++; }
+  }
+  return out;
+}
+// sum = (sum*31 + 문자코드) % 65536 → 4자리 대문자 16진수
+function checksum4(s){
+  let sum = 0;
+  for(let i = 0; i < s.length; i++) sum = (sum * 31 + s.charCodeAt(i)) % 65536;
+  return sum.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function escHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function ellipsis(s, n){
+  s = String(s || '').replace(/[\r\n]+/g, ' ');
+  return s.length <= n ? s : s.slice(0, n) + '…';
+}
+
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+}
+
+async function copyText(text){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch(e){ /* file:// 에서 막히면 아래로 */ }
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){ return false; }
+}
+
+function download(filename, content, mime){
+  const blob = new Blob([content], {type: (mime || 'text/plain') + ';charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+/* ============================================================
+   2. 데이터
+   ============================================================ */
+const LS_KEY = 'wsch.db.v1';
+
+function emptyDB(){
+  return { v:1, savedAt:'', cfg:{}, task:[], contact:[], share:[], lunch:[], trip:[], emp:[], fav:[], log:[] };
+}
+let DB = emptyDB();
+let dirty = false;              // 파일로 저장하지 않은 변경이 있는가
+let viewDate = startOfDay(new Date());
+let calMonth = new Date();
+
+function myName(){ return (DB.cfg.name || '').trim() || '사용자'; }
+function alive(list){ return list.filter(r => !r.del); }
+
+function markDirty(){
+  dirty = true;
+  saveLocal();
+  paintSaveState();
+}
+// 브라우저 저장소를 쓸 수 있는지. 정책이나 시크릿 모드로 막히는 경우가 있다.
+let lsOK = true;
+function testLocalStorage(){
+  try{
+    localStorage.setItem('wsch.probe', '1');
+    localStorage.removeItem('wsch.probe');
+    return true;
+  }catch(e){ return false; }
+}
+
+let quotaWarned = false;
+
+function saveLocal(){
+  DB.savedAt = nowStamp();
+  if(!lsOK) return;
+  try{
+    const json = JSON.stringify(DB);
+    // 브라우저 저장소는 보통 5MB 다. 꽉 찬 뒤에 알면 마지막 입력이 날아간다.
+    // 4MB 를 넘으면 미리 알려서 정리하거나 파일로 빼게 한다.
+    if(!quotaWarned && json.length > 4 * 1024 * 1024){
+      quotaWarned = true;
+      setTimeout(() => alert(
+        '저장 공간이 거의 찼어요. (' + Math.round(json.length / 1024 / 1024 * 10) / 10 + 'MB / 약 5MB)\n\n' +
+        '지금 [파일로 저장하기]로 백업하신 뒤,\n' +
+        '설정 > 휴지통에서 지운 항목을 비우거나\n' +
+        '오래된 완료 업무를 정리해 주세요.\n\n' +
+        '이대로 두면 곧 자동 저장이 멈춥니다.'), 100);
+    }
+    localStorage.setItem(LS_KEY, json);
+  }catch(e){
+    // 용량 초과 등으로 갑자기 막힌 경우 — 조용히 넘어가지 않고 알린다
+    lsOK = false;
+    $('#noStore').hidden = false;
+    paintSaveState();
+    console.warn('로컬 저장 실패', e);
+  }
+}
+function paintSaveState(){
+  const el = $('#saveState');
+  if(!lsOK){
+    el.innerHTML = '<span>●</span><span>자동 저장 안 됨 — 파일로 저장하세요</span>';
+    el.className = 'saveState dirty';
+  }else if(dirty){
+    el.innerHTML = '<span>●</span><span>아직 파일로 저장하지 않았어요' + agoText() + '</span>';
+    el.className = 'saveState dirty';
+  }else{
+    el.innerHTML = '<span>●</span><span>모두 저장했어요' + agoText() + '</span>';
+    el.className = 'saveState';
+  }
+}
+
+// 마지막으로 파일에 저장한 지 얼마나 됐는지.
+// "언제 저장했더라" 를 생각할 필요가 없게 한다.
+function agoText(){
+  const s = DB.cfg.lastFileSaveAt;
+  if(!s) return '';
+  const d = parseDate(s.slice(0, 10));
+  if(!d) return '';
+  const n = daysBetween(startOfDay(new Date()), d);
+  if(n <= 0) return ' · 오늘 파일 저장';
+  if(n === 1) return ' · 파일 저장 어제';
+  return ' · 파일 저장 ' + n + '일 전';
+}
+
+function readEmbedded(){
+  try{
+    const raw = $('#wsch-data').textContent.trim();
+    if(!raw || raw === '{}') return null;
+    const o = JSON.parse(raw);
+    return (o && o.v) ? o : null;
+  }catch(e){ return null; }
+}
+function readLocal(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    const o = JSON.parse(raw);
+    return (o && o.v) ? o : null;
+  }catch(e){ return null; }
+}
+function normalizeDB(o){
+  const d = emptyDB();
+  ['task','contact','share','lunch','trip','emp','fav','log'].forEach(k => { if(Array.isArray(o[k])) d[k] = o[k]; });
+  if(o.cfg && typeof o.cfg === 'object') d.cfg = o.cfg;
+  d.savedAt = o.savedAt || '';
+  return d;
+}
+
+/* --- 파일로 저장: 원본 HTML 의 데이터 블록만 갈아끼운다 --- */
+function saveToFile(isAuto){
+  const json = JSON.stringify(DB).split('<').join('\\u003c');
+  const open = '<script id="wsch-data" type="application/json">';
+  const close = '<\/script>';
+  const i = PRISTINE.indexOf(open);
+  if(i < 0){ alert('원본 데이터 블록을 찾지 못했습니다.'); return; }
+  const j = PRISTINE.indexOf(close, i);
+  const html = PRISTINE.slice(0, i + open.length) + json + PRISTINE.slice(j);
+
+  const d = new Date();
+  const base = appTitle().replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '_') || '업무스케줄러';
+  download(base + '_' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.html', html, 'text/html');
+  dirty = false;
+  DB.cfg.lastFileSaveAt = nowStamp();
+  saveLocal();
+  resetBackupTimer();
+  paintSaveState();
+  paintCountdown();
+  renderSetup();
+  toast(isAuto
+    ? '자동 백업 파일을 내려받았어요. (' + backupMin() + '분마다)'
+    : '파일을 내려받았어요. 다음부터 그 파일을 여세요.');
+}
+
+/* ------------------------------------------------------------
+   자동 백업
+   브라우저는 파일을 조용히 덮어쓸 수 없다. 그래서 정해진 간격마다
+   "파일로 저장하기"와 똑같은 내려받기를 자동으로 실행한다.
+   바뀐 게 없으면 받지 않는다(같은 파일이 쌓이는 걸 막으려고).
+   ------------------------------------------------------------ */
+const BACKUP_MIN_DEFAULT = 120;          // 2시간
+let nextBackupAt = 0;
+
+function backupMode(){ return DB.cfg.backupMode || 'auto'; }   // auto | notify | off
+function backupMin(){
+  const v = +(DB.cfg.backupEveryMin || BACKUP_MIN_DEFAULT);
+  return (isFinite(v) && v >= 5) ? Math.floor(v) : BACKUP_MIN_DEFAULT;
+}
+function resetBackupTimer(){ nextBackupAt = Date.now() + backupMin() * 60000; }
+
+function fmtLeft(ms){
+  const s = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  if(h > 0) return h + '시간 ' + m + '분';
+  if(m > 0) return m + '분 ' + pad(sec) + '초';
+  return sec + '초';
+}
+
+function paintCountdown(){
+  const el = $('#backupCd');
+  if(backupMode() === 'off'){ el.hidden = true; return; }
+  el.hidden = false;
+  const left = nextBackupAt - Date.now();
+  if(left <= 0){
+    el.className = 'countdown over';
+    el.innerHTML = '<span class="cd-lab">백업할 때가 됐어요</span>';
+  }else{
+    el.className = 'countdown' + (left <= 5 * 60000 ? ' soon' : '');
+    el.innerHTML = '<span class="cd-lab">다음 백업까지</span>' +
+                   '<span class="cd-t">' + fmtLeft(left) + '</span>';
+  }
+}
+
+function tickBackup(){
+  if(backupMode() === 'off'){ paintCountdown(); return; }
+  if(Date.now() >= nextBackupAt){
+    if(!dirty){
+      // 저장할 변경이 없으면 그냥 다음 주기로 미룬다
+      resetBackupTimer();
+    }else if(backupMode() === 'auto'){
+      saveToFile(true);
+    }else{
+      toast('백업할 때가 됐어요. [파일로 저장하기]를 눌러 주세요.');
+      nextBackupAt = Date.now() + 5 * 60000;   // 알림만: 5분 뒤 다시 알림
+    }
+  }
+  paintCountdown();
+}
+
+/* ============================================================
+   3. 명부 (엑셀 버전 modEmployee.bas 와 같은 규칙)
+   ============================================================ */
+function empSearch(q){
+  q = (q || '').trim();
+  if(!q) return [];
+  const exact = DB.emp.filter(e => (e.name || '').trim() === q);
+  if(exact.length) return exact;
+  return DB.emp.filter(e => (e.name || '').includes(q));
+}
+/* 내선번호는 저장하지 않고 이름+부서로 매번 명부에서 끌어온다.
+   그래서 명부를 갱신하면 등록된 연락 건의 번호도 자동으로 최신이 된다.
+
+   이름만으로 여러 명이 걸리면 번호를 확정하지 않는다.
+   틀린 번호를 자신 있게 보여주는 것보다 모른다고 하는 편이 낫다.
+   (예전에는 명부에서 먼저 나오는 사람 번호를 아무 표시 없이 찍었다) */
+function empLookup(empName, dept){
+  const name = (empName || '').trim();
+  const d = (dept || '').trim();
+  if(!name) return { state:'none', ext:'' };
+
+  if(d){
+    const exact = DB.emp.find(e => (e.name || '').trim() === name && (e.dept || '').trim() === d);
+    if(exact) return { state:'ok', ext: exact.ext || '' };
+  }
+  const byName = DB.emp.filter(e => (e.name || '').trim() === name);
+  if(byName.length === 1) return { state:'ok', ext: byName[0].ext || '', dept: byName[0].dept || '' };
+  if(byName.length > 1)   return { state:'ambiguous', ext:'', count: byName.length, list: byName };
+  return { state:'none', ext:'' };
+}
+
+function empExt(empName, dept){
+  const r = empLookup(empName, dept);
+  return r.state === 'ok' ? r.ext : '';
+}
+
+// 머리글 이름 → 우리가 쓰는 4개 항목
+const EMP_HEAD = {
+  '이름':0,'성명':0,'사원명':0,
+  '내선번호':1,'내선':1,'전화번호':1,'연락처':1,'사내번호':1,'전화':1,
+  '부서':2,'부서명':2,'소속':2,'팀':2,
+  '직급':3,'직위':3
+};
+
+// 마지막으로 명부를 읽은 결과. 왜 몇 명만 읽혔는지 사용자에게 보여 주려고 남긴다.
+let empParseInfo = { total:0, blank:0, noName:0, header:false, cols:'' };
+
+// 행 배열(문자열 2차원) → 명부 레코드
+// 머리글이 있으면 이름을 보고 열 위치를 잡고, 없으면 순서대로 본다.
+//
+// 중간에 빈 줄이 있어도 멈추지 않고 건너뛴다.
+// (부서 구분용 빈 줄 하나 때문에 명부가 조용히 잘리는 사고가 있었다)
+function rowsToEmp(rows){
+  let map = [0,1,2,3], start = 0, header = false;
+  const first = rows[0] || [];
+  if(first.some(c => EMP_HEAD[String(c).trim()] !== undefined)){
+    const m = [-1,-1,-1,-1];
+    first.forEach((c, i) => {
+      const k = EMP_HEAD[String(c).trim()];
+      if(k !== undefined && m[k] < 0) m[k] = i;
+    });
+    map = m.map((v, i) => v < 0 ? i : v);
+    start = 1;
+    header = true;
+  }
+
+  const out = [];
+  let blank = 0, noName = 0;
+  for(let i = start; i < rows.length; i++){
+    const f = rows[i] || [];
+    if(f.every(c => !String(c == null ? '' : c).trim())){ blank++; continue; }
+    const g = k => String(f[map[k]] == null ? '' : f[map[k]]).trim();
+    const rec = { name:g(0), ext:g(1), dept:g(2), rank:g(3) };
+    if(rec.name) out.push(rec); else noName++;
+  }
+
+  empParseInfo = {
+    total: Math.max(0, rows.length - start),
+    blank: blank, noName: noName, header: header,
+    cols: (first || []).map(c => String(c == null ? '' : c).trim()).filter(Boolean).join(' | ')
+  };
+  return out;
+}
+
+function csvToRows(text){
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const head = lines[0] || '';
+  const sep = head.split('\t').length > head.split(',').length ? '\t' : ',';
+  return lines.map(l => splitCsvLine(l, sep));
+}
+function splitCsvLine(line, sep){
+  const out = []; let cur = '', q = false;
+  for(let i = 0; i < line.length; i++){
+    const ch = line[i];
+    if(q){
+      if(ch === '"'){ if(line[i+1] === '"'){ cur += '"'; i++; } else q = false; }
+      else cur += ch;
+    }else{
+      if(ch === '"') q = true;
+      else if(ch === sep){ out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+  }
+  out.push(cur.trim());
+  return out;
+}
+// BOM 이 있으면 UTF-8, 없으면 CP949(euc-kr) 로 읽는다.
+// 0212 같은 앞자리 0 은 문자열로 다루므로 그대로 보존된다.
+function decodeCsv(buf){
+  const b = new Uint8Array(buf);
+  if(b.length >= 3 && b[0] === 0xEF && b[1] === 0xBB && b[2] === 0xBF){
+    return new TextDecoder('utf-8').decode(b.subarray(3));
+  }
+  try{
+    const t = new TextDecoder('euc-kr', {fatal:false}).decode(b);
+    // euc-kr 로 읽었는데 대체문자가 많으면 utf-8 로 재시도
+    const bad = (t.match(/�/g) || []).length;
+    if(bad > t.length * 0.02) return new TextDecoder('utf-8').decode(b);
+    return t;
+  }catch(e){
+    return new TextDecoder('utf-8').decode(b);
+  }
+}
+
+/* ------------------------------------------------------------
+   엑셀(.xlsx) 직접 읽기
+   .xlsx 는 XML 몇 개를 담은 ZIP 이다. 외부 라이브러리 없이
+   ZIP 을 직접 풀고(브라우저 내장 DecompressionStream) XML 을 읽는다.
+   ------------------------------------------------------------ */
+function zipEntries(buf){
+  const u8 = new Uint8Array(buf);
+  const dv = new DataView(buf);
+  // 끝에서부터 중앙 디렉터리 끝(EOCD) 표식을 찾는다
+  let eocd = -1;
+  for(let i = u8.length - 22; i >= 0 && i >= u8.length - 22 - 65536; i--){
+    if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if(eocd < 0) throw new Error('ZIP 형식이 아닙니다');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+
+  const out = new Map();
+  const dec = new TextDecoder('utf-8');
+  for(let i = 0; i < count; i++){
+    if(dv.getUint32(p, true) !== 0x02014b50) break;
+    const method   = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen  = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const cmtLen   = dv.getUint16(p + 32, true);
+    const localOff = dv.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nameLen));
+
+    // 로컬 헤더에서 실제 데이터 시작 위치를 다시 계산한다
+    const lNameLen  = dv.getUint16(localOff + 26, true);
+    const lExtraLen = dv.getUint16(localOff + 28, true);
+    const dataOff = localOff + 30 + lNameLen + lExtraLen;
+
+    out.set(name, { method, data: u8.subarray(dataOff, dataOff + compSize) });
+    p += 46 + nameLen + extraLen + cmtLen;
+  }
+  return out;
+}
+
+async function unzipText(entry){
+  if(!entry) return '';
+  if(entry.method === 0) return new TextDecoder('utf-8').decode(entry.data);
+  if(entry.method !== 8) throw new Error('지원하지 않는 압축 방식입니다 (' + entry.method + ')');
+  if(typeof DecompressionStream === 'undefined'){
+    throw new Error('이 브라우저는 xlsx 를 못 읽어요. CSV 로 저장해 주세요.');
+  }
+  const ds = new DecompressionStream('deflate-raw');
+  const stream = new Blob([entry.data]).stream().pipeThrough(ds);
+  return await new Response(stream).text();
+}
+
+function colIndex(ref){                       // "AB12" -> 27
+  let n = 0;
+  for(let i = 0; i < ref.length; i++){
+    const c = ref.charCodeAt(i);
+    if(c < 65 || c > 90) break;
+    n = n * 26 + (c - 64);
+  }
+  return n - 1;
+}
+
+// 태그를 이름만 보고 찾는다.
+// 엑셀은 <row> 로 쓰지만 한셀 등은 <x:row> 처럼 접두사를 붙인다.
+// getElementsByTagName 은 접두사까지 맞아야 해서 한쪽을 통째로 놓친다.
+function tags(node, name){
+  return Array.from(node.getElementsByTagNameNS('*', name));
+}
+
+async function xlsxToRows(buf){
+  const zip = zipEntries(buf);
+
+  // 첫 번째 시트가 실제로 어느 파일인지 관계 파일에서 찾는다
+  let sheetPath = 'xl/worksheets/sheet1.xml';
+  try{
+    const wbXml = await unzipText(zip.get('xl/workbook.xml'));
+    const relXml = await unzipText(zip.get('xl/_rels/workbook.xml.rels'));
+    const wb = new DOMParser().parseFromString(wbXml, 'application/xml');
+    const rel = new DOMParser().parseFromString(relXml, 'application/xml');
+    const s0 = tags(wb, 'sheet')[0];
+    const rid = s0 && (s0.getAttribute('r:id') || s0.getAttribute('id'));
+    if(rid){
+      for(const r of tags(rel, 'Relationship')){
+        if(r.getAttribute('Id') === rid){
+          let t = r.getAttribute('Target') || '';
+          if(t.startsWith('/')) t = t.slice(1);
+          else if(!t.startsWith('xl/')) t = 'xl/' + t;
+          if(zip.has(t)) sheetPath = t;
+          break;
+        }
+      }
+    }
+  }catch(e){ /* 못 찾으면 sheet1.xml 로 간다 */ }
+
+  // 공유 문자열 표
+  let shared = [];
+  if(zip.has('xl/sharedStrings.xml')){
+    const doc = new DOMParser().parseFromString(await unzipText(zip.get('xl/sharedStrings.xml')), 'application/xml');
+    shared = tags(doc, 'si').map(si => tags(si, 't').map(t => t.textContent).join(''));
+  }
+
+  const sheetXml = await unzipText(zip.get(sheetPath));
+  if(!sheetXml) throw new Error('시트를 찾지 못했습니다');
+  const doc = new DOMParser().parseFromString(sheetXml, 'application/xml');
+
+  const rows = [];
+  for(const row of tags(doc, 'row')){
+    const arr = [];
+    for(const c of tags(row, 'c')){
+      const ci = colIndex(c.getAttribute('r') || '');
+      const t = c.getAttribute('t');
+      let v = '';
+      if(t === 's'){
+        const iEl = tags(c, 'v')[0];
+        v = iEl ? (shared[+iEl.textContent] || '') : '';
+      }else if(t === 'inlineStr'){
+        v = tags(c, 't').map(x => x.textContent).join('');
+      }else{
+        const vEl = tags(c, 'v')[0];
+        v = vEl ? vEl.textContent : '';
+      }
+      if(ci >= 0) arr[ci] = v;
+    }
+    for(let i = 0; i < arr.length; i++) if(arr[i] == null) arr[i] = '';
+    rows.push(arr);
+  }
+  return rows;
+}
+
+/* ============================================================
+   4. 동기화 프로토콜 — 엑셀 버전 modSync.bas 와 완전히 동일
+      ###WSCH1|P1/3|N=5###
+      S|ID|문서번호|제목|내용|등록일|회신기한|작성자|수정시각|삭제여부
+      ###END|P1/3|C=A3F1###
+   ============================================================ */
+const PROTO = 'WSCH1';
+const PART_MAX_DEFAULT = 800;      // 사내 메신저 한 번에 붙여넣기 가능한 글자 수
+// 메신저가 한 번에 받아 주는 글자 수. 설정에서 바꾼다.
+// 이 값이 클수록 조각 수가 줄어든다 (압축보다 훨씬 큰 차이를 만든다).
+function partMax(){
+  const v = +(DB.cfg.partMax || PART_MAX_DEFAULT);
+  return (isFinite(v) && v >= 200) ? Math.floor(v) : PART_MAX_DEFAULT;
+}
+const FD = { NOHEADER:0, BADSUM:1, PARTIAL:2, COMPLETE:3, DUPLICATE:4 };
+
+function shareToLine(r){
+  return ['S', r.id, r.docNo, r.title, r.content, r.regDate, r.dueDate,
+          r.author, r.mtime, r.del ? '1' : '0',
+          r.replyType || '', r.owner || ''].map((v, i) => i === 0 ? v : esc(v)).join('|');
+}
+function lineToShare(ln){
+  const f = ln.split('|');
+  if(f.length < 10 || f[0] !== 'S') return null;
+  return {
+    id: unesc(f[1]), docNo: unesc(f[2]), title: unesc(f[3]), content: unesc(f[4]),
+    regDate: unesc(f[5]), dueDate: unesc(f[6]), author: unesc(f[7]),
+    mtime: unesc(f[8]), del: unesc(f[9]) === '1',
+    // 아래 두 칸은 나중에 생겼다. 옛 버전이 보낸 줄에는 없으므로 빈 값으로 둔다.
+    replyType: f.length > 10 ? unesc(f[10]) : '',
+    owner: f.length > 11 ? unesc(f[11]) : ''
+  };
+}
+
+/* ------------------------------------------------------------
+   배치 ID
+   같은 방에서 두 사람이 조각을 보내면 섞인다. 배치 ID가 없으면
+   나중에 들어온 것이 앞의 것을 덮어쓰거나 조용히 버려진다.
+   내보낼 때 한 번 만들어 그 배치의 모든 조각에 똑같이 붙인다.
+   ------------------------------------------------------------ */
+function newBatchId(){
+  const d = new Date();
+  return SanitizeBatch(myName()) + '_' +
+         d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) +
+         pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+}
+function SanitizeBatch(s){
+  return String(s || '사용자').replace(/[|=#\s\\]/g, '') || '사용자';
+}
+function senderOf(batchId){
+  const i = String(batchId).lastIndexOf('_');
+  return i > 0 ? batchId.slice(0, i) : batchId;
+}
+
+// 마지막으로 만든 조각들의 정보 (너무 긴 레코드 경고용)
+let lastBuildInfo = { oversize: [], batchId: '', bodyMax: 0 };
+
+// 레코드 중간에서 자르지 않는다. 한 건이 최대치를 넘으면 그 건만 단독 파트.
+function buildParts(records){
+  const lines = records.map(shareToLine);
+  lastBuildInfo = { oversize: [], batchId: '', bodyMax: 0 };
+  if(!lines.length) return [];
+
+  const bid = newBatchId();
+  // 머리말·꼬리말도 붙여넣는 글자 수에 포함된다. 그만큼 본문을 줄여야
+  // 사용자가 설정한 값이 실제 한 조각의 길이와 맞는다.
+  const probeH = '###' + PROTO + '|B=' + bid + '|P99/99|N=999###';
+  const probeF = '###END|B=' + bid + '|P99/99|C=FFFF###';
+  const overhead = probeH.length + probeF.length + 4;      // 줄바꿈 2개
+  const max = Math.max(120, partMax() - overhead);
+  lastBuildInfo.batchId = bid;
+  lastBuildInfo.bodyMax = max;
+
+  const parts = []; let cur = []; let len = 0;
+  for(let i = 0; i < lines.length; i++){
+    const ln = lines[i];
+    if(ln.length > max){
+      // 한 줄이 통째로 최대치를 넘는다 = 이 건은 조각 하나에 안 들어간다
+      lastBuildInfo.oversize.push({ title: records[i].title, docNo: records[i].docNo, len: ln.length });
+    }
+    const add = cur.length === 0 ? ln.length : ln.length + 1;
+    if(cur.length > 0 && len + add > max){ parts.push(cur); cur = [ln]; len = ln.length; }
+    else { cur.push(ln); len += add; }
+  }
+  if(cur.length) parts.push(cur);
+
+  return parts.map((body, i) => {
+    const b = body.join('\n');
+    const tag = 'B=' + bid + '|P' + (i+1) + '/' + parts.length;
+    return '###' + PROTO + '|' + tag + '|N=' + body.length + '###\r\n'
+         + b.split('\n').join('\r\n') + '\r\n'
+         + '###END|' + tag + '|C=' + checksum4(b) + '###';
+  });
+}
+
+function scopeFilter(scope, days){
+  const all = DB.share;
+  const today = new Date(); today.setHours(0,0,0,0);
+  // 지난번 내보낸 뒤로 바뀐 것만. 평소에는 이게 1~2건이라 조각도 1개로 끝난다.
+  if(scope === 'changed'){
+    const since = DB.cfg.lastExportAt || '';
+    return all.filter(r => (r.mtime || '') > since);
+  }
+  if(scope === 'mine')   return all.filter(r => (r.author || '') === myName());
+  if(scope === 'recent') return all.filter(r => { const d = parseDate(r.regDate); return d && daysBetween(d, today) >= -days; });
+  if(scope === 'open')   return all.filter(r => { const d = parseDate(r.dueDate); return d && d >= today && !r.del; });
+  return all;
+}
+
+/* ------------------------------------------------------------
+   수신 버퍼
+   inbox[배치ID] = { sender, total, parts:{파트번호: 본문} }
+   여러 사람이 보낸 배치를 동시에 담아 둘 수 있다.
+   ------------------------------------------------------------ */
+let inbox = {};
+function resetInbox(){ inbox = {}; }
+
+function batchList(){
+  return Object.keys(inbox).map(id => {
+    const b = inbox[id];
+    const got = Object.keys(b.parts).length;
+    const miss = [];
+    for(let i = 1; i <= b.total; i++) if(!b.parts[i]) miss.push(i);
+    return { id, sender:b.sender, total:b.total, got, miss, complete: got >= b.total };
+  }).sort((a, b) => a.id < b.id ? -1 : 1);
+}
+function completeBatches(){ return batchList().filter(b => b.complete); }
+function inboxCount(){ return batchList().reduce((n, b) => n + b.got, 0); }
+
+function parsePartNo(s){
+  if(s[0] !== 'P') return null;
+  const p = s.indexOf('/');
+  if(p < 0) return null;
+  const a = +s.slice(1, p), b = +s.slice(p + 1);
+  if(!Number.isInteger(a) || !Number.isInteger(b) || a < 1 || b < 1 || a > b) return null;
+  return {no:a, tot:b};
+}
+// 머리말: ###WSCH1|B=배치ID|P1/3|N=5###   (B= 는 옛 형식엔 없다)
+function parseHeader(ln){
+  if(!ln.endsWith('###')) return null;
+  const f = ln.slice(3, -3).split('|');
+  if(f.length < 3 || f[0] !== PROTO) return null;
+  let k = 1, bid = '';
+  if(f[k] && f[k].startsWith('B=')){ bid = f[k].slice(2); k++; }
+  const pn = parsePartNo(f[k] || ''); k++;
+  if(!pn) return null;
+  const nf = f[k] || '';
+  if(!nf.startsWith('N=')) return null;
+  const n = +nf.slice(2);
+  if(!Number.isInteger(n)) return null;
+  return {bid, no:pn.no, tot:pn.tot, n};
+}
+function parseFooter(ln){
+  if(!ln.endsWith('###')) return null;
+  const f = ln.slice(3, -3).split('|');
+  if(f.length < 3 || f[0] !== 'END') return null;
+  let k = 1, bid = '';
+  if(f[k] && f[k].startsWith('B=')){ bid = f[k].slice(2); k++; }
+  const pn = parsePartNo(f[k] || ''); k++;
+  if(!pn) return null;
+  const cf = f[k] || '';
+  if(!cf.startsWith('C=')) return null;
+  const sum = cf.slice(2);
+  if(sum.length !== 4) return null;
+  return {bid, no:pn.no, tot:pn.tot, sum};
+}
+
+// 붙여넣은 텍스트를 먹인다. 조각 순서 무관, 같은 조각 재투입 안전(멱등).
+// 서로 다른 사람이 보낸 배치가 섞여 들어와도 각자 따로 모인다.
+function feed(text){
+  const lines = String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  let inPart = false, body = [], hdr = null;
+  let gotAny = false, gotNew = false, badSum = false, truncated = false;
+  let touched = null;
+
+  for(const raw of lines){
+    const ln = raw.trim();
+    if(!ln) continue;
+
+    if(ln.startsWith('###' + PROTO + '|')){
+      if(inPart) truncated = true;
+      hdr = parseHeader(ln);
+      if(hdr){ inPart = true; body = []; gotAny = true; }
+      else inPart = false;
+    }
+    else if(ln.startsWith('###END|')){
+      if(inPart && hdr){
+        const ft = parseFooter(ln);
+        if(!ft || ft.no !== hdr.no || ft.tot !== hdr.tot || (ft.bid || '') !== (hdr.bid || '')){
+          badSum = true;
+        }else{
+          const b = body.join('\n');
+          if(checksum4(b) !== ft.sum || body.length !== hdr.n){
+            badSum = true;
+          }else{
+            // 옛 형식(B= 없음)은 조각 수로 묶는다. 예전 동작 그대로.
+            const bid = hdr.bid || ('(이전형식)_' + hdr.tot);
+            if(!inbox[bid]) inbox[bid] = { sender: senderOf(bid), total: hdr.tot, parts: {} };
+            if(inbox[bid].total !== hdr.tot) inbox[bid].total = hdr.tot;
+            if(!inbox[bid].parts[hdr.no]){ inbox[bid].parts[hdr.no] = b; gotNew = true; }
+            touched = bid;
+          }
+        }
+        inPart = false;
+      }
+    }
+    else if(inPart) body.push(ln);
+  }
+  if(inPart) truncated = true;
+
+  if(!gotAny) return {st:FD.NOHEADER, msg:'인식할 수 없는 텍스트예요. 머리말(###' + PROTO + ')까지 통째로 복사했는지 확인해 주세요.'};
+  if(truncated || badSum) return {st:FD.BADSUM, msg:'글이 잘리거나 바뀌었어요. 보낸 분께 다시 부탁드리세요.'};
+
+  const b = touched ? batchList().find(x => x.id === touched) : null;
+  const who = b ? (b.sender + '님이 보낸 ') : '';
+  const waiting = batchList().filter(x => !x.complete);
+
+  if(b && b.complete){
+    const done = completeBatches();
+    const extra = waiting.length ? ' (' + waiting.length + '개 묶음은 아직 조각이 모자라요)' : '';
+    return {st:FD.COMPLETE,
+      msg: who + '조각 ' + b.total + '개를 모두 받았어요.' +
+           (done.length > 1 ? ' 반영할 묶음 ' + done.length + '개.' : '') + extra};
+  }
+  if(!gotNew){
+    return {st:FD.DUPLICATE,
+      msg: who + '조각은 이미 받았어요. ' + (b ? b.got + '/' + b.total + ' 받은 상태 — 남은 조각: ' + b.miss.join(', ') : '')};
+  }
+  return {st:FD.PARTIAL,
+    msg: who + '조각 ' + b.got + '/' + b.total + ' 까지 받았어요. 남은 조각: ' + b.miss.join(', ')};
+}
+
+// 완성된 배치의 레코드만 모은다. 같은 ID 는 수정시각이 최신인 것만.
+function inboxRecords(){
+  const d = {};
+  for(const b of completeBatches()){
+    const parts = inbox[b.id].parts;
+    for(let i = 1; i <= b.total; i++){
+      if(!parts[i]) continue;
+      for(const ln of parts[i].split('\n')){
+        if(!ln.trim()) continue;
+        const r = lineToShare(ln);
+        if(!r || !r.id) continue;
+        if(!d[r.id] || r.mtime >= d[r.id].mtime) d[r.id] = r;
+      }
+    }
+  }
+  return d;
+}
+
+/* 병합 판정 — 삭제도 하나의 상태로 보고 수정시각으로 겨룬다.
+     · 들어온 것이 더 최신  -> 그대로 채택 (지웠던 건이면 되살아남)
+     · 시각이 같거나 과거   -> 내 것을 지킨다. 단 삭제는 같은 시각에서 우선.
+   이렇게 하면 남이 옛날 데이터를 통째로 내보내도 내가 지운 게 되살아나지 않고,
+   반대로 누가 지운 뒤 다시 손본 건은 제대로 돌아온다. */
+function mergeVerdict(r){
+  const cur = DB.share.find(x => x.id === r.id);
+  if(!cur) return r.del ? '삭제' : '신규';
+  if(r.mtime > cur.mtime){
+    if(r.del) return '삭제';
+    return cur.del ? '되살아남' : '갱신';
+  }
+  if(r.del && !cur.del) return '삭제';
+  return '변화없음';
+}
+
+function syncPreview(){
+  const d = inboxRecords();
+  return Object.keys(d).map(k => ({rec:d[k], verdict:mergeVerdict(d[k])}));
+}
+
+function syncApply(){
+  const d = inboxRecords();
+  let nAdd = 0, nUpd = 0, nSame = 0, nDel = 0, nBack = 0;
+  const dupDocNo = new Set();
+  const docIndex = {};
+  alive(DB.share).forEach(r => { if(r.docNo && !docIndex[r.docNo]) docIndex[r.docNo] = r.id; });
+
+  Object.keys(d).forEach(id => {
+    const r = d[id];
+    const i = DB.share.findIndex(x => x.id === id);
+    if(i < 0){
+      DB.share.push(r);
+      if(r.del){ nDel++; addLog('삭제표식수신', id, '', shareSummary(r), r.author); }
+      else { nAdd++; addLog('신규', id, '', shareSummary(r), r.author); }
+    }else{
+      const cur = DB.share[i];
+      if(r.mtime > cur.mtime){
+        if(r.del){
+          addLog('삭제', id, shareSummary(cur), '', r.author);
+          cur.del = true; cur.mtime = r.mtime; nDel++;
+        }else if(cur.del){
+          // 내가 지운 뒤에 상대가 더 최신으로 손본 건 -> 되살린다
+          addLog('되살림', id, '(삭제된 상태)', shareSummary(r), r.author);
+          DB.share[i] = r; nBack++;
+        }else{
+          addLog('갱신', id, shareSummary(cur), shareSummary(r), r.author);
+          DB.share[i] = r; nUpd++;
+        }
+      }
+      else if(r.del && !cur.del){
+        // 같은 시각이면 삭제가 이긴다
+        addLog('삭제', id, shareSummary(cur), '', r.author);
+        cur.del = true; nDel++;
+      }
+      else nSame++;
+    }
+    if(r.docNo){
+      if(docIndex[r.docNo] && docIndex[r.docNo] !== id) dupDocNo.add(r.docNo);
+      else docIndex[r.docNo] = id;
+    }
+  });
+
+  DB.cfg.lastSync = nowStamp();
+  markDirty();
+
+  // 반영한 배치만 비운다. 아직 조각이 모자란 배치는 그대로 둔다.
+  completeBatches().forEach(b => { delete inbox[b.id]; });
+
+  let msg = '신규 ' + nAdd + '건, 갱신 ' + nUpd + '건, 변화없음 ' + nSame + '건';
+  if(nBack) msg += ', 되살림 ' + nBack + '건';
+  if(nDel) msg += ', 삭제 ' + nDel + '건';
+  msg += ' 반영했어요.';
+  const left = batchList();
+  if(left.length) msg += '\n\n아직 조각이 모자란 묶음이 ' + left.length + '개 남아 있어요: ' +
+    left.map(b => b.sender + ' (' + b.got + '/' + b.total + ')').join(', ');
+  if(dupDocNo.size){
+    msg += '\n\n※ 문서번호가 중복된 건이 있어요: ' + Array.from(dupDocNo).join(', ') +
+           '\n   (병합은 그대로 했습니다. 어느 쪽이 맞는지 확인해 주세요.)';
+  }
+  return msg;
+}
+
+/* 내가 회신했는지 — 사람마다 다른 값이라 로컬에만 둔다.
+   김대리는 회신했고 박과장은 안 했을 수 있다.
+   shareToLine 에는 절대 들어가지 않는다. */
+function myReplied(id){ return !!(DB.cfg.shareDone && DB.cfg.shareDone[id]); }
+function setReplied(id, on){
+  if(!DB.cfg.shareDone) DB.cfg.shareDone = {};
+  if(on) DB.cfg.shareDone[id] = 1; else delete DB.cfg.shareDone[id];
+  markDirty();
+}
+
+function shareSummary(r){ return (r.docNo || '') + ' / ' + (r.title || '') + ' / 기한 ' + (r.dueDate || ''); }
+function addLog(action, id, before, after, src){
+  DB.log.unshift({time:nowStamp(), action, id, before:ellipsis(before,200), after:ellipsis(after,200), src:src||''});
+  if(DB.log.length > 500) DB.log.length = 500;
+}
+function docNoOwner(docNo, exceptId){
+  docNo = (docNo || '').trim();
+  if(!docNo) return '';
+  const hit = alive(DB.share).find(r => r.docNo === docNo && r.id !== exceptId);
+  return hit ? (hit.author || '(작성자 없음)') : '';
+}
+
+/* ============================================================
+   5. 모달
+   ============================================================ */
+/* 날짜를 비워 두는 게 기본인 폼(연락·점심)에서 쓰는 빠른 날짜 버튼.
+   비워두기가 기본이면 매번 달력을 여는 게 번거로우니 한 번에 넣게 한다. */
+function quickDateBtns(){
+  return '<div class="quickdate">' +
+    '<button type="button" class="btn sm" data-qd="0">오늘</button>' +
+    '<button type="button" class="btn sm" data-qd="1">내일</button>' +
+    '<button type="button" class="btn sm" data-qd="clear">비우기</button>' +
+  '</div>';
+}
+function bindQuickDate(){
+  $$('[data-qd]').forEach(b => b.onclick = () => {
+    const v = b.dataset.qd;
+    $('#f_date').value = (v === 'clear') ? '' : dateStr(addDays(startOfDay(new Date()), +v));
+  });
+}
+
+/* 한 줄짜리 입력에서 Enter -> 저장.
+   내용(textarea)에서는 Ctrl+Enter. 하루에 수십 번 하는 동작이라 기본에 가깝다. */
+function bindEnterSave(okId){
+  const ok = $('#' + (okId || 'f_ok'));
+  if(!ok) return;
+  // 창을 열 때마다 #modalRoot 에 붙이면 리스너가 쌓인다.
+  // 지금 열린 창 안에만 붙여서 창이 닫히면 함께 사라지게 한다.
+  const box = ok.closest('.modal') || $('#modalRoot');
+  box.addEventListener('keydown', e => {
+    if(e.key !== 'Enter') return;
+    const t = e.target;
+    if(t.tagName === 'TEXTAREA'){
+      if(e.ctrlKey || e.metaKey){ e.preventDefault(); ok.click(); }
+      return;
+    }
+    if(t.tagName === 'INPUT' && t.type !== 'file'){ e.preventDefault(); ok.click(); }
+  });
+}
+
+function closeModal(){ $('#modalRoot').innerHTML = ''; }
+// 맨 위 창 하나만 닫는다. 동명이인 선택창이 떠 있을 때 Esc 로
+// 뒤의 등록창이 사라지던 문제를 막는다.
+function closeTopModal(){
+  const root = $('#modalRoot');
+  if(root.lastElementChild) root.lastElementChild.remove();
+}
+function openModal(html, opts){
+  opts = opts || {};
+  const root = $('#modalRoot');
+  root.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.innerHTML = '<div class="backdrop"><div class="modal ' + (opts.wide ? 'wide' : '') + '">' + html + '</div></div>';
+  root.appendChild(wrap);
+  const bd = $('.backdrop', wrap);
+  bd.addEventListener('mousedown', e => { if(e.target === bd && !opts.sticky) closeTopModal(); });
+  const f = $('[data-focus]', root);
+  if(f) setTimeout(() => f.focus(), 30);
+  return root;
+}
+// Esc 는 항상 맨 위 창 하나만 닫는다
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeTopModal();
+});
+function confirmBox(msg){ return window.confirm(msg); }
+
+/* --- 업무 --- */
+function taskModal(id){
+  const r = id ? DB.task.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '업무 수정' : '업무 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow"><label>제목</label><input type="text" id="f_title" data-focus value="' + escHtml(r ? r.title : '') + '"></div>' +
+      '<div class="frow two">' +
+        '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '"></div>' +
+        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
+      '</div>' +
+      '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>', {wide:true});
+
+  bindEnterSave();
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('task', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const title = $('#f_title').value.trim();
+    const date = $('#f_date').value;
+    const time = normTime($('#f_time').value);
+    if(!title) return showErr('제목을 입력해 주세요.');
+    if(!date)  return showErr('날짜를 입력해 주세요.');
+    if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+    const rec = r || {id:newId(myName()), author:myName(), done:false, doneAt:'', del:false};
+    Object.assign(rec, {title, date, time, content:$('#f_content').value, mtime:nowStamp()});
+    if(!r){
+      const ord = nextOrderFor(date);     // 순서를 매긴 날이면 맨 뒤로
+      if(ord !== undefined) rec.order = ord;
+      DB.task.push(rec);
+    }
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+/* --- 연락하기 --- */
+function contactModal(id){
+  const r = id ? DB.contact.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '연락하기 수정' : '연락하기 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      (DB.emp.length ? '' :
+        '<div class="notebox">' +
+          '<span>직원 명부가 아직 없어서 <b>이름으로 내선번호를 찾을 수 없어요.</b><br>' +
+          '내선번호를 직접 입력하시거나, 명부를 등록해 주세요.</span>' +
+          '<span class="spacer"></span>' +
+          '<button class="btn sm primary" id="f_regemp">명부 등록하기</button>' +
+        '</div>') +
+      '<div class="frow two">' +
+        '<div><label>이름</label><input type="text" id="f_name" data-focus value="' + escHtml(r ? r.name : '') + '" placeholder="일부만 입력해도 찾습니다"></div>' +
+        '<div><label>부서</label><input type="text" id="f_dept" value="' + escHtml(r ? r.dept : '') + '"></div>' +
+      '</div>' +
+      '<div class="frow" id="f_favwrap" hidden><label>자주 쓰는 연락처</label>' +
+        '<div class="favlist" id="f_favs"></div></div>' +
+      '<div class="frow"><button class="btn sm" id="f_find">명부에서 찾기</button> <span id="f_extinfo" class="hint" style="display:inline"></span></div>' +
+      '<div class="frow"><label>내선 직접입력 (명부에 없을 때만)</label>' +
+        '<div style="display:flex;gap:8px;align-items:center">' +
+          '<input type="text" id="f_ext" value="' + escHtml(r ? r.extCache : '') + '">' +
+          '<button class="btn sm" id="f_favadd" style="white-space:nowrap">★ 자주 쓰는 연락처로</button>' +
+        '</div></div>' +
+      '<div class="frow two">' +
+        '<div><label>날짜 (선택)</label>' +
+          '<input type="date" id="f_date" value="' + escHtml(r ? r.date : '') + '">' +
+          quickDateBtns() +
+        '</div>' +
+        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
+      '</div>' +
+      '<div class="hint">날짜를 비워 두면 <b>날짜 미정</b>으로 오늘 화면에 계속 보여요.</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>');
+
+  bindQuickDate();
+  const regBtn = $('#f_regemp');
+  if(regBtn) regBtn.onclick = () => { closeModal(); pickEmpFile(); };
+
+  /* --- 자주 쓰는 연락처 ---
+     명부에 없거나 명부가 아직 없어도, 자주 거는 곳은 직접 모아 쓸 수 있게 한다. */
+  function drawFavs(){
+    if(!DB.fav.length){ $('#f_favwrap').hidden = true; return; }
+    $('#f_favwrap').hidden = false;
+    $('#f_favs').innerHTML = DB.fav.map((v, i) =>
+      '<span class="favchip" data-i="' + i + '">' +
+        '<b>' + escHtml(v.name) + '</b>' +
+        (v.dept ? '<em>' + escHtml(v.dept) + '</em>' : '') +
+        '<em>' + escHtml(v.ext || '-') + '</em>' +
+        '<span class="x" data-del="' + i + '" title="지우기">×</span>' +
+      '</span>').join('');
+  }
+
+  function bindFavs(){
+    drawFavs();
+    $('#f_favs').addEventListener('click', ev => {
+      const del = ev.target.closest('[data-del]');
+      if(del){
+        ev.stopPropagation();
+        DB.fav.splice(+del.dataset.del, 1);
+        markDirty(); drawFavs();
+        return;
+      }
+      const chip = ev.target.closest('.favchip');
+      if(!chip) return;
+      const v = DB.fav[+chip.dataset.i];
+      $('#f_name').value = v.name;
+      $('#f_dept').value = v.dept || '';
+      $('#f_ext').value = v.ext || '';
+      refreshExt();
+    });
+    $('#f_favadd').onclick = () => {
+      const name = $('#f_name').value.trim();
+      if(!name) return showErr('이름을 먼저 입력해 주세요.');
+      const dept = $('#f_dept').value.trim();
+      const ext = $('#f_ext').value.trim() || empExt(name, dept);
+      if(!ext) return showErr('내선번호를 입력해 주세요. 자주 쓰는 연락처에는 번호가 필요해요.');
+      const dup = DB.fav.findIndex(v => v.name === name && (v.dept || '') === dept);
+      if(dup >= 0) DB.fav[dup] = { name, dept, ext };
+      else DB.fav.push({ name, dept, ext });
+      markDirty(); drawFavs();
+      toast(name + '님을 자주 쓰는 연락처에 담았어요.');
+    };
+  }
+
+  /* 이름을 다 치면 부서까지 알아서 채운다.
+     명부에 그 이름이 한 명뿐일 때만. 동명이인이면 함부로 정하지 않는다.
+     사용자가 부서를 직접 적어 뒀으면 건드리지 않는다. */
+  function autoFillDept(){
+    const nameV = $('#f_name').value.trim();
+    const deptV = $('#f_dept').value.trim();
+    if(!nameV || deptV) return;
+    const look = empLookup(nameV, '');
+    if(look.state === 'ok' && look.dept) $('#f_dept').value = look.dept;
+  }
+
+  function refreshExt(){
+    const ext = empExt($('#f_name').value, $('#f_dept').value);
+    const box = $('#f_extinfo');
+    if(ext){ box.textContent = '명부: 내선 ' + ext; box.className = 'hint ok'; $('#f_ext').disabled = true; }
+    else { box.textContent = '명부에 없음 — 아래에 직접 입력'; box.className = 'hint'; $('#f_ext').disabled = false; }
+  }
+  // 부서 자동 채움은 이름 칸에서만. 부서 칸에서 하면 지우는 즉시 다시 채워진다.
+  $('#f_name').oninput = () => { autoFillDept(); refreshExt(); };
+  $('#f_dept').oninput = refreshExt;
+  autoFillDept();
+  refreshExt();
+  bindFavs();
+
+  // 0건 → 직접 입력 / 1건 → 팝업 없이 자동 세팅 / 2건 이상 → 선택 팝업
+  $('#f_find').onclick = () => {
+    const q = $('#f_name').value.trim();
+    if(!q) return showErr('이름을 먼저 입력해 주세요. 일부만 입력해도 찾습니다.');
+    const hits = empSearch(q);
+    if(!hits.length) return showErr("'" + q + "' 은(는) 명부에 없습니다. 내선번호를 직접 입력해 주세요.");
+    if(hits.length === 1){ applyPick(hits[0]); return; }
+    pickerModal(hits, applyPick);
+  };
+  function applyPick(e){
+    $('#f_name').value = e.name;
+    $('#f_dept').value = e.dept || '';
+    $('#f_ext').value = '';
+    refreshExt();
+    toast(e.name + (e.dept ? ' / ' + e.dept : '') + ' / 내선 ' + (e.ext || '-'));
+  }
+
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('contact', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const name = $('#f_name').value.trim();
+    const dept = $('#f_dept').value.trim();
+    const time = normTime($('#f_time').value);
+    if(!name) return showErr('이름을 입력해 주세요.');
+    if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+    let extCache = $('#f_ext').value.trim();
+    if(empExt(name, dept)) extCache = '';       // 명부가 항상 우선
+    const rec = r || {id:newId(myName()), author:myName(), done:false, del:false};
+    Object.assign(rec, {name, dept, extCache, date:$('#f_date').value, time, mtime:nowStamp()});
+    if(!r) DB.contact.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+/* --- 동명이인 선택 --- */
+function pickerModal(list, cb){
+  const root = document.createElement('div');
+  root.innerHTML =
+    '<div class="backdrop" style="z-index:110"><div class="modal">' +
+    '<h3>같은 이름이 ' + list.length + '명 있습니다</h3>' +
+    '<div class="body"><div class="picklist">' +
+      list.map((e, i) =>
+        '<div class="p" data-i="' + i + '"><b>' + escHtml(e.name) + '</b>' +
+        '<span>' + escHtml(e.dept || '-') + '</span>' +
+        '<span>' + escHtml(e.rank || '-') + '</span>' +
+        '<span style="margin-left:auto">내선 ' + escHtml(e.ext || '-') + '</span></div>'
+      ).join('') +
+    '</div></div>' +
+    '<div class="foot"><span class="spacer"></span><button class="btn" data-cancel>취소</button></div>' +
+    '</div></div>';
+  $('#modalRoot').appendChild(root);
+  const kill = () => root.remove();
+  $('[data-cancel]', root).onclick = kill;
+  $$('.p', root).forEach(el => el.onclick = () => { kill(); cb(list[+el.dataset.i]); });
+}
+
+/* --- 업무공유 --- */
+function shareModal(id){
+  const r = id ? DB.share.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '업무공유 수정' : '업무공유 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow two">' +
+        '<div><label>문서번호</label><input type="text" id="f_doc" data-focus value="' + escHtml(r ? r.docNo : '') + '"></div>' +
+        '<div><label>&nbsp;</label><div class="hint" id="f_docwarn"></div></div>' +
+      '</div>' +
+      '<div class="frow"><label>제목</label><input type="text" id="f_title" value="' + escHtml(r ? r.title : '') + '"></div>' +
+      '<div class="frow two">' +
+        '<div><label>회신 방식</label>' +
+          '<div class="segbtns" id="f_rtype">' +
+            '<button type="button" data-rt="문서">문서회신</button>' +
+            '<button type="button" data-rt="메일">메일회신</button>' +
+          '</div></div>' +
+        '<div><label>담당자</label>' +
+          '<input type="text" id="f_owner" value="' + escHtml(r ? (r.owner || '') : '') + '" placeholder="회신할 사람"></div>' +
+      '</div>' +
+      '<div class="frow two">' +
+        '<div><label>등록일</label><input type="date" id="f_reg" value="' + escHtml(r ? r.regDate : todayStr()) + '"></div>' +
+        '<div><label>회신기한</label><input type="date" id="f_due" value="' + escHtml(r ? r.dueDate : dateStr(addDays(new Date(), 3))) + '"></div>' +
+      '</div>' +
+      '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
+      '<div class="hint">이 항목만 팀원과 공유됩니다.</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>');
+
+  // 회신 방식 — 문서로 회신하는지 메일로 회신하는지
+  let rtype = (r && r.replyType) || '문서';
+  function paintRt(){
+    $$('#f_rtype [data-rt]').forEach(b => b.classList.toggle('on', b.dataset.rt === rtype));
+  }
+  $('#f_rtype').addEventListener('click', e => {
+    const b = e.target.closest('[data-rt]');
+    if(!b) return;
+    rtype = b.dataset.rt;
+    paintRt();
+  });
+  paintRt();
+
+  // 문서번호 중복은 막지 않고 미리 알려만 준다
+  $('#f_doc').oninput = () => {
+    const owner = docNoOwner($('#f_doc').value, r ? r.id : '');
+    const w = $('#f_docwarn');
+    w.textContent = owner ? '이미 등록된 문서번호입니다 (등록자: ' + owner + ')' : '';
+    w.className = owner ? 'hint warn' : 'hint';
+  };
+  $('#f_doc').oninput();
+
+  bindEnterSave();
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('share', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const docNo = $('#f_doc').value.trim();
+    const title = $('#f_title').value.trim();
+    const due = $('#f_due').value;
+    if(!docNo) return showErr('문서번호를 입력해 주세요.');
+    if(!title) return showErr('제목을 입력해 주세요.');
+    if(!due)   return showErr('회신기한을 입력해 주세요. (필수 항목입니다)');
+    const owner = docNoOwner(docNo, r ? r.id : '');
+    if(owner && !confirmBox('문서번호 ' + docNo + ' 은(는) 이미 등록돼 있습니다.\n(등록자: ' + owner + ')\n\n그래도 등록할까요?')) return;
+    const rec = r || {id:newId(myName()), author:myName(), del:false};
+    Object.assign(rec, {docNo, title, content:$('#f_content').value,
+                        regDate:$('#f_reg').value || todayStr(), dueDate:due,
+                        replyType:rtype, owner:$('#f_owner').value.trim(), mtime:nowStamp()});
+    if(!r) DB.share.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+/* --- 점심약속 --- */
+function lunchModal(id){
+  const r = id ? DB.lunch.find(x => x.id === id) : null;
+  openModal(
+    '<h3>' + (r ? '점심약속 수정' : '점심약속 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow"><label>대상 이름</label><input type="text" id="f_target" data-focus value="' + escHtml(r ? r.target : '') + '"></div>' +
+      '<div class="frow two">' +
+        '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '">' + quickDateBtns() + '</div>' +
+        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
+      '</div>' +
+      '<div class="frow"><label>장소</label><input type="text" id="f_place" value="' + escHtml(r ? r.place : '') + '"></div>' +
+      '<div class="hint" id="f_same"></div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>');
+
+  bindQuickDate();
+
+  function sameDay(){
+    const d = $('#f_date').value;
+    const other = alive(DB.lunch).find(x => x.date === d && x.id !== (r ? r.id : ''));
+    const box = $('#f_same');
+    box.textContent = other ? (d.slice(5).replace('-','/') + '에 ' + other.target + '님과 약속이 있습니다.') : '';
+    box.className = other ? 'hint warn' : 'hint';
+  }
+  $('#f_date').onchange = sameDay;
+  sameDay();
+
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('lunch', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const target = $('#f_target').value.trim();
+    const date = $('#f_date').value;
+    const time = normTime($('#f_time').value);
+    if(!target) return showErr('약속 대상 이름을 입력해 주세요.');
+    if(!date)   return showErr('날짜를 입력해 주세요.');
+    if(time === null) return showErr('시간 형식이 올바르지 않습니다.');
+
+    const myId = r ? r.id : '';
+    const dup = alive(DB.lunch).find(x => x.date === date && x.target === target && x.id !== myId);
+    if(dup){
+      if(!confirmBox(date.slice(5).replace('-','/') + '에 ' + target + '님과의 약속이 이미 등록돼 있습니다.\n중복 등록할까요?')) return;
+    }else{
+      const other = alive(DB.lunch).find(x => x.date === date && x.id !== myId);
+      if(other && !confirmBox(date.slice(5).replace('-','/') + '에 ' + other.target + '님과 약속이 있습니다.\n그래도 등록할까요?')) return;
+    }
+    const rec = r || {id:newId(myName()), author:myName(), del:false};
+    Object.assign(rec, {target, date, time, place:$('#f_place').value.trim(), mtime:nowStamp()});
+    if(!r) DB.lunch.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했습니다.' : '등록했습니다.');
+  };
+}
+
+/* ------------------------------------------------------------
+   출장
+   이동수단·출장지역은 자주 쓰는 것을 버튼으로 두되,
+   목록에 없는 경우가 반드시 있으므로 직접입력을 항상 남겨 둔다.
+   갈 때 KTX, 올 때 자차처럼 여러 개를 고를 수 있어야 해서 복수 선택이다.
+   ------------------------------------------------------------ */
+const TRIP_TRANSPORT = ['자차', 'KTX', '새마을', '무궁화호'];
+const TRIP_REGION = ['우정사업본부(세종)', '우정정보관리원(나주)', '우정인재개발원(천안)'];
+const TRIP_MAX_MEMBER = 10;
+
+// 저장값("KTX, 자차, 셔틀") 을 고른 것 / 직접 적은 것으로 가른다
+function splitMulti(list, value){
+  const parts = String(value || '').split(',').map(s => s.trim()).filter(Boolean);
+  const sel = parts.filter(v => list.includes(v));
+  const etc = parts.filter(v => !list.includes(v)).join(', ');
+  return { sel, etc };
+}
+// 고른 것 + 직접 적은 것을 한 문자열로
+function joinMulti(sel, etc){
+  return sel.concat(String(etc || '').split(',').map(s => s.trim()).filter(Boolean)).join(', ');
+}
+
+function tripModal(id){
+  const r = id ? DB.trip.find(x => x.id === id) : null;
+  const tr = splitMulti(TRIP_TRANSPORT, r && r.transport);
+  const rg = splitMulti(TRIP_REGION, r && r.region);
+  let members = (r && Array.isArray(r.members)) ? r.members.slice() : [];
+
+  // 여러 개 고를 수 있는 버튼 묶음
+  const segs = (name, list, sel, etc) =>
+    '<div class="segbtns multi" data-seg="' + name + '">' +
+      list.map(v =>
+        '<button type="button" data-v="' + escHtml(v) + '"' +
+        (sel.includes(v) ? ' class="on"' : '') + '>' + escHtml(v) + '</button>').join('') +
+      '<button type="button" data-etc="1"' + (etc ? ' class="on"' : '') + '>직접입력</button>' +
+    '</div>';
+
+  openModal(
+    '<h3>' + (r ? '출장 수정' : '출장 등록') + '</h3>' +
+    '<div class="body">' +
+      '<div id="err"></div>' +
+      '<div class="frow"><label>제목</label>' +
+        '<input type="text" id="f_title" data-focus value="' + escHtml(r ? r.title : '') + '"></div>' +
+
+      '<div class="frow two">' +
+        '<div><label>날짜</label><input type="date" id="f_date" value="' +
+          escHtml(r ? r.date : dateStr(viewDate)) + '">' + quickDateBtns() + '</div>' +
+        '<div><label>회의 시작 시간</label><input type="time" id="f_time" value="' +
+          escHtml(r ? r.time : '') + '"></div>' +
+      '</div>' +
+
+      '<div class="frow"><label>이동수단 <span class="lhint">여러 개 고를 수 있어요</span></label>' +
+        segs('tr', TRIP_TRANSPORT, tr.sel, tr.etc) +
+        '<input type="text" id="f_tretc" class="segetc" placeholder="예: 셔틀버스, 시외버스" value="' +
+          escHtml(tr.etc) + '"' + (tr.etc ? '' : ' hidden') + '></div>' +
+
+      '<div class="frow"><label>출장 지역 <span class="lhint">여러 곳도 됩니다</span></label>' +
+        segs('rg', TRIP_REGION, rg.sel, rg.etc) +
+        '<input type="text" id="f_rgetc" class="segetc" placeholder="가는 곳을 적어 주세요" value="' +
+          escHtml(rg.etc) + '"' + (rg.etc ? '' : ' hidden') + '></div>' +
+
+      '<div class="frow"><label>출장자 <span id="f_mcount" class="mcount"></span></label>' +
+        '<div class="memadd">' +
+          '<input type="text" id="f_mname" list="empNames" placeholder="이름을 적고 Enter">' +
+          '<button type="button" class="btn sm" id="f_madd">추가</button>' +
+        '</div>' +
+        '<div class="memlist" id="f_members"></div>' +
+        '<div class="hint">명부에 있는 분은 이름을 치면 목록이 떠요. 최대 ' + TRIP_MAX_MEMBER + '명.</div>' +
+      '</div>' +
+
+      '<div class="frow"><label>내용 (무슨 출장인지)</label>' +
+        '<textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
+    '</div>' +
+    '<div class="foot">' +
+      (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="f_cancel">취소</button>' +
+      '<button class="btn primary" id="f_ok">저장</button>' +
+    '</div>', {wide:true});
+
+  bindQuickDate();
+  bindEnterSave();
+
+  // 버튼을 눌러 켜고 끈다. 직접입력은 글칸을 여닫는다.
+  $$('[data-seg]').forEach(box => {
+    box.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if(!b) return;
+      const etcBox = $('#f_' + box.dataset.seg + 'etc');
+      if(b.dataset.etc){
+        b.classList.toggle('on');
+        etcBox.hidden = !b.classList.contains('on');
+        if(!etcBox.hidden) etcBox.focus(); else etcBox.value = '';
+      }else{
+        b.classList.toggle('on');
+      }
+    });
+  });
+
+  function drawMembers(){
+    $('#f_members').innerHTML = members.map((v, i) =>
+      '<span class="memchip"><b>' + escHtml(v) + '</b>' +
+        '<span class="x" data-mi="' + i + '" title="빼기">×</span></span>').join('');
+    $('#f_mcount').textContent = members.length + ' / ' + TRIP_MAX_MEMBER;
+    $('#f_madd').disabled = members.length >= TRIP_MAX_MEMBER;
+    $('#f_mname').disabled = members.length >= TRIP_MAX_MEMBER;
+  }
+  function addMember(){
+    const v = $('#f_mname').value.trim();
+    if(!v) return;
+    if(members.length >= TRIP_MAX_MEMBER) return showErr('출장자는 ' + TRIP_MAX_MEMBER + '명까지예요.');
+    if(members.includes(v)){ $('#f_mname').value = ''; return showErr(v + '님은 이미 넣으셨어요.'); }
+    members.push(v);
+    $('#f_mname').value = '';
+    drawMembers();
+    $('#f_mname').focus();
+  }
+  $('#f_madd').onclick = addMember;
+  $('#f_mname').addEventListener('keydown', e => {
+    // 여기서 Enter 는 저장이 아니라 "한 명 추가" 다
+    if(e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); addMember(); }
+  });
+  $('#f_members').addEventListener('click', e => {
+    const x = e.target.closest('[data-mi]');
+    if(!x) return;
+    members.splice(+x.dataset.mi, 1);
+    drawMembers();
+  });
+  drawMembers();
+
+  function segValue(name){
+    const box = $('[data-seg="' + name + '"]');
+    const sel = $$('button.on[data-v]', box).map(b => b.dataset.v);
+    return joinMulti(sel, $('#f_' + name + 'etc').value);
+  }
+
+  $('#f_cancel').onclick = closeModal;
+  if(r) $('#f_del').onclick = () => { if(softDelete('trip', r.id)) { closeModal(); renderAll(); } };
+  $('#f_ok').onclick = () => {
+    const title = $('#f_title').value.trim();
+    const date = $('#f_date').value;
+    const time = normTime($('#f_time').value);
+    if(!title) return showErr('제목을 입력해 주세요.');
+    if(!date)  return showErr('날짜를 입력해 주세요.');
+    if(time === null) return showErr('회의 시작 시간이 올바르지 않아요.');
+    const transport = segValue('tr');
+    const region = segValue('rg');
+    if(!transport) return showErr('이동수단을 하나 이상 골라 주세요.');
+    if(!region) return showErr('출장 지역을 하나 이상 골라 주세요.');
+
+    const rec = r || { id:newId(myName()), author:myName(), del:false };
+    Object.assign(rec, {
+      title, date, time, transport, region,
+      members: members.slice(),
+      content: $('#f_content').value, mtime: nowStamp()
+    });
+    if(!r) DB.trip.push(rec);
+    markDirty(); closeModal(); renderAll();
+    toast(r ? '수정했어요.' : '등록했어요.');
+  };
+}
+
+function showErr(msg){
+  const box = $('#err');
+  if(box) box.innerHTML = '<div class="errbox">' + escHtml(msg) + '</div>';
+  return false;
+}
+function softDelete(kind, id){
+  if(!confirmBox('이 항목을 삭제할까요?\n(공유 건은 다음 내보내기 때 상대방에게도 삭제로 전달됩니다.)')) return false;
+  const r = DB[kind].find(x => x.id === id);
+  if(!r) return false;
+  r.del = true; r.mtime = nowStamp();
+  markDirty();
+  return true;
+}
+
+/* --- 내용 보기 --- */
+function detailModal(title, body){
+  openModal(
+    '<h3>' + escHtml(title) + '</h3>' +
+    '<div class="body"><div class="detailBody">' + escHtml(body) + '</div></div>' +
+    '<div class="foot"><span class="spacer"></span><button class="btn" id="d_close">닫기</button></div>',
+    {wide:true});
+  $('#d_close').onclick = closeModal;
+}
+
+/* ------------------------------------------------------------
+   검색 · 전체 목록 · 휴지통
+   달력을 한 달씩 넘기며 눈으로 찾는 것 말고는 지난 것을 볼 방법이 없었다.
+   ------------------------------------------------------------ */
+const KIND_LABEL = { task:'업무', contact:'연락', share:'공유', lunch:'점심', trip:'출장' };
+
+// 한 건을 화면에 뿌릴 공통 모양으로
+function hitOf(kind, r){
+  if(kind === 'task')    return { kind, id:r.id, date:r.date, title:r.title, sub:r.content || '', done:!!r.done };
+  if(kind === 'contact') return { kind, id:r.id, date:r.date, title:r.name + (r.dept ? ' (' + r.dept + ')' : ''), sub:'', done:!!r.done };
+  if(kind === 'trip')    return { kind, id:r.id, date:r.date, title:r.title,
+    sub:[r.region, r.transport, (r.members || []).join(', ')].filter(Boolean).join(' · '), done:false };
+  if(kind === 'share')   return { kind, id:r.id, date:r.dueDate, title:r.title,
+    sub:r.docNo + (r.owner ? ' · 담당 ' + r.owner : '') + (r.replyType ? ' · ' + r.replyType : ''), done:false };
+  return { kind, id:r.id, date:r.date, title:r.target, sub:r.place || '', done:false };
+}
+
+function searchAll(q){
+  q = (q || '').trim();
+  if(!q) return [];
+  const has = (...xs) => xs.some(x => String(x || '').toLowerCase().includes(q.toLowerCase()));
+  const out = [];
+  alive(DB.task).forEach(r => { if(has(r.title, r.content)) out.push(hitOf('task', r)); });
+  alive(DB.share).forEach(r => { if(has(r.title, r.content, r.docNo, r.author, r.owner, r.replyType)) out.push(hitOf('share', r)); });
+  alive(DB.contact).forEach(r => { if(has(r.name, r.dept)) out.push(hitOf('contact', r)); });
+  alive(DB.lunch).forEach(r => { if(has(r.target, r.place)) out.push(hitOf('lunch', r)); });
+  alive(DB.trip).forEach(r => { if(has(r.title, r.content, r.region, r.transport, (r.members || []).join(' '))) out.push(hitOf('trip', r)); });
+  return out.sort((a, b) => (b.date || '') < (a.date || '') ? -1 : 1);
+}
+
+function hitRows(list, emptyMsg){
+  if(!list.length) return '<div class="empty">' + escHtml(emptyMsg) + '</div>';
+  return list.map(h =>
+    '<div class="hitrow' + (h.done ? ' done' : '') + '" data-kind="' + h.kind + '" data-id="' + escHtml(h.id) + '">' +
+      '<span class="kind">' + KIND_LABEL[h.kind] + '</span>' +
+      '<span class="ttl" title="' + escHtml(h.title) + '">' + escHtml(h.title) +
+        (h.sub ? ' <span style="color:var(--ink-3);font-weight:400">— ' + escHtml(ellipsis(h.sub, 40)) + '</span>' : '') +
+      '</span>' +
+      '<span class="sub2">' + escHtml(h.date || '날짜 미정') + '</span>' +
+    '</div>').join('');
+}
+
+// 결과를 누르면 그 날짜로 이동하고 수정 창을 연다
+function bindHitRows(root){
+  root.addEventListener('click', e => {
+    const row = e.target.closest('.hitrow');
+    if(!row) return;
+    const kind = row.dataset.kind, id = row.dataset.id;
+    const rec = DB[kind].find(x => x.id === id);
+    closeModal();
+    if(rec){
+      const d = parseDate(kind === 'share' ? rec.dueDate : rec.date);
+      if(d){ viewDate = d; }
+      showView('today');
+      ({task:taskModal, contact:contactModal, share:shareModal, lunch:lunchModal, trip:tripModal})[kind](id);
+    }
+  });
+}
+
+function searchModal(q){
+  openModal(
+    '<h3>찾기</h3>' +
+    '<div class="body">' +
+      '<div class="frow"><input type="text" id="sq" data-focus value="' + escHtml(q || '') +
+        '" placeholder="제목 · 내용 · 문서번호 · 이름"></div>' +
+      '<div class="hint" id="scount" style="margin:0 0 10px"></div>' +
+      '<div class="hitbox" id="sbox"></div>' +
+    '</div>' +
+    '<div class="foot"><span class="spacer"></span><button class="btn" id="sclose">닫기</button></div>',
+    {wide:true});
+
+  function draw(){
+    const list = searchAll($('#sq').value);
+    $('#scount').textContent = $('#sq').value.trim()
+      ? list.length + '건 찾았어요. 누르면 그 항목으로 갑니다.'
+      : '찾을 말을 입력해 주세요.';
+    $('#sbox').innerHTML = hitRows(list, '해당하는 것이 없어요.');
+  }
+  $('#sq').oninput = draw;
+  draw();
+  bindHitRows($('#sbox'));
+  $('#sclose').onclick = closeModal;
+}
+
+/* 업무공유 전체 목록 — 오늘 화면에는 기한 -7일 이내만 보인다.
+   문서번호가 붙는 공식 기록이라 지난 것도 찾을 수 있어야 한다. */
+function shareAllModal(){
+  let filter = 'open';
+  openModal(
+    '<h3>업무공유 전체</h3>' +
+    '<div class="body">' +
+      '<div class="filterbar">' +
+        '<button class="btn sm on" data-f="open">진행 중</button>' +
+        '<button class="btn sm" data-f="past">지난 것</button>' +
+        '<button class="btn sm" data-f="all">전부</button>' +
+      '</div>' +
+      '<div class="frow"><input type="text" id="shq" data-focus placeholder="문서번호 · 제목 · 작성자로 걸러보기"></div>' +
+      '<div class="hint" id="shcount" style="margin:0 0 10px"></div>' +
+      '<div class="hitbox" id="shbox"></div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn" id="shexp">내보내기</button>' +
+      '<button class="btn" id="shimp">가져오기</button>' +
+      '<span class="spacer"></span><button class="btn" id="shclose">닫기</button>' +
+    '</div>', {wide:true});
+
+  function draw(){
+    const q = $('#shq').value.trim().toLowerCase();
+    const t0 = startOfDay(new Date());
+    let list = alive(DB.share).filter(r => {
+      const due = parseDate(r.dueDate);
+      if(filter === 'open') return !due || due >= t0;
+      if(filter === 'past') return due && due < t0;
+      return true;
+    });
+    if(q) list = list.filter(r =>
+      [r.docNo, r.title, r.content, r.author, r.owner].some(x => String(x || '').toLowerCase().includes(q)));
+    list.sort((a, b) => (a.dueDate || '') < (b.dueDate || '') ? -1 : 1);
+    $('#shcount').textContent = list.length + '건';
+    $('#shbox').innerHTML = hitRows(list.map(r => hitOf('share', r)), '해당하는 공유 건이 없어요.');
+  }
+  $$('[data-f]').forEach(b => b.onclick = () => {
+    filter = b.dataset.f;
+    $$('[data-f]').forEach(x => x.classList.toggle('on', x === b));
+    draw();
+  });
+  $('#shq').oninput = draw;
+  draw();
+  bindHitRows($('#shbox'));
+  $('#shexp').onclick = () => { closeModal(); exportModal(); };
+  $('#shimp').onclick = () => { closeModal(); importModal(); };
+  $('#shclose').onclick = closeModal;
+}
+
+/* 휴지통 — 삭제는 플래그만 세우므로 되살릴 수 있다.
+   되살릴 때 수정시각을 갱신하면 다음 동기화에서 상대에게도 전파된다. */
+function trashModal(){
+  openModal(
+    '<h3>휴지통</h3>' +
+    '<div class="body">' +
+      '<div class="hint" style="margin:0 0 10px">되살리면 목록으로 돌아옵니다.</div>' +
+      '<div class="hitbox" id="tbox"></div>' +
+    '</div>' +
+    '<div class="foot"><span class="spacer"></span><button class="btn" id="tclose">닫기</button></div>',
+    {wide:true});
+
+  function draw(){
+    const out = [];
+    ['task','contact','share','lunch','trip'].forEach(k => {
+      DB[k].filter(r => r.del).forEach(r => {
+        const h = hitOf(k, r);
+        out.push('<div class="hitrow" data-k="' + k + '" data-i="' + escHtml(r.id) + '">' +
+          '<span class="kind">' + KIND_LABEL[k] + '</span>' +
+          '<span class="ttl">' + escHtml(h.title || '(제목 없음)') + '</span>' +
+          '<span class="sub2">' + escHtml((r.mtime || '').slice(0, 10)) + '</span>' +
+          '<button class="btn sm primary" data-restore>되살리기</button>' +
+        '</div>');
+      });
+    });
+    $('#tbox').innerHTML = out.length ? out.join('') : '<div class="empty">지운 항목이 없어요.</div>';
+  }
+  draw();
+  $('#tbox').addEventListener('click', e => {
+    if(!e.target.closest('[data-restore]')) return;
+    const row = e.target.closest('.hitrow');
+    const rec = DB[row.dataset.k].find(x => x.id === row.dataset.i);
+    if(!rec) return;
+    rec.del = false;
+    rec.mtime = nowStamp();
+    markDirty(); renderAll(); draw();
+    toast('되살렸어요.');
+  });
+  $('#tclose').onclick = closeModal;
+}
+
+/* ------------------------------------------------------------
+   직원 명부 안내
+   명부가 없으면 연락하기가 반쪽이 된다(이름으로 내선을 못 찾음).
+   그래서 처음 열 때 한 번, 연락 등록을 시도할 때 한 번 알려 준다.
+   ------------------------------------------------------------ */
+function pickEmpFile(){
+  showView('setup');
+  $('#empFile').click();
+}
+
+function empGuideModal(){
+  openModal(
+    '<h3>직원 명부를 먼저 등록해 주세요</h3>' +
+    '<div class="body">' +
+      '<div class="notebox">명부를 올려두면 연락하기를 등록할 때 ' +
+        '<b>이름만 입력해도 내선번호를 자동으로 찾아옵니다.</b></div>' +
+      '<ul class="guide-list">' +
+        '<li>엑셀(.xlsx) 파일을 그대로 올리면 돼요. CSV 도 됩니다.</li>' +
+        '<li>첫 줄에 <b>이름 · 내선번호 · 부서 · 직급</b> 머리글이 있으면 순서가 달라도 알아서 찾아요.</li>' +
+        '<li>부서·직급은 비워도 됩니다.</li>' +
+        '<li>명부가 없어도 내선번호를 직접 입력해 쓸 수 있어요.</li>' +
+      '</ul>' +
+      '<label class="checkline"><input type="checkbox" id="g_never"> 다시 보지 않기</label>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn" id="g_later">나중에 하기</button>' +
+      '<button class="btn" id="g_tpl">양식 내려받기</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn primary" id="g_now">지금 등록하기</button>' +
+    '</div>');
+
+  const remember = () => { if($('#g_never').checked){ DB.cfg.empGuideOff = true; markDirty(); } };
+  $('#g_later').onclick = () => { remember(); closeModal(); };
+  $('#g_tpl').onclick = () => { downloadEmpTemplate(); };
+  $('#g_now').onclick = () => { remember(); closeModal(); pickEmpFile(); };
+}
+
+// 명부가 비어 있고 "다시 보지 않기"를 고르지 않았을 때만
+function maybeShowEmpGuide(){
+  if(DB.emp.length) return;
+  if(DB.cfg.empGuideOff) return;
+  empGuideModal();
+}
+
+// 올린 명부를 그대로 보여 준다. 몇 명이 어떻게 들어갔는지 눈으로 확인하는 창.
+function empListModal(){
+  const info = empParseInfo;
+  const rows = DB.emp;
+  openModal(
+    '<h3>직원 명부 ' + rows.length + '명</h3>' +
+    '<div class="body">' +
+      (rows.length ? '' : '<div class="notebox">아직 명부를 안 올렸어요.</div>') +
+      (info.total ? '<div class="hint" style="margin:0 0 12px">' +
+        '파일에서 ' + info.total + '줄을 읽어 ' + rows.length + '명으로 인식했어요.' +
+        (info.blank ? ' · 빈 줄 ' + info.blank + '줄 건너뜀' : '') +
+        (info.noName ? ' · 이름 없는 줄 ' + info.noName + '줄 건너뜀' : '') +
+        (info.header ? '' : ' · 머리글을 못 찾아서 열 순서대로 읽었어요') +
+        '</div>' : '') +
+      '<div class="frow"><input type="text" id="el_q" data-focus placeholder="이름·부서로 걸러보기"></div>' +
+      '<div style="max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:var(--radius-sm)">' +
+        '<table class="mini"><thead><tr>' +
+        '<th style="width:110px">이름</th><th style="width:130px">부서</th>' +
+        '<th style="width:90px">직급</th><th>내선번호</th>' +
+        '</tr></thead><tbody id="el_body"></tbody></table>' +
+      '</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn" id="el_reload">다시 올리기</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="el_close">닫기</button>' +
+    '</div>', {wide:true});
+
+  function draw(){
+    const q = $('#el_q').value.trim();
+    const list = q ? DB.emp.filter(e =>
+      (e.name || '').includes(q) || (e.dept || '').includes(q)) : DB.emp;
+    $('#el_body').innerHTML = list.length ? list.map(e =>
+      '<tr><td><b>' + escHtml(e.name) + '</b></td><td>' + escHtml(e.dept || '-') + '</td>' +
+      '<td>' + escHtml(e.rank || '-') + '</td>' +
+      '<td style="font-variant-numeric:tabular-nums">' + escHtml(e.ext || '-') + '</td></tr>').join('')
+      : '<tr><td colspan="4" style="color:var(--ink-3)">해당하는 사람이 없어요.</td></tr>';
+  }
+  $('#el_q').oninput = draw;
+  draw();
+  $('#el_reload').onclick = () => { closeModal(); pickEmpFile(); };
+  $('#el_close').onclick = closeModal;
+}
+
+function downloadEmpTemplate(){
+  const csv = '﻿이름,내선번호,부서,직급\r\n홍길동,1234,기획팀,과장\r\n김영희,02-1234-5678,총무팀,대리\r\n';
+  download('직원명부_양식.csv', csv, 'text/csv');
+}
+
+/* ============================================================
+   6. 공유 내보내기 / 가져오기
+   ============================================================ */
+/* ------------------------------------------------------------
+   내보내기
+   같은 공유 건이라도 팀원에게 넘길 때(양식)와 상대 부서에 메일 쓸 때는
+   글 모양이 완전히 다르다. 먼저 무엇을 할지 고르게 한다.
+   ------------------------------------------------------------ */
+
+// 제목 앞머리가 팀 이름이다. "AX금융혁신팀 업무스케줄러" -> "AX금융혁신팀"
+function teamName(){
+  const t = appTitle().trim();
+  const cut = t.replace(/업무\s*스케줄러\s*$/, '').trim();
+  return cut || t;
+}
+
+// 메일 본문 - 정해진 양식이라 손대지 않는다
+function mailText(r){
+  return '안녕하십니까 ' + teamName() + ' ' + ((r.author || '').trim() || myName()) + ' 입니다.\n' +
+         '\n' + (r.title || '') + '관련하여 공유드립니다.\n' +
+         '\n관련한 내용은 아래와 같습니다. (관련문서 : ' + ((r.docNo || '').trim() || '-') + ')\n' +
+         '\n' + (r.content || '').trim() + '\n' +
+         '\n확인 후 회신부탁드립니다.';
+}
+
+/* ------------------------------------------------------------
+   출장 공유
+   메신저에 그대로 붙여넣을 글이다. 양식 부호(###)를 쓰지 않고
+   사람이 읽는 모양으로만 만든다.
+   ------------------------------------------------------------ */
+function tripShareText(trips){
+  const byDate = {};
+  trips.forEach(r => { (byDate[r.date] = byDate[r.date] || []).push(r); });
+
+  const out = ['[' + teamName() + '] 출장 공유'];
+  Object.keys(byDate).sort().forEach(d => {
+    const dt = new Date(d + 'T00:00:00');
+    out.push('');
+    out.push('▶ ' + d + ' (' + WD[dt.getDay()] + ')');
+    sortByTime(byDate[d]).forEach(r => {
+      const mem = r.members || [];
+      out.push('');
+      out.push('■ ' + (r.title || '(제목 없음)'));
+      out.push('- 지역: ' + (r.region || '-'));
+      out.push('- 이동수단: ' + (r.transport || '-'));
+      if(r.time) out.push('- 회의 시작: ' + r.time);
+      out.push('- 출장자(' + mem.length + '명): ' + (mem.join(', ') || '-'));
+      if((r.content || '').trim()){
+        // 내용이 여러 줄이면 줄마다 들여써야 뭉치지 않는다
+        const lines = r.content.trim().split('\n');
+        out.push('- 내용: ' + lines[0]);
+        lines.slice(1).forEach(l => out.push('        ' + l));
+      }
+    });
+  });
+  return out.join('\n');
+}
+
+function tripShareModal(){
+  const ds = dateStr(viewDate);
+  openModal(
+    '<h3>출장 공유하기</h3>' +
+    '<div class="body">' +
+      '<div class="frow"><label>범위</label>' +
+        '<select id="p_scope">' +
+          '<option value="day">이 날짜 (' + escHtml(ds) + ')</option>' +
+          '<option value="week">이 날짜부터 7일</option>' +
+          '<option value="future">앞으로 잡힌 것 전부</option>' +
+        '</select>' +
+      '</div>' +
+      '<label>붙여넣을 글</label>' +
+      '<div class="pre prose" id="p_prev"></div>' +
+      '<div class="hint" id="p_info"></div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn primary" id="p_copy">복사하기</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="p_close">닫기</button>' +
+    '</div>', {wide:true});
+
+  let text = '';
+  function draw(){
+    const sc = $('#p_scope').value;
+    const end = dateStr(addDays(viewDate, 6));
+    const list = alive(DB.trip).filter(r =>
+      sc === 'day' ? r.date === ds :
+      sc === 'week' ? (r.date >= ds && r.date <= end) : r.date >= ds);
+    if(!list.length){
+      text = '';
+      $('#p_prev').textContent = '';
+      $('#p_info').textContent = '해당하는 출장이 없어요.';
+      $('#p_copy').disabled = true;
+      return;
+    }
+    text = tripShareText(list.slice().sort((a, b) => a.date.localeCompare(b.date)));
+    $('#p_prev').textContent = text;
+    $('#p_info').textContent = list.length + '건 · ' + text.length + '자';
+    $('#p_copy').disabled = false;
+  }
+  $('#p_scope').onchange = draw;
+  draw();
+
+  $('#p_close').onclick = closeModal;
+  $('#p_copy').onclick = async () => {
+    if(!text) return;
+    const ok = await copyText(text);
+    toast(ok ? '복사했어요. 메신저에 붙여넣으세요.' : '복사가 막혀 있어요. 위 상자를 직접 긁어 주세요.');
+  };
+}
+
+function exportModal(){
+  openModal(
+    '<h3>업무공유 내보내기</h3>' +
+    '<div class="body">' +
+      '<p class="lead">무엇을 하시려는지 골라 주세요.</p>' +
+      '<div class="pick2">' +
+        '<button type="button" class="pickcard" data-go="mail">' +
+          '<div class="ic">✉</div>' +
+          '<div class="nm">메일 쓰기</div>' +
+          '<div class="ds">정해진 양식으로 만들어<br>클립보드에 담아요</div>' +
+        '</button>' +
+        '<button type="button" class="pickcard" data-go="sync">' +
+          '<div class="ic">⇄</div>' +
+          '<div class="nm">양식 공유하기</div>' +
+          '<div class="ds">팀원 스케줄러로<br>그대로 넘겨요</div>' +
+        '</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="foot"><span class="spacer"></span>' +
+      '<button class="btn" id="x_close">닫기</button></div>');
+  $('#x_close').onclick = closeModal;
+  $$('.pick2 .pickcard').forEach(b => {
+    b.onclick = () => (b.dataset.go === 'mail' ? mailModal() : syncExportModal());
+  });
+}
+
+function mailModal(){
+  const list = alive(DB.share).slice().sort((a, b) =>
+    String(b.regDate || '').localeCompare(String(a.regDate || '')));
+
+  if(!list.length){
+    openModal(
+      '<h3>메일 쓰기</h3>' +
+      '<div class="body"><p class="lead">공유된 업무가 없어요.<br>먼저 [＋ 공유 추가]로 등록해 주세요.</p></div>' +
+      '<div class="foot"><span class="spacer"></span><button class="btn" id="m_close">닫기</button></div>');
+    $('#m_close').onclick = closeModal;
+    return;
+  }
+
+  openModal(
+    '<h3>메일 쓰기</h3>' +
+    '<div class="body">' +
+      '<div class="frow"><label>어느 건인가요</label>' +
+        '<select id="m_pick">' +
+          list.map((r, i) => '<option value="' + i + '">' +
+            escHtml((r.docNo ? r.docNo + ' · ' : '') + (r.title || '(제목 없음)')) + '</option>').join('') +
+        '</select>' +
+        '<div class="hint">팀 이름은 지금 <b>' + escHtml(teamName()) + '</b> 로 들어갑니다.</div>' +
+      '</div>' +
+      '<label>메일 본문</label>' +
+      '<div class="pre prose" id="m_prev"></div>' +
+      '<div class="hint">정해진 양식입니다. 내용은 공유 건을 수정하면 바뀌어요.</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn primary" id="m_copy">복사하기</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="m_back">뒤로</button>' +
+      '<button class="btn" id="m_close">닫기</button>' +
+    '</div>', {wide:true});
+
+  const draw = () => { $('#m_prev').textContent = mailText(list[+$('#m_pick').value]); };
+  $('#m_pick').onchange = draw;
+  draw();
+
+  $('#m_back').onclick = exportModal;
+  $('#m_close').onclick = closeModal;
+  $('#m_copy').onclick = async () => {
+    const ok = await copyText(mailText(list[+$('#m_pick').value]));
+    toast(ok ? '복사했어요. 메일 본문에 붙여넣으세요.' : '복사가 막혀 있어요. 위 상자를 직접 긁어 주세요.');
+  };
+}
+
+function syncExportModal(){
+  let parts = [], idx = 0, count = 0, sentAll = false;
+  const hasPrev = !!DB.cfg.lastExportAt;
+
+  openModal(
+    '<h3>업무공유 내보내기</h3>' +
+    '<div class="body">' +
+      '<div class="frow"><label>내보낼 범위</label>' +
+        '<select id="e_scope">' +
+          (hasPrev ? '<option value="changed">지난번 내보낸 뒤 바뀐 것만 (권장)</option>' : '') +
+          '<option value="all">전체</option>' +
+          '<option value="mine">내가 등록한 것만</option>' +
+          '<option value="open">회신기한 미도래분만</option>' +
+          '<option value="recent">최근 N일</option>' +
+        '</select>' +
+        (hasPrev ? '<div class="hint">지난번 내보낸 시각: ' + escHtml(DB.cfg.lastExportAt) + '</div>' : '') +
+      '</div>' +
+      '<div class="frow" id="e_daysrow" hidden><label>N일</label><input type="number" id="e_days" value="30" min="1"></div>' +
+      '<div class="hint" id="e_info" style="margin-bottom:8px"></div>' +
+      '<div id="e_steps" style="margin-bottom:10px"></div>' +
+      '<div class="pre" id="e_prev"></div>' +
+      '<div class="hint">자동 복사가 안 되면 위 상자를 직접 긁어서 복사하세요.<br>' +
+        '받는 쪽에서 <b>인식할 수 없는 텍스트</b> 라고 나오면, ' +
+        '코드블록(백틱 세 개)으로 감싸서 보내면 됩니다.</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn primary" id="e_copy">복사</button>' +
+      '<button class="btn add primary" id="e_done" hidden>메신저에 다 붙여넣었어요</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="e_back">뒤로</button>' +
+      '<button class="btn" id="e_close">닫기</button>' +
+    '</div>', {sticky:true});
+
+  $('#e_back').onclick = exportModal;
+
+  // 이 버튼을 눌러야 "보낸 것" 으로 기록한다
+  $('#e_done').onclick = () => {
+    DB.cfg.lastExportAt = nowStamp();
+    markDirty();
+    closeModal();
+    renderAll();
+    toast('보낸 것으로 기록했어요. 다음부터는 바뀐 것만 보내면 됩니다.');
+  };
+
+  // 조각 진행 표시: 보낸 것은 초록, 지금 것은 파랑, 남은 것은 회색
+  function drawSteps(){
+    if(parts.length <= 1){ $('#e_steps').innerHTML = ''; return; }
+    $('#e_steps').innerHTML = parts.map((_, i) =>
+      '<span class="pill step ' + (i < idx ? 'green' : i === idx && !sentAll ? 'blue' : 'gray') + '">' +
+      (i < idx ? '✓ ' : '') + (i+1) + '</span>').join('');
+  }
+
+  function recalc(){
+    const scope = $('#e_scope').value;
+    $('#e_daysrow').hidden = scope !== 'recent';
+    const days = Math.max(1, +($('#e_days').value || 30));
+    const recs = scopeFilter(scope, days);
+    count = recs.length;
+    parts = buildParts(recs);
+    idx = 0; sentAll = false;
+    $('#e_done').hidden = true;      // 범위를 바꾸면 처음부터 다시
+
+    if(!parts.length){
+      $('#e_info').textContent = scope === 'changed'
+        ? '지난번 내보낸 뒤로 바뀐 건이 없습니다. 보낼 것이 없습니다.'
+        : '대상 0건 — 내보낼 것이 없습니다.';
+      $('#e_prev').textContent = '';
+      $('#e_copy').disabled = true;
+      $('#e_copy').textContent = '복사';
+    }else{
+      $('#e_info').textContent = '대상 ' + count + '건 · 조각 ' + parts.length + '개'
+        + (parts.length > 1 ? ' — 아래 버튼을 누르고 메신저에 붙여넣기를 ' + parts.length + '번 반복하세요.' : '');
+      // 한 건이 통째로 조각 하나에 안 들어가면 그대로 보내면 잘린다. 반드시 알린다.
+      const big = lastBuildInfo.oversize;
+      if(big.length){
+        $('#e_info').innerHTML = escHtml($('#e_info').textContent) +
+          '<div class="errbox" style="margin:10px 0 0">내용이 너무 긴 건이 ' + big.length + '건 있어요. ' +
+          '조각 하나에 안 들어가서 메신저에서 잘릴 수 있습니다.<br>' +
+          big.slice(0, 3).map(o => '· ' + escHtml(o.docNo || '') + ' ' + escHtml(ellipsis(o.title, 24)) +
+            ' (' + o.len + '자 / 한 조각 ' + lastBuildInfo.bodyMax + '자)').join('<br>') +
+          (big.length > 3 ? '<br>· 외 ' + (big.length - 3) + '건' : '') +
+          '<br><br>내용을 줄이시거나, 설정에서 조각당 글자 수를 늘려 주세요.</div>';
+      }
+      $('#e_prev').textContent = parts[0];
+      $('#e_copy').disabled = false;
+      $('#e_copy').textContent = parts.length === 1 ? '복사하기' : '1 / ' + parts.length + ' 복사';
+    }
+    drawSteps();
+  }
+  $('#e_scope').onchange = recalc;
+  $('#e_days').oninput = recalc;
+  recalc();
+
+  $('#e_copy').onclick = async () => {
+    if(!parts.length) return;
+    const ok = await copyText(parts[idx]);
+    if(!ok){
+      $('#e_info').innerHTML = '<span style="color:var(--red)">자동 복사가 막혀 있습니다. 아래 상자의 내용을 직접 선택해 복사해 주세요.</span>';
+      return;
+    }
+    if(idx >= parts.length - 1){
+      idx = parts.length; sentAll = true;
+      $('#e_info').textContent = parts.length === 1
+        ? '복사했어요. 메신저 대화창에 붙여넣어 주세요.'
+        : '조각 ' + parts.length + '개를 모두 복사했어요. 마지막 조각을 붙여넣어 주세요.';
+      $('#e_copy').disabled = true;
+      // 복사만 하고 안 보내는 일이 있다. 여기서 기록하면 그 건들이
+      // 다음 "바뀐 것만" 에서 영영 빠진다. 실제로 붙여넣었는지 확인받는다.
+      $('#e_done').hidden = false;
+    }else{
+      idx++;
+      $('#e_info').textContent = idx + '/' + parts.length + ' 조각을 복사했습니다. 붙여넣은 뒤 다시 눌러 주세요.';
+      $('#e_prev').textContent = parts[idx];
+      $('#e_copy').textContent = (idx+1) + ' / ' + parts.length + ' 복사';
+    }
+    drawSteps();
+  };
+  $('#e_close').onclick = closeModal;
+}
+
+function importModal(){
+  resetInbox();
+  openModal(
+    '<h3>업무공유 가져오기</h3>' +
+    '<div class="body">' +
+      '<div class="frow"><label>받은 텍스트를 붙여넣으세요 (Ctrl+V)</label>' +
+        '<textarea id="i_paste" data-focus style="min-height:110px" placeholder="###WSCH1|P1/1|N=1###&#10;S|...&#10;###END|P1/1|C=XXXX###"></textarea></div>' +
+      '<div class="hint" id="i_status">붙여넣으면 바로 읽어요. 조각 순서는 상관없습니다.</div>' +
+      '<div id="i_steps" style="margin-top:8px"></div>' +
+      '<div id="i_prevwrap" hidden style="margin-top:12px">' +
+        '<table class="mini"><thead><tr><th style="width:70px">상태</th><th style="width:130px">문서번호</th><th>제목</th></tr></thead>' +
+        '<tbody id="i_prev"></tbody></table>' +
+      '</div>' +
+    '</div>' +
+    '<div class="foot">' +
+      '<button class="btn primary" id="i_apply" disabled>반영</button>' +
+      '<button class="btn" id="i_reset">받은 조각 버리기</button>' +
+      '<span class="spacer"></span>' +
+      '<button class="btn" id="i_close">닫기</button>' +
+    '</div>', {wide:true, sticky:true});
+
+  let busy = false;
+  const ta = $('#i_paste');
+  ta.addEventListener('input', () => {
+    if(busy) return;
+    const t = ta.value;
+    if(!t.trim()) return;
+    const res = feed(t);
+    $('#i_status').textContent = res.msg;
+    $('#i_status').className = (res.st === FD.BADSUM || res.st === FD.NOHEADER) ? 'hint warn' : 'hint';
+    drawSteps();
+
+    if(res.st === FD.COMPLETE){
+      clearBox();
+      fillPreview();
+      $('#i_apply').disabled = !syncPreview().length;
+    }else if(res.st === FD.PARTIAL || res.st === FD.DUPLICATE){
+      clearBox();                       // 다음 조각을 바로 붙여넣게 비운다
+      $('#i_apply').disabled = true;
+    }else{
+      $('#i_apply').disabled = true;    // 형식/체크섬 오류는 내용을 볼 수 있게 지우지 않는다
+    }
+  });
+  function clearBox(){ busy = true; ta.value = ''; busy = false; }
+
+  // 받은 조각 / 남은 조각을 한눈에
+  function drawSteps(){
+    const tot = inboxTotal;
+    if(tot <= 1){ $('#i_steps').innerHTML = ''; return; }
+    let h = '';
+    for(let i = 1; i <= tot; i++){
+      const got = !!inbox[i];
+      h += '<span class="pill step ' + (got ? 'green' : 'gray') + '">' + (got ? '✓ ' : '') + i + '</span>';
+    }
+    $('#i_steps').innerHTML = h;
+  }
+  drawSteps();
+
+  function fillPreview(){
+    const rows = syncPreview();
+    $('#i_prevwrap').hidden = !rows.length;
+    const cls = {'신규':'green','갱신':'blue','삭제':'red','변화없음':'gray'};
+    $('#i_prev').innerHTML = rows.map(x =>
+      '<tr><td><span class="pill ' + cls[x.verdict] + '">' + x.verdict + '</span></td>' +
+      '<td>' + escHtml(x.rec.docNo) + '</td><td>' + escHtml(x.rec.title) + '</td></tr>').join('');
+  }
+
+  $('#i_apply').onclick = () => {
+    const msg = syncApply();
+    closeModal();
+    renderAll();
+    alert(msg);
+  };
+  $('#i_reset').onclick = () => {
+    resetInbox(); clearBox(); drawSteps();
+    $('#i_prevwrap').hidden = true;
+    $('#i_apply').disabled = true;
+    $('#i_status').textContent = '받은 조각을 모두 버렸습니다. 처음부터 다시 붙여넣으세요.';
+    $('#i_status').className = 'hint';
+  };
+  $('#i_close').onclick = closeModal;
+}
+
+/* ============================================================
+   7. 화면 그리기
+   ============================================================ */
+function renderAll(){ renderToday(); renderCal(); renderSetup(); paintSaveState(); }
+
+function sortByTime(list){
+  const withT = list.filter(r => r.time).sort((a,b) => a.time < b.time ? -1 : a.time > b.time ? 1 : 0);
+  return withT.concat(list.filter(r => !r.time));
+}
+
+/* ------------------------------------------------------------
+   업무 정렬
+   1) 완료한 건은 무조건 뒤로
+   2) 손으로 옮긴 순서(order)가 있으면 그대로
+   3) 없으면 시간순, 시간 없는 건 뒤
+   order 는 끌어다 놓기 전까지는 아예 없다. 그래야 처음엔 시간순으로 보인다.
+   ------------------------------------------------------------ */
+function taskSortKey(r){
+  if(typeof r.order === 'number') return r.order;
+  if(r.time) return +r.time.slice(0, 2) * 60 + +r.time.slice(3, 5);
+  return 100000;
+}
+function sortTasks(list){
+  return list.slice().sort((a, b) =>
+    (a.done ? 1 : 0) - (b.done ? 1 : 0) || taskSortKey(a) - taskSortKey(b));
+}
+function dayTasks(ds){ return alive(DB.task).filter(r => r.date === ds); }
+
+// 한 번 끌어다 놓으면 그날 업무 전부에 순서를 박아 둔다
+function materializeOrder(ds){
+  const list = sortTasks(dayTasks(ds));
+  list.forEach((r, i) => { r.order = i; });
+  return list;
+}
+// 이미 순서를 매긴 날에 새 업무가 들어오면 맨 뒤로
+function nextOrderFor(ds){
+  const has = dayTasks(ds).filter(r => typeof r.order === 'number');
+  return has.length ? Math.max.apply(null, has.map(r => r.order)) + 1 : undefined;
+}
+
+// 끌어온 건을 대상 앞/뒤로 옮긴다
+function moveTask(ds, dragId, targetId, after){
+  const list = materializeOrder(ds);
+  const from = list.findIndex(r => r.id === dragId);
+  let to = list.findIndex(r => r.id === targetId);
+  if(from < 0 || to < 0 || from === to) return false;
+  const [moved] = list.splice(from, 1);
+  to = list.findIndex(r => r.id === targetId);
+  list.splice(after ? to + 1 : to, 0, moved);
+  list.forEach((r, i) => { r.order = i; r.mtime = nowStamp(); });
+  return true;
+}
+
+// 업무 건수에 따라 열 수와 블록 크기를 바꾼다.
+//   5건 이하 -> 1열로 넓게 / 6건부터 -> 2열 / 13건부터 -> 2열 유지하고 조밀하게
+function taskDensity(n){ return n <= 5 ? 'd1' : n <= 12 ? 'd2' : 'd3'; }
+
+function emptyBox(head, tail){
+  return '<div class="empty"><b>' + escHtml(head) + '</b>' + escHtml(tail) + '</div>';
+}
+
+/* ------------------------------------------------------------
+   한 줄 빠른 입력 파서
+   "보고서 초안 오후 2시" -> 제목 "보고서 초안", 시간 14:00
+   "다음주 화요일 팀 회의" -> 다음주 화요일
+   못 알아들은 말은 전부 제목으로 둔다. 입력이 실패하는 일은 없어야 한다.
+   ------------------------------------------------------------ */
+const QA_WEEK = { '월':1, '화':2, '수':3, '목':4, '금':5, '토':6, '일':0 };
+
+function parseQuickAdd(text, baseDate){
+  let t = ' ' + String(text || '').replace(/\s+/g, ' ').trim() + ' ';
+  const today = startOfDay(new Date());
+  let date = dateStr(baseDate || today);
+  let time = '';
+  let usedDate = false;
+
+  const cut = m => { t = t.replace(m, ' '); };
+
+  /* ---------- 시간 ----------
+     오전/오후 + 시:분 / N시 M분 / N시반.
+     14:00~15:00 처럼 범위로 적어도 앞의 것만 쓴다. */
+  let m = t.match(/ (오전|오후|아침|저녁|밤)?\s?(\d{1,2}):(\d{2})(?:\s?[~\-–]\s?\d{1,2}:\d{2})? /);
+  if(m && +m[2] <= 23 && +m[3] <= 59){
+    time = qaHour(m[1], +m[2]) + ':' + pad(+m[3]);
+    cut(m[0]);
+  }else{
+    m = t.match(/ (오전|오후|아침|저녁|밤)?\s?(\d{1,2})\s?시\s?(반|(\d{1,2})\s?분)?(?:\s?[~\-–]\s?\d{1,2}\s?시)? /);
+    if(m && +m[2] <= 23){
+      const mi = m[3] === '반' ? 30 : (m[4] ? +m[4] : 0);
+      if(mi <= 59){ time = qaHour(m[1], +m[2]) + ':' + pad(mi); cut(m[0]); }
+    }
+  }
+
+  /* ---------- 날짜: 낱말 ---------- */
+  const rel = [['글피', 3], ['모레', 2], ['내일', 1], ['오늘', 0]];
+  for(const [w, off] of rel){
+    const re = new RegExp(' ' + w + '(?:까지|부터|에|중|안에)? ');
+    const mm = t.match(re);
+    if(mm){ date = dateStr(addDays(today, off)); cut(mm[0]); usedDate = true; break; }
+  }
+
+  /* ---------- 날짜: N일 뒤 / N주 뒤 ---------- */
+  if(!usedDate){
+    m = t.match(/ (\d{1,2})\s?(일|주)\s?(뒤|후)(?:에)? /);
+    if(m){
+      const n = +m[1] * (m[2] === '주' ? 7 : 1);
+      date = dateStr(addDays(today, n)); cut(m[0]); usedDate = true;
+    }
+  }
+
+  /* ---------- 날짜: (이번주|다음주) X요일 ---------- */
+  if(!usedDate){
+    m = t.match(/ (이번\s?주|금주|다음\s?주|차주|담주|담달)?\s?([월화수목금토일])요일?(?:까지|부터|에|중)? /);
+    if(m && QA_WEEK[m[2]] !== undefined){
+      const wantDow = QA_WEEK[m[2]];
+      const scope = (m[1] || '').replace(/\s/g, '');
+      let d;
+      if(scope === '다음주' || scope === '차주' || scope === '담주'){
+        d = qaWeekday(addDays(qaMonday(today), 7), wantDow);
+      }else if(scope === '이번주' || scope === '금주'){
+        d = qaWeekday(qaMonday(today), wantDow);
+      }else{
+        // 그냥 "금요일" 이면 오늘 포함 다음에 오는 그 요일
+        d = today;
+        for(let i = 0; i < 7; i++){ if(d.getDay() === wantDow) break; d = addDays(d, 1); }
+      }
+      date = dateStr(d); cut(m[0]); usedDate = true;
+    }
+  }
+
+  /* ---------- 날짜: 숫자 표기 ---------- */
+  if(!usedDate){
+    // 9/3, 9.3, 9-3, 09/03
+    m = t.match(/ (\d{1,2})\s?[\/.\-]\s?(\d{1,2})(?:까지|부터|에)? /);
+    if(!m) m = t.match(/ (\d{1,2})\s?월\s?(\d{1,2})\s?일(?:까지|부터|에)? /);
+    if(m){
+      const mo = +m[1], dd = +m[2];
+      if(mo >= 1 && mo <= 12 && dd >= 1 && dd <= 31){
+        date = qaYearOf(mo, dd, today); cut(m[0]); usedDate = true;
+      }
+    }
+  }
+  if(!usedDate){
+    // "27일" -> 이번 달 27일 (이미 지났으면 다음 달)
+    m = t.match(/ (\d{1,2})\s?일(?:까지|부터|에)? /);
+    if(m){
+      const dd = +m[1];
+      if(dd >= 1 && dd <= 31){
+        let y = today.getFullYear(), mo = today.getMonth() + 1;
+        if(dd < today.getDate()){ mo++; if(mo > 12){ mo = 1; y++; } }
+        const cand = y + '-' + pad(mo) + '-' + pad(dd);
+        if(parseDate(cand)){ date = cand; cut(m[0]); usedDate = true; }
+      }
+    }
+  }
+
+  return { title: t.replace(/\s+/g, ' ').trim(), date, time, usedDate, usedTime: !!time };
+}
+
+// 오전/오후를 반영한 24시간제 시각
+function qaHour(ampm, h){
+  if(ampm === '오후' || ampm === '저녁' || ampm === '밤'){ if(h < 12) h += 12; }
+  else if(ampm === '오전' || ampm === '아침'){ if(h === 12) h = 0; }
+  return pad(h);
+}
+// 그 주의 월요일
+function qaMonday(d){
+  const dow = d.getDay();               // 0=일
+  return addDays(d, dow === 0 ? -6 : 1 - dow);
+}
+// 월요일 기준 주에서 원하는 요일
+function qaWeekday(monday, wantDow){
+  return addDays(monday, wantDow === 0 ? 6 : wantDow - 1);
+}
+// 월/일만 적었을 때의 연도 — 이미 많이 지났으면 내년으로 본다
+function qaYearOf(mo, dd, today){
+  const y = today.getFullYear();
+  const cand = new Date(y, mo - 1, dd);
+  if(daysBetween(cand, today) < -180) return (y + 1) + '-' + pad(mo) + '-' + pad(dd);
+  return y + '-' + pad(mo) + '-' + pad(dd);
+}
+
+function quickAddPreview(){
+  const raw = $('#qaInput').value;
+  const box = $('#qaHint');
+  if(!raw.trim()){ box.innerHTML = 'Enter 를 누르면 바로 등록돼요. 시간(14:00)이나 날짜(내일, 9/3)를 같이 적어도 됩니다.'; return; }
+  const p = parseQuickAdd(raw, viewDate);
+  if(!p.title){ box.innerHTML = '<span style="color:var(--orange)">제목이 없어요.</span>'; return; }
+  const d = parseDate(p.date);
+  const label = p.date === todayStr() ? '오늘'
+              : (d ? p.date.slice(5).replace('-', '/') + ' (' + WD[d.getDay()] + ')' : p.date);
+  box.innerHTML = '<span class="tag">' + escHtml(label) + '</span>' +
+    (p.time ? '<span class="tag">' + escHtml(p.time) + '</span>' : '') +
+    '<b>' + escHtml(p.title) + '</b> 로 등록됩니다';
+}
+
+function quickAddSubmit(){
+  const raw = $('#qaInput').value;
+  if(!raw.trim()) return;
+  const p = parseQuickAdd(raw, viewDate);
+  if(!p.title){ toast('제목을 적어 주세요.'); return; }
+
+  const rec = {
+    id: newId(myName()), title: p.title, content: '',
+    date: p.date, time: p.time, done: false, doneAt: '',
+    author: myName(), mtime: nowStamp(), del: false
+  };
+  const ord = nextOrderFor(p.date);
+  if(ord !== undefined) rec.order = ord;
+  DB.task.push(rec);
+  markDirty();
+  $('#qaInput').value = '';
+  renderAll();
+  quickAddPreview();
+  $('#qaInput').focus();
+  toast('등록했어요' + (p.date !== todayStr() ? ' (' + p.date + ')' : '') + '.');
+}
+
+/* 지난 미완료 업무 — 오늘 화면을 보고 있을 때만 알려 준다.
+   과거 날짜를 들여다보는 중에 뜨면 혼란스럽다. */
+function overdueTasks(){
+  const t = todayStr();
+  return alive(DB.task)
+    .filter(r => !r.done && r.date && r.date < t)
+    .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+}
+
+function renderCarry(isToday){
+  const box = $('#carryBox');
+  const list = isToday ? overdueTasks() : [];
+  if(!list.length){ box.hidden = true; return; }
+  box.hidden = false;
+  $('#carryTitle').textContent = '지난 미완료 ' + list.length + '건';
+
+  const t0 = startOfDay(new Date());
+  $('#carryList').innerHTML = list.map(r => {
+    const d = parseDate(r.date);
+    const ago = d ? daysBetween(t0, d) : 0;
+    return '<div class="carry-row">' +
+      '<span class="when">' + escHtml((r.date || '').slice(5).replace('-', '/')) +
+        ' · ' + ago + '일 전</span>' +
+      '<span class="what" title="' + escHtml(r.title) + '">' + escHtml(r.title) + '</span>' +
+      '<button class="btn sm" data-carry="' + escHtml(r.id) + '">오늘로</button>' +
+    '</div>';
+  }).join('');
+}
+
+// 원래 날짜는 origDate 에 남겨 둔다. 언제 잡았던 일인지 추적할 수 있게.
+function carryToToday(id){
+  const r = DB.task.find(x => x.id === id);
+  if(!r) return false;
+  if(!r.origDate) r.origDate = r.date;
+  r.date = todayStr();
+  r.mtime = nowStamp();
+  return true;
+}
+
+function renderToday(){
+  const d = viewDate, ds = dateStr(d);
+  const isToday = ds === todayStr();
+  const diff = daysBetween(d, startOfDay(new Date()));
+  let suffix = '';
+  if(diff === 0) suffix = ' · 오늘';
+  else if(diff === 1) suffix = ' · 내일';
+  else if(diff === -1) suffix = ' · 어제';
+  else suffix = diff > 0 ? ' · ' + diff + '일 뒤' : ' · ' + (-diff) + '일 전';
+
+  $('#dLabel').textContent = ds + ' (' + WD[d.getDay()] + ')';
+  $('#dToday').disabled = isToday;
+
+  renderCarry(isToday);
+
+  /* ---------- 1) 업무 (주역) ---------- */
+  const tasks = sortTasks(dayTasks(ds));
+  const doneN = tasks.filter(r => r.done).length;
+
+  const grid = $('#listTask');
+  grid.className = 'rows taskgrid ' + taskDensity(tasks.length);
+  grid.innerHTML = tasks.length ? tasks.map(r =>
+    '<div class="row' + (r.done ? ' done' : '') + '" data-kind="task" data-id="' + escHtml(r.id) + '">' +
+      '<span class="bar"></span>' +
+      '<input type="checkbox" class="chk"' + (r.done ? ' checked' : '') + '>' +
+      '<div style="min-width:0">' +
+        '<div class="title">' + escHtml(r.title) + '</div>' +
+        (r.content ? '<div class="sub">' + escHtml(r.content) + '</div>' : '') +
+      '</div>' +
+      '<span class="time">' + escHtml(r.time || '') + '</span>' +
+      '<span class="acts"><button class="btn sm" data-edit>수정</button></span>' +
+    '</div>').join('')
+    : emptyBox('오늘 등록된 업무가 없어요.', '[＋ 업무 추가]를 누르면 여기에 보여요.');
+
+  // 진행 표시: 완료 수를 크게, 전체는 작게, 옆에 막대와 상태 문구
+  const box = $('#taskCount');
+  if(tasks.length){
+    const pct = Math.round(doneN / tasks.length * 100);
+    const state = doneN === tasks.length ? ' done-all' : doneN === 0 ? ' none' : '';
+    const label = doneN === tasks.length ? '다 했어요'
+                : doneN === 0 ? '시작 전'
+                : (tasks.length - doneN) + '건 남음';
+    box.className = 'count prog' + state;
+    box.innerHTML =
+      '<span class="num"><b>' + doneN + '</b><i>/' + tasks.length + '</i></span>' +
+      '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
+      '<span class="lab">' + label + '</span>';
+  }else{
+    box.className = 'count';
+    box.textContent = '0건';
+  }
+
+  /* ---------- 2) 업무공유 ---------- */
+  // 회신한 건은 뒤로. 기한 지나도 계속 빨갛게 쌓이면 아무도 안 보게 된다.
+  const shares = alive(DB.share)
+    .filter(r => { const due = parseDate(r.dueDate); return !due || daysBetween(due, d) >= -7 || !myReplied(r.id); })
+    .sort((a,b) => (myReplied(a.id) ? 1 : 0) - (myReplied(b.id) ? 1 : 0)
+                || ((a.dueDate || '') < (b.dueDate || '') ? -1 : 1));
+
+  $('#listShare').innerHTML = shares.length ? shares.map(r => {
+    const due = parseDate(r.dueDate);
+    const rep = myReplied(r.id);
+    let badge = '<span class="pill gray">기한 없음</span>', tone = '';
+    if(rep){
+      badge = '<span class="pill green">회신함</span>';
+    }else if(due){
+      const dd = daysBetween(due, d);
+      if(dd === 0){ badge = '<span class="pill red-solid">D-DAY</span>'; tone = ' due-now'; }
+      else if(dd < 0){ badge = '<span class="pill red">D+' + (-dd) + '</span>'; tone = ' due-over'; }
+      else if(dd <= 3){ badge = '<span class="pill orange">D-' + dd + '</span>'; tone = ' due-soon'; }
+      else badge = '<span class="pill gray">D-' + dd + '</span>';
+    }
+    return '<div class="row' + tone + (rep ? ' done' : '') + '" data-kind="share" data-id="' + escHtml(r.id) + '">' +
+      '<button class="repbtn' + (rep ? ' on' : '') + '" data-reply="' + escHtml(r.id) + '" ' +
+        'title="' + (rep ? '회신 표시를 지웁니다' : '내가 회신했으면 눌러 주세요') + '">' +
+        (rep ? '✓' : '') + '</button>' +
+      badge +
+      '<div style="min-width:0">' +
+        '<div class="title">' +
+          (r.replyType ? '<span class="rt rt-' + (r.replyType === '메일' ? 'mail' : 'doc') + '">' +
+            escHtml(r.replyType) + '</span>' : '') +
+          escHtml(r.title) + '</div>' +
+        '<div class="smeta">' +
+          '<span><i>문서번호</i>' + escHtml(r.docNo || '-') + '</span>' +
+          '<span class="due"><i>회신기한</i>' + escHtml(r.dueDate || '없음') +
+            (due ? ' (' + WD[due.getDay()] + ')' : '') + '</span>' +
+          '<span><i>담당자</i>' + escHtml(r.owner || '-') + '</span>' +
+          '<span><i>작성자</i>' + escHtml(r.author || '-') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<span class="acts"><button class="btn sm" data-edit>수정</button></span>' +
+    '</div>';
+  }).join('') : emptyBox('공유된 업무가 없어요.', '[＋ 공유 추가]로 등록하거나 [가져오기]로 받아오세요.');
+  $('#shareCount').textContent = shares.length + '건';
+
+  /* ---------- 3) 유관부서 연락하기 ----------
+     내선번호는 저장값이 아니라 이름+부서로 명부에서 매번 조회한 결과다. */
+  // 날짜를 안 정한 건은 완료해도 목록에 남긴다.
+  // 사라지면 체크를 되돌릴 방법이 없어진다.
+  const contacts = sortByTime(alive(DB.contact).filter(r =>
+    r.date === ds || (!r.date && isToday)));
+
+  $('#listContact').innerHTML = contacts.length ? contacts.map(r => {
+    const look = empLookup(r.name, r.dept);
+    let extHtml;
+    if(look.state === 'ok'){
+      extHtml = '<span class="ext">내선 ' + escHtml(look.ext) + '</span>';
+    }else if(look.state === 'ambiguous'){
+      // 같은 이름이 여럿이면 번호를 찍지 않는다. 다른 사람에게 전화하게 된다.
+      extHtml = '<span class="ext warn" data-fixdept="' + escHtml(r.id) + '">' +
+                '동명이인 ' + look.count + '명 — 부서를 정해 주세요</span>';
+    }else if(r.extCache){
+      extHtml = '<span class="ext">내선 ' + escHtml(r.extCache) + '</span>';
+    }else{
+      extHtml = '<span class="ext missing">내선번호를 직접 넣으면 돼요</span>';
+    }
+    return '<div class="row' + (r.done ? ' done' : '') + '" data-kind="contact" data-id="' + escHtml(r.id) + '">' +
+      '<input type="checkbox" class="chk"' + (r.done ? ' checked' : '') + '>' +
+      '<div style="min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">' +
+        '<span class="title">' + escHtml(r.name) + (r.dept ? ' (' + escHtml(r.dept) + ')' : '') + '</span>' +
+        extHtml +
+      '</div>' +
+      '<span class="time">' + escHtml(r.time || '') + '</span>' +
+    '</div>';
+  }).join('') : emptyBox('연락할 곳이 없어요.', '[＋ 연락 추가]를 누르면 여기에 보여요.');
+  $('#contactCount').textContent = contacts.length + '건';
+
+  /* ---------- 4) 출장 ---------- */
+  const trips = sortByTime(alive(DB.trip).filter(r => r.date === ds));
+  $('#listTrip').innerHTML = trips.length ? trips.map(r => {
+    const mem = r.members || [];
+    return '<div class="row" data-kind="trip" data-id="' + escHtml(r.id) + '">' +
+      '<div style="min-width:0">' +
+        '<div class="title">' + escHtml(r.title) + '</div>' +
+        '<div class="tmeta">' +
+          '<span class="place">' + escHtml(r.region || '-') + '</span>' +
+          '<span class="via">' + escHtml(r.transport || '-') + '</span>' +
+          (r.time ? '<span class="at">회의 ' + escHtml(r.time) + '</span>' : '') +
+        '</div>' +
+        (mem.length ? '<div class="tmem">' + escHtml(mem.slice(0, 4).join(', ')) +
+          (mem.length > 4 ? ' 외 ' + (mem.length - 4) + '명' : '') +
+          ' <em>(' + mem.length + '명)</em></div>' : '') +
+      '</div>' +
+      '<span class="acts"><button class="btn sm" data-edit>수정</button></span>' +
+    '</div>';
+  }).join('') : emptyBox('오늘 출장이 없어요.', '[＋ 추가]로 등록하세요.');
+
+  // 출장은 미리 알아야 준비를 한다. 점심약속과 같은 모양으로 앞일을 띄운다.
+  const tsoon = alive(DB.trip)
+    .filter(r => r.date && r.date > ds)
+    .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.time || '') < (b.time || '') ? -1 : 1)
+    .slice(0, 3);
+
+  if(tsoon.length){
+    $('#listTrip').innerHTML += '<div class="soonwrap"><div class="soonhead">다가올 출장</div>' +
+      tsoon.map(r => {
+        const sd = parseDate(r.date);
+        const gap = sd ? daysBetween(sd, d) : 0;
+        const rel = gap === 1 ? '내일' : gap === 2 ? '모레' : '';
+        const day = sd ? (sd.getMonth() + 1) + '/' + sd.getDate() + ' (' + WD[sd.getDay()] + ')' : r.date;
+        return '<div class="row soon" data-kind="trip" data-id="' + escHtml(r.id) + '">' +
+          '<span class="dd' + (gap <= 2 ? ' near' : '') + '">D-' + gap + '</span>' +
+          '<span class="when">' + (rel ? '<b>' + rel + '</b> ' : '') + escHtml(day) + '</span>' +
+          '<span class="time">' + escHtml(r.time || '') + '</span>' +
+          '<span class="who"><b>' + escHtml(r.title) + '</b>' +
+            (r.region ? '<em>' + escHtml(r.region) + '</em>' : '') + '</span>' +
+        '</div>';
+      }).join('') + '</div>';
+  }
+  $('#tripCount').textContent = trips.length + '건'
+    + (tsoon.length ? ' · 예정 ' + tsoon.length : '');
+
+  /* ---------- 5) 점심약속 ----------
+     오늘 것만 보여주면 "다음에 누구랑 언제였더라" 를 알 수 없다.
+     아래에 다가올 약속을 같이 띄운다. */
+  const lunches = sortByTime(alive(DB.lunch).filter(r => r.date === ds));
+  let lunchHtml = lunches.length ? lunches.map(r =>
+    '<div class="row" data-kind="lunch" data-id="' + escHtml(r.id) + '">' +
+      '<div style="min-width:0;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap">' +
+        '<span class="title">' + escHtml(r.target) + '</span>' +
+        (r.place ? '<span class="place">' + escHtml(r.place) + '</span>' : '') +
+      '</div>' +
+      '<span class="time">' + escHtml(r.time || '') + '</span>' +
+    '</div>').join('') : emptyBox('오늘 점심약속이 없어요.', '[＋ 추가]로 잡아 두세요.');
+
+  const soon = alive(DB.lunch)
+    .filter(r => r.date && r.date > ds)
+    .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.time || '') < (b.time || '') ? -1 : 1)
+    .slice(0, 3);
+
+  if(soon.length){
+    lunchHtml += '<div class="soonwrap"><div class="soonhead">다가올 점심 약속</div>' +
+      soon.map(r => {
+        const sd = parseDate(r.date);
+        const gap = sd ? daysBetween(sd, d) : 0;
+        const rel = gap === 1 ? '내일' : gap === 2 ? '모레' : '';
+        const day = sd ? (sd.getMonth() + 1) + '/' + sd.getDate() + ' (' + WD[sd.getDay()] + ')' : r.date;
+        return '<div class="row soon" data-kind="lunch" data-id="' + escHtml(r.id) + '">' +
+          '<span class="dd' + (gap <= 2 ? ' near' : '') + '">D-' + gap + '</span>' +
+          '<span class="when">' + (rel ? '<b>' + rel + '</b> ' : '') + escHtml(day) + '</span>' +
+          '<span class="time">' + escHtml(r.time || '') + '</span>' +
+          '<span class="who"><b>' + escHtml(r.target) + '</b>' +
+            (r.place ? '<em>' + escHtml(r.place) + '</em>' : '') + '</span>' +
+        '</div>';
+      }).join('') + '</div>';
+  }
+  $('#listLunch').innerHTML = lunchHtml;
+  $('#lunchCount').textContent = lunches.length + '건'
+    + (soon.length ? ' · 예정 ' + soon.length : '');
+}
+
+function renderCal(){
+  const first = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1);
+  const now = new Date();
+  $('#mLabel').textContent = first.getFullYear() + '년 ' + (first.getMonth() + 1) + '월';
+  $('#mToday').disabled = (first.getFullYear() === now.getFullYear() && first.getMonth() === now.getMonth());
+
+  // 각 표를 한 번씩만 순회해 날짜별로 집계한다
+  const cnt = {};
+  const bump = (k, f) => { if(!k) return; (cnt[k] = cnt[k] || {t:0,c:0,s:0,l:0,p:0})[f]++; };
+  // 업무는 건수만이 아니라 제목까지 모은다 (달력에 직접 띄우려고)
+  const taskBy = {};
+  alive(DB.task).forEach(r => {
+    bump(r.date, 't');
+    if(r.date) (taskBy[r.date] = taskBy[r.date] || []).push(r);
+  });
+  Object.keys(taskBy).forEach(k => { taskBy[k] = sortByTime(taskBy[k]); });
+  alive(DB.contact).forEach(r => bump(r.date, 'c'));
+  alive(DB.lunch).forEach(r => bump(r.date, 'l'));
+  alive(DB.trip).forEach(r => bump(r.date, 'p'));
+  const urgent = {};
+  const today0 = startOfDay(new Date());
+  alive(DB.share).forEach(r => {
+    bump(r.dueDate, 's');
+    const dueD = parseDate(r.dueDate);
+    if(dueD && dueD >= today0 && daysBetween(dueD, today0) <= 3) urgent[r.dueDate] = true;
+  });
+
+  let cur = addDays(first, -first.getDay());
+  const ts = todayStr();
+  let html = '';
+  for(let i = 0; i < 42; i++){
+    const k = dateStr(cur);
+    const out = cur.getMonth() !== first.getMonth();
+    const c = cnt[k];
+
+    // 업무는 제목을 그대로 띄우고, 나머지는 아래 한 줄로 접는다
+    const dayTasks = taskBy[k] || [];
+    const SHOW = 3;
+    let body = '';
+    if(dayTasks.length){
+      body += '<div class="tasks">' + dayTasks.slice(0, SHOW).map(r =>
+        '<span class="t' + (r.done ? ' done' : '') + '" title="' + escHtml(r.title) + '">' +
+        escHtml(r.title) + '</span>').join('') + '</div>';
+    }
+
+    const bits = [];
+    if(dayTasks.length > SHOW) bits.push('<span class="more">+' + (dayTasks.length - SHOW) + '건</span>');
+    if(c && c.c) bits.push('연락 ' + c.c);
+    if(c && c.p) bits.push('출장 ' + c.p);
+    if(c && c.l) bits.push('점심 ' + c.l);
+    let meta = bits.join('<span style="opacity:.5">·</span>');
+    if(c && c.s){
+      meta += '<span class="chip ' + (!out && urgent[k] ? 'due' : 'share') + '">공유 ' + c.s +
+              (!out && urgent[k] ? ' 임박' : '') + '</span>';
+    }
+    if(meta) body += '<div class="meta">' + meta + '</div>';
+
+    html += '<div class="cell' + (out ? ' out' : '') + (k === ts ? ' today' : '')
+          + (cur.getDay() === 0 ? ' sun' : cur.getDay() === 6 ? ' sat' : '')
+          + '" data-date="' + k + '">'
+          + '<span class="d">' + cur.getDate() + '</span>'
+          + body
+          + '</div>';
+    cur = addDays(cur, 1);
+  }
+  $('#calGrid').innerHTML = html;
+}
+
+function renderSetup(){
+  $('#cfgName').value = DB.cfg.name || '';
+  $('#cfgTitle').value = appTitle();
+  $('#cfgBkMode').value = backupMode();
+  $('#cfgBkMin').value = backupMin();
+  $('#bkHint').innerHTML = backupMode()==='off'
+    ? '자동 백업을 끈 상태예요. 직접 [파일로 저장하기]를 눌러 주세요.'
+    : (backupMode()==='auto'
+        ? '바뀐 내용이 있을 때만 파일을 내려받아요. 같은 내용이면 받지 않습니다.<br>브라우저가 처음 한 번 "여러 파일 다운로드 허용"을 물어볼 수 있어요.'
+        : '때가 되면 알려만 드려요. 직접 [파일로 저장하기]를 누르시면 됩니다.')
+      // 남이 준 .json 을 가져오면 cfg 값도 남의 손을 탄 값이 된다. 반드시 막아서 넣는다.
+      + (DB.cfg.lastFileSaveAt ? '<br>마지막으로 파일에 저장한 시각: ' + escHtml(DB.cfg.lastFileSaveAt) : '');
+  $('#cfgTitle').value = appTitle();
+  $('#cfgPartMax').value = partMax();
+  if(DB.emp.length){
+    $('#empInfo').textContent = DB.emp.length + '명' +
+      (DB.cfg.empAt ? '  ·  ' + DB.cfg.empAt + '에 올렸어요' : '');
+    $('#empInfo').className = 'val';
+  }else{
+    $('#empInfo').innerHTML = '아직 명부를 안 올렸어요. ' +
+      '<b style="color:var(--accent-d)">이름으로 내선번호를 찾으려면 먼저 등록해 주세요.</b>';
+    $('#empInfo').className = 'val';
+  }
+
+  // 지금 데이터로 실제 몇 조각이 되는지 바로 보여 준다
+  const n = alive(DB.share).length;
+  $('#partHint').textContent = n
+    ? '지금 공유 ' + n + '건을 전체로 내보내면 ' + buildParts(DB.share).length + '조각이에요.'
+    : '';
+
+  // 명부 카드를 설정 화면 맨 위 전폭으로 옮긴다 (한 번만)
+  const slot = $('#setupEmpSlot');
+  if(slot && !slot.firstElementChild){
+    const empCard = $('#empFile').closest('.card');
+    if(empCard) slot.appendChild(empCard);
+  }
+
+  // 출장자 이름 자동완성 — 명부에 있는 사람을 그대로 쓴다
+  $('#empNames').innerHTML = DB.emp.slice(0, 500)
+    .map(e => '<option value="' + escHtml(e.name) + '">').join('');
+
+  drawSearchExamples();
+  $('#lastSync').textContent = DB.cfg.lastSync || '아직 없어요';
+  $('#countInfo').textContent =
+    '업무 ' + alive(DB.task).length + ' · 연락 ' + alive(DB.contact).length +
+    ' · 공유 ' + alive(DB.share).length + ' · 점심 ' + alive(DB.lunch).length;
+}
+
+/* ============================================================
+   8. 이벤트
+   ============================================================ */
+function showView(name){
+  $$('nav.tabs button').forEach(x => x.classList.toggle('on', x.dataset.view === name));
+  ['today','cal','setup'].forEach(v => $('#view-' + v).hidden = (v !== name));
+  if(name === 'today') renderToday();
+  else if(name === 'cal') renderCal();
+}
+$$('nav.tabs button').forEach(b => b.onclick = () => showView(b.dataset.view));
+
+$('#dPrev').onclick  = () => { viewDate = addDays(viewDate, -1); renderToday(); };
+$('#dNext').onclick  = () => { viewDate = addDays(viewDate, 1); renderToday(); };
+$('#dToday').onclick = () => { viewDate = startOfDay(new Date()); renderToday(); };
+$('#mPrev').onclick  = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()-1, 1); renderCal(); };
+$('#mNext').onclick  = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1); renderCal(); };
+$('#mToday').onclick = () => { calMonth = new Date(); renderCal(); };
+
+$('#btnAddTask').onclick    = () => taskModal();
+$('#btnAddContact').onclick = () => contactModal();
+$('#btnAddShare').onclick   = () => shareModal();
+$('#btnAddLunch').onclick   = () => lunchModal();
+$('#btnExport').onclick     = exportModal;
+$('#btnImport').onclick     = importModal;
+$('#btnSaveFile').onclick   = () => saveToFile(false);
+
+// 달력 칸 클릭 → 그 날짜의 오늘 화면으로
+$('#calGrid').addEventListener('click', e => {
+  const cell = e.target.closest('.cell');
+  if(!cell) return;
+  viewDate = parseDate(cell.dataset.date) || startOfDay(new Date());
+  showView('today');
+  window.scrollTo(0, 0);
+});
+
+// 목록: 체크박스 = 완료 토글, 제목 = 내용 보기, 수정 버튼 = 편집
+$('#view-today').addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if(!row) return;
+  const kind = row.dataset.kind, id = row.dataset.id;
+  const rec = DB[kind].find(x => x.id === id);
+  if(!rec) return;
+
+  if(e.target.classList.contains('chk')){
+    rec.done = e.target.checked;
+    if(kind === 'task') rec.doneAt = rec.done ? nowStamp() : '';
+    rec.mtime = nowStamp();
+    markDirty(); renderToday();
+    return;
+  }
+  if(e.target.closest('[data-edit]')){
+    ({task:taskModal, contact:contactModal, share:shareModal, lunch:lunchModal, trip:tripModal})[kind](id);
+    return;
+  }
+  if(e.target.closest('.title')){
+    if(kind === 'task'){
+      detailModal(rec.title, '날짜: ' + rec.date + (rec.time ? ' ' + rec.time : '') + '\n' + '─'.repeat(24) + '\n' + (rec.content || '(내용 없음)'));
+    }else if(kind === 'share'){
+      detailModal(rec.title,
+        '문서번호: ' + rec.docNo + '\n등록일: ' + rec.regDate + '   회신기한: ' + rec.dueDate +
+        '\n작성자: ' + (rec.author || '') + '\n' + '─'.repeat(24) + '\n' + (rec.content || '(내용 없음)'));
+    }else if(kind === 'contact'){
+      const ext = empExt(rec.name, rec.dept) || rec.extCache || '(명부에 없음)';
+      detailModal(rec.name, '부서: ' + (rec.dept || '-') + '\n내선: ' + ext + '\n일시: ' + (rec.date || '미정') + ' ' + (rec.time || ''));
+    }else if(kind === 'trip'){
+      const mem = rec.members || [];
+      detailModal(rec.title,
+        '날짜: ' + rec.date + (rec.time ? '   회의 시작 ' + rec.time : '') +
+        '\n지역: ' + (rec.region || '-') + '\n이동수단: ' + (rec.transport || '-') +
+        '\n출장자(' + mem.length + '명): ' + (mem.join(', ') || '-') +
+        '\n' + '─'.repeat(24) + '\n' + (rec.content || '(내용 없음)'));
+    }else{
+      detailModal(rec.target, '날짜: ' + rec.date + ' ' + (rec.time || '') + '\n장소: ' + (rec.place || '-'));
+    }
+  }
+});
+
+/* ---- 헤더 제목: 더블클릭하면 그 자리에서 고친다 ----
+   팀 이름이 바뀌거나 다른 부서가 그대로 가져다 써도 되도록. */
+const DEFAULT_TITLE = 'AX금융혁신팀 업무스케줄러';
+function appTitle(){ return (DB.cfg.appTitle || '').trim() || DEFAULT_TITLE; }
+function paintTitle(){
+  const h = $('#appTitle');
+  if(h.classList.contains('editing')) return;   // 고치는 중엔 건드리지 않는다
+  h.textContent = appTitle();
+  document.title = appTitle();
+}
+(function bindTitleEdit(){
+  const h = $('#appTitle');
+  let backup = '';
+  h.addEventListener('dblclick', () => {
+    if(h.classList.contains('editing')) return;
+    backup = h.textContent;
+    h.classList.add('editing');
+    h.contentEditable = 'true';
+    h.focus();
+    const r = document.createRange();
+    r.selectNodeContents(h);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  });
+  h.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){ e.preventDefault(); h.blur(); }
+    else if(e.key === 'Escape'){ h.textContent = backup; h.blur(); }
+  });
+  h.addEventListener('blur', () => {
+    if(!h.classList.contains('editing')) return;
+    h.classList.remove('editing');
+    h.contentEditable = 'false';
+    const t = h.textContent.replace(/\s+/g, ' ').trim();
+    if(t && t !== appTitle()){
+      DB.cfg.appTitle = t;
+      markDirty();
+      toast('이름을 바꿨어요.');
+    }
+    paintTitle();
+    renderSetup();
+    measureSticky();
+  });
+})();
+
+// 목록 항목의 더블클릭 수정은 뺐다.
+// 클릭(내용 보기)과 겹쳐서 팝업이 떴다 교체되는 게 보이고, 숨은 기능이라 아무도 모른다.
+// 대신 [수정] 버튼을 항상 보이게 했다.
+
+/* ---- 첫 실행 온보딩 ----
+   처음 열었을 때 한 번만. 이름과 화면 모드를 여기서 정한다.
+   예전에는 브라우저 기본 prompt() 로 이름만 물었다. */
+let obPick = 'simple';
+
+function obPaint(){
+  $$('#obModes .ob-card').forEach(c => c.classList.toggle('on', c.dataset.mode === obPick));
+  const name = $('#obName').value.trim();
+  const btn = $('#obStart');
+  btn.disabled = !name;
+  btn.textContent = !name ? '이름을 적어주세요'
+    : (obPick === 'simple' ? '간편 모드로 시작하기' : '전체 화면으로 시작하기');
+}
+
+function showOnboard(){
+  obPick = DB.cfg.simple ? 'simple' : (DB.cfg.onboarded ? 'full' : 'simple');
+  $('#obTitle').textContent = appTitle();
+  $('#obName').value = DB.cfg.name || '';
+  $('#onboard').hidden = false;
+  obPaint();
+  setTimeout(() => $('#obName').focus(), 60);
+}
+
+function finishOnboard(){
+  const name = $('#obName').value.trim();
+  if(!name){ $('#obName').focus(); return; }
+  DB.cfg.name = name;
+  DB.cfg.simple = (obPick === 'simple');
+  DB.cfg.onboarded = true;
+  markDirty();
+  $('#onboard').hidden = true;
+  applySimple();
+  renderAll();
+  if(DB.cfg.simple) $('#qaInput').focus();
+  // 이름·모드를 정한 다음에 명부 안내를 띄워야 순서가 자연스럽다
+  setTimeout(maybeShowEmpGuide, 250);
+}
+
+$('#obModes').addEventListener('click', e => {
+  const c = e.target.closest('.ob-card');
+  if(!c) return;
+  obPick = c.dataset.mode;
+  obPaint();
+});
+$('#obName').addEventListener('input', obPaint);
+$('#obName').addEventListener('keydown', e => { if(e.key === 'Enter') finishOnboard(); });
+$('#obStart').onclick = finishOnboard;
+$('#btnOnboard').onclick = showOnboard;
+
+/* ---- 간편 모드 ----
+   켜면 오늘로 고정하고 업무만 남긴다. 상태는 저장해서 다음에 열 때도 그대로. */
+function applySimple(){
+  const on = !!DB.cfg.simple;
+  document.body.classList.toggle('simple', on);
+  $$('#modeSwitch button').forEach(b =>
+    b.classList.toggle('on', (b.dataset.mode === 'simple') === on));
+  if(on){
+    viewDate = startOfDay(new Date());
+    showView('today');
+  }
+  setTimeout(measureSticky, 0);
+}
+$('#modeSwitch').addEventListener('click', e => {
+  const b = e.target.closest('[data-mode]');
+  if(!b) return;
+  const want = b.dataset.mode === 'simple';
+  if(!!DB.cfg.simple === want) return;
+  DB.cfg.simple = want;
+  markDirty();
+  applySimple();
+  renderAll();
+  if(want) $('#qaInput').focus();
+  toast(want ? '간편 모드예요. 오늘 할 일만 보여줍니다.' : '전체 화면으로 돌아왔어요.');
+});
+
+/* ---- 업무 순서 바꾸기 (끌어다 놓기) ----
+   완료한 건은 끌 수 없다. 어차피 정렬이 맨 뒤로 보내기 때문에
+   위로 끌어도 제자리로 돌아와 헷갈리기만 한다. */
+(function bindTaskDnD(){
+  const grid = $('#listTask');
+  let dragId = null;
+
+  const clearMarks = () => $$('.taskgrid .row').forEach(el =>
+    el.classList.remove('drop-before', 'drop-after', 'dragging'));
+
+  // 세로로 쌓였는지(1열) 가로로 놓였는지에 따라 기준을 바꾼다
+  function isAfter(row, e){
+    const b = row.getBoundingClientRect();
+    return grid.classList.contains('d1')
+      ? (e.clientY - b.top) > b.height / 2
+      : (e.clientX - b.left) > b.width / 2;
+  }
+
+  /* 왼쪽 손잡이(.bar)를 누른 동안에만 끌기를 켠다.
+     박스 전체를 draggable 로 두면 커서가 어디서나 손바닥이 되고
+     체크박스 밖을 누르는 순간 끌기로 먹혀 클릭이 빗나간다. */
+  grid.addEventListener('mousedown', e => {
+    const bar = e.target.closest('.bar');
+    const row = e.target.closest('.row');
+    if(bar && row && !row.classList.contains('done')) row.setAttribute('draggable', 'true');
+  });
+  const dropHandle = () => $$('.taskgrid .row[draggable]').forEach(r => r.removeAttribute('draggable'));
+  document.addEventListener('mouseup', dropHandle);
+
+  grid.addEventListener('dragstart', e => {
+    const row = e.target.closest('.row');
+    if(!row || row.getAttribute('draggable') !== 'true'){ e.preventDefault(); return; }
+    dragId = row.dataset.id;
+    row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try{ e.dataTransfer.setData('text/plain', dragId); }catch(err){}
+  });
+
+  grid.addEventListener('dragover', e => {
+    if(!dragId) return;
+    const row = e.target.closest('.row');
+    if(!row || row.dataset.id === dragId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    $$('.taskgrid .row').forEach(el => el.classList.remove('drop-before', 'drop-after'));
+    row.classList.add(isAfter(row, e) ? 'drop-after' : 'drop-before');
+  });
+
+  grid.addEventListener('drop', e => {
+    if(!dragId) return;
+    const row = e.target.closest('.row');
+    if(!row || row.dataset.id === dragId){ clearMarks(); dragId = null; return; }
+    e.preventDefault();
+    const after = isAfter(row, e);
+    const ds = dateStr(viewDate);
+    clearMarks();
+    if(moveTask(ds, dragId, row.dataset.id, after)){
+      markDirty();
+      renderToday();
+    }
+    dragId = null;
+  });
+
+  grid.addEventListener('dragend', () => { clearMarks(); dragId = null; dropHandle(); });
+  grid.addEventListener('dragleave', e => {
+    const row = e.target.closest('.row');
+    if(row) row.classList.remove('drop-before', 'drop-after');
+  });
+})();
+
+/* ---- 스티키 높이 실측 ----
+   헤더는 제목 길이·모드 스위치에 따라, 탭은 간편 모드 여부에 따라 높이가 바뀐다.
+   고정값으로 두면 한 줄 입력이 탭에 가려지거나 뜬다. */
+function measureSticky(){
+  const hd = document.querySelector('header');
+  const nv = document.querySelector('nav.tabs');
+  const hh = hd ? hd.offsetHeight : 0;
+  const nh = (nv && nv.offsetParent !== null) ? nv.offsetHeight : 0;
+  const root = document.documentElement.style;
+  root.setProperty('--hdrH', hh + 'px');
+  root.setProperty('--tabH', nh + 'px');
+  if(nv) nv.style.top = hh + 'px';
+}
+window.addEventListener('resize', measureSticky);
+window.addEventListener('scroll', () => {
+  const s = $('#qaSticky');
+  if(s) s.classList.toggle('stuck', window.scrollY > 8);
+}, {passive:true});
+
+/* ---- 한 줄 빠른 입력 ---- */
+$('#qaInput').addEventListener('input', quickAddPreview);
+$('#qaInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); quickAddSubmit(); }
+  else if(e.key === 'Escape'){ e.target.value = ''; quickAddPreview(); }
+});
+$('#qaBtn').onclick = quickAddSubmit;
+
+/* ---- 좁은 창에서 보조 열 펼치기 ---- */
+$('#btnSideToggle').onclick = () => {
+  const s = $('#view-today');
+  s.classList.toggle('side-open');
+  $('#btnSideToggle').textContent = s.classList.contains('side-open')
+    ? '공유·연락·점심 접기 ▴' : '공유·연락·점심 ▾';
+};
+
+/* ---- 지난 미완료 이월 ---- */
+$('#carryToggle').onclick = () => {
+  const l = $('#carryList');
+  l.hidden = !l.hidden;
+  $('#carryToggle').textContent = l.hidden ? '펼쳐보기 ▾' : '접기 ▴';
+};
+$('#carryAll').onclick = () => {
+  const list = overdueTasks();
+  if(!list.length) return;
+  if(!confirmBox('지난 미완료 ' + list.length + '건을 모두 오늘로 옮길까요?')) return;
+  list.forEach(r => carryToToday(r.id));
+  markDirty(); renderAll();
+  toast(list.length + '건을 오늘로 옮겼어요.');
+};
+$('#carryList').addEventListener('click', e => {
+  const b = e.target.closest('[data-carry]');
+  if(!b) return;
+  if(carryToToday(b.dataset.carry)){ markDirty(); renderAll(); toast('오늘로 옮겼어요.'); }
+});
+
+// 공유 건 회신 표시 토글 (로컬 전용)
+$('#listShare').addEventListener('click', e => {
+  const b = e.target.closest('[data-reply]');
+  if(!b) return;
+  e.stopPropagation();
+  const id = b.dataset.reply;
+  setReplied(id, !myReplied(id));
+  renderToday();
+});
+
+// 동명이인이라 번호를 못 정한 연락 건 -> 부서 고르기
+$('#listContact').addEventListener('click', e => {
+  const w = e.target.closest('[data-fixdept]');
+  if(!w) return;
+  e.stopPropagation();
+  const rec = DB.contact.find(x => x.id === w.dataset.fixdept);
+  if(!rec) return;
+  const look = empLookup(rec.name, rec.dept);
+  if(look.state !== 'ambiguous') return;
+  pickerModal(look.list.map(p => ({name:p.name, dept:p.dept, rank:p.rank, ext:p.ext})), sel => {
+    rec.dept = sel.dept || '';
+    rec.mtime = nowStamp();
+    markDirty(); renderAll();
+    toast(sel.name + ' (' + (sel.dept || '부서 없음') + ') 으로 정했어요.');
+  });
+});
+
+$('#btnAddTrip').onclick = () => tripModal();
+$('#btnTripShare').onclick = tripShareModal;
+$('#btnShareAll').onclick = shareAllModal;
+$('#btnTrash').onclick = trashModal;
+
+/* ---- 찾기 ----
+   설정 화면의 큰 검색이 본체이고, 헤더 입력은 그리로 보내는 지름길이다.
+   같은 결과를 두 군데서 다르게 보여주면 헷갈리므로 하나로 모았다. */
+function runBigSearch(){
+  const q = $('#bsInput').value.trim();
+  const box = $('#bsBox'), cnt = $('#bsCount');
+  if(!q){ box.hidden = true; cnt.textContent = ''; return; }
+  const list = searchAll(q);
+  cnt.innerHTML = list.length
+    ? '<b>' + list.length + '건</b> 찾았어요. 누르면 그 항목으로 갑니다.'
+    : '찾는 것이 없어요. 다른 낱말로 해보세요.';
+  box.hidden = false;
+  box.innerHTML = hitRows(list, '찾는 것이 없어요.');
+}
+// 실제 데이터에서 예시를 뽑아 준다. 뭘 찾을 수 있는지 바로 보이게.
+function drawSearchExamples(){
+  const ex = [];
+  const s = alive(DB.share)[0];
+  if(s && s.docNo) ex.push(s.docNo);
+  const t = alive(DB.task).find(r => (r.title || '').length > 1);
+  if(t) ex.push(t.title.split(' ')[0]);
+  const c = alive(DB.contact)[0];
+  if(c && c.name) ex.push(c.name);
+  const box = $('#bsEx');
+  if(!box) return;
+  box.innerHTML = ex.length
+    ? '<span style="border:none;background:none;padding-left:0;cursor:default;color:var(--ink-3)">예시</span>' +
+      ex.map(v => '<span data-ex="' + escHtml(v) + '">' + escHtml(v) + '</span>').join('')
+    : '';
+}
+$('#bsEx').addEventListener('click', e => {
+  const s = e.target.closest('[data-ex]');
+  if(!s) return;
+  $('#bsInput').value = s.dataset.ex;
+  runBigSearch();
+  $('#bsInput').focus();
+});
+
+$('#bsInput').addEventListener('input', runBigSearch);
+$('#bsInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); runBigSearch(); }
+  else if(e.key === 'Escape'){ e.target.value = ''; runBigSearch(); }
+});
+$('#bsBtn').onclick = runBigSearch;
+bindHitRows($('#bsBox'));
+
+function gotoSearch(q){
+  showView('setup');
+  $('#bsInput').value = q;
+  runBigSearch();
+  $('#bsInput').focus();
+  $('#bsInput').select();
+}
+$('#globalSearch').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){
+    const q = e.target.value.trim();
+    if(q){ gotoSearch(q); e.target.value = ''; }
+  }
+});
+$('#globalSearch').addEventListener('search', e => {
+  const q = e.target.value.trim();
+  if(q){ gotoSearch(q); e.target.value = ''; }
+});
+
+$('#btnEmpList').onclick = empListModal;
+$('#cfgBkMode').addEventListener('change', () => {
+  DB.cfg.backupMode = $('#cfgBkMode').value;
+  resetBackupTimer(); markDirty(); paintCountdown(); renderSetup();
+});
+$('#cfgBkMin').addEventListener('change', () => {
+  DB.cfg.backupEveryMin = Math.max(5, Math.floor(+$('#cfgBkMin').value || BACKUP_MIN_DEFAULT));
+  resetBackupTimer(); markDirty(); paintCountdown(); renderSetup();
+});
+$('#cfgTitle').addEventListener('change', () => {
+  DB.cfg.appTitle = $('#cfgTitle').value.replace(/\s+/g, ' ').trim();
+  markDirty(); paintTitle(); renderSetup();
+});
+$('#cfgTitle').addEventListener('change', () => {
+  const v = $('#cfgTitle').value.replace(/\s+/g,' ').trim();
+  DB.cfg.appTitle = v;
+  markDirty(); paintTitle(); renderSetup();
+});
+$('#cfgName').addEventListener('change', () => { DB.cfg.name = $('#cfgName').value.trim(); markDirty(); });
+$('#cfgPartMax').addEventListener('change', () => {
+  const v = Math.max(200, Math.floor(+$('#cfgPartMax').value || PART_MAX_DEFAULT));
+  DB.cfg.partMax = v;
+  markDirty(); renderSetup();
+});
+
+$('#empFile').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const buf = await f.arrayBuffer();
+    const isXlsx = /\.(xlsx|xlsm)$/i.test(f.name);
+    const rows = isXlsx ? await xlsxToRows(buf) : csvToRows(decodeCsv(buf));
+    const emp = rowsToEmp(rows);
+    const info = empParseInfo;
+    if(!emp.length){
+      alert('명부에서 사람을 한 명도 못 읽었어요.\n\n' +
+            '읽어본 줄: ' + info.total + '줄\n' +
+            '첫 줄에서 찾은 항목: ' + (info.cols || '(비어 있음)') + '\n\n' +
+            '첫 줄이 머리글(이름 / 내선번호 / 부서 / 직급)인지,\n' +
+            '이름이 첫 번째 열에 있는지 확인해 주세요.');
+      return;
+    }
+    DB.emp = emp;
+    DB.cfg.empAt = nowStamp();
+    DB.cfg.empFile = f.name;
+    markDirty(); renderAll();
+
+    // 읽은 수와 건너뛴 수를 반드시 보여 준다.
+    // 조용히 잘려서 몇 명만 들어가는 사고를 막기 위한 것.
+    const skipped = info.blank + info.noName;
+    if(skipped > 0){
+      alert('명부 ' + emp.length + '명을 불러왔어요.\n\n' +
+            '· 읽어본 줄: ' + info.total + '줄\n' +
+            '· 사람으로 인식: ' + emp.length + '명\n' +
+            '· 빈 줄이라 건너뜀: ' + info.blank + '줄\n' +
+            '· 이름 칸이 비어 건너뜀: ' + info.noName + '줄\n\n' +
+            '숫자가 예상과 다르면 [명부 보기]로 확인해 주세요.');
+    }else{
+      toast('명부 ' + emp.length + '명을 불러왔어요.');
+    }
+  }catch(err){
+    alert('명부를 읽지 못했습니다.\n\n' + err.message);
+  }
+  e.target.value = '';
+});
+
+$('#btnEmpTemplate').onclick = downloadEmpTemplate;
+
+$('#btnExportJson').onclick = () => {
+  const d = new Date();
+  download('스케줄러데이터_' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.json',
+           JSON.stringify(DB, null, 2), 'application/json');
+};
+$('#btnImportJson').onclick = () => $('#jsonFile').click();
+$('#jsonFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const o = JSON.parse(rd.result);
+      if(!o || !o.v) throw new Error('형식이 다릅니다');
+      if(!confirmBox('현재 데이터를 전부 지우고 파일 내용으로 덮어씁니다.\n계속할까요?')) return;
+      DB = normalizeDB(o);
+      markDirty(); renderAll();
+      toast('데이터를 가져왔습니다.');
+    }catch(err){ alert('가져오지 못했습니다: ' + err.message); }
+    e.target.value = '';
+  };
+  rd.readAsText(f, 'utf-8');
+});
+
+$('#btnShowLog').onclick = () => {
+  if(!DB.log.length) return alert('병합 기록이 없습니다.');
+  detailModal('병합 로그 (최근 ' + DB.log.length + '건)',
+    DB.log.map(l => '[' + l.time + '] ' + l.action + '  ' + l.id +
+      (l.before ? '\n   이전: ' + l.before : '') +
+      (l.after ? '\n   이후: ' + l.after : '') +
+      (l.src ? '\n   출처: ' + l.src : '')).join('\n\n'));
+};
+
+$('#btnWipe').onclick = () => {
+  if(!confirmBox('모든 데이터를 지웁니다. 되돌릴 수 없습니다.\n계속할까요?')) return;
+  if(!confirmBox('정말로 지울까요? 파일로 저장해 둔 백업이 없으면 복구할 수 없습니다.')) return;
+  DB = emptyDB();
+  localStorage.removeItem(LS_KEY);
+  dirty = false;
+  renderAll();
+  toast('모두 지웠습니다.');
+};
+
+window.addEventListener('beforeunload', e => {
+  if(!dirty) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+/* ============================================================
+   9. 시작
+   ============================================================ */
+(function boot(){
+  lsOK = testLocalStorage();
+  if(!lsOK) $('#noStore').hidden = false;
+
+  const emb = readEmbedded();
+  const ls = readLocal();
+
+  if(emb && ls && (ls.savedAt || '') > (emb.savedAt || '')){
+    if(confirm('이 브라우저에 더 최근 작업이 있습니다.\n\n  파일 안: ' + (emb.savedAt || '(시각 없음)') +
+               '\n  브라우저: ' + ls.savedAt + '\n\n브라우저 쪽을 불러올까요?')){
+      DB = normalizeDB(ls);
+      dirty = true;
+    } else {
+      DB = normalizeDB(emb);
+    }
+  } else if(emb){
+    DB = normalizeDB(emb);
+  } else if(ls){
+    DB = normalizeDB(ls);
+  } else {
+    DB = emptyDB();
+  }
+
+  paintTitle();
+  applySimple();
+  measureSticky();
+  resetBackupTimer();
+  paintCountdown();
+  setInterval(tickBackup, 1000);
+  renderAll();
+
+  // 처음이면 온보딩부터. 이름·모드를 정하고 나서 명부 안내로 이어진다.
+  if(!DB.cfg.onboarded || !DB.cfg.name){
+    showOnboard();
+  }else{
+    setTimeout(maybeShowEmpGuide, 300);
+  }
+})();
+</script>
+</body>
+</html>

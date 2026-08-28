@@ -1,0 +1,21 @@
+Option Explicit
+' 내용 보기 팝업 (긴 내용용). 짧은 내용은 modMain.ShowDetail 이 MsgBox 로 처리한다.
+
+Private Sub UserForm_Initialize()
+    Me.Caption = modMain.DetailTitle
+    lblTitle.Caption = modMain.DetailTitle
+    txtBody.Text = modMain.DetailBody
+    txtBody.SelStart = 0
+End Sub
+
+Private Sub cmdCopy_Click()
+    If ClipSet(txtBody.Text) Then
+        Say "내용을 클립보드에 복사했습니다."
+    Else
+        Warn "클립보드에 복사하지 못했습니다."
+    End If
+End Sub
+
+Private Sub cmdClose_Click()
+    Unload Me
+End Sub

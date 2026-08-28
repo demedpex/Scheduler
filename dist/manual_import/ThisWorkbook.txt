@@ -1,0 +1,14 @@
+Option Explicit
+
+Private Sub Workbook_Open()
+    On Error Resume Next
+    modMain.InitApp
+End Sub
+
+Private Sub Workbook_BeforeClose(Cancel As Boolean)
+    ' 오류로 화면이 멈춘 채 남는 일이 없게 항상 되돌린다
+    On Error Resume Next
+    Application.EnableEvents = True
+    Application.ScreenUpdating = True
+    Application.Cursor = xlDefault
+End Sub

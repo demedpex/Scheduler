@@ -1,0 +1,138 @@
+<div id="onboard" hidden>
+  <div class="onboard">
+    <div class="ob-top">
+      <div class="ob-brand">
+        <span class="logo">업</span>
+        <h1 id="obTitle">AX금융혁신팀 업무스케줄러</h1>
+      </div>
+      <p class="lead">처음 오셨네요. 두 가지만 정하면 바로 시작해요.</p>
+    </div>
+
+    <div class="ob-name">
+      <label for="obName">이름</label>
+      <input type="text" id="obName" placeholder="홍길동" autocomplete="off">
+      <p class="hint">업무공유를 주고받을 때 작성자로 기록돼요.</p>
+    </div>
+
+    <div class="ob-modes" id="obModes">
+      <button type="button" class="ob-card on" data-mode="simple">
+        <span class="head">
+          <span class="check">✓</span>
+          <span>
+            <span class="name">간편 모드</span>
+            <span class="one" style="display:block">오늘 할 일에만 집중해요</span>
+          </span>
+        </span>
+        <span class="ob-preview">
+          <svg viewBox="0 0 280 168" role="img" aria-label="간편 모드 화면 축소판 — 위에 입력창 하나, 아래에 세로 목록 하나">
+            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
+            <rect x="16" y="14" width="248" height="26" rx="7" fill="#fff" stroke="#3182f6" stroke-width="1.5"/>
+            <rect x="26" y="24" width="86" height="6" rx="3" fill="#d1d6db"/>
+            <rect x="222" y="20" width="32" height="14" rx="7" fill="#3182f6"/>
+            <g fill="#fff">
+              <rect x="16" y="52" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+              <rect x="16" y="78" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+              <rect x="16" y="104" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+              <rect x="16" y="130" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+            </g>
+            <g fill="#3182f6">
+              <rect x="22" y="56" width="3" height="12" rx="1.5"/>
+              <rect x="22" y="82" width="3" height="12" rx="1.5"/>
+              <rect x="22" y="108" width="3" height="12" rx="1.5"/>
+              <rect x="22" y="134" width="3" height="12" rx="1.5"/>
+            </g>
+            <g fill="#d1d6db">
+              <rect x="34" y="59" width="130" height="6" rx="3"/>
+              <rect x="34" y="85" width="96" height="6" rx="3"/>
+              <rect x="34" y="111" width="142" height="6" rx="3"/>
+              <rect x="34" y="137" width="110" height="6" rx="3"/>
+            </g>
+          </svg>
+        </span>
+        <ul class="ob-feat">
+          <li><span>한 줄 입력과 업무 목록만 보여줍니다</span></li>
+          <li><span>날짜는 오늘로 고정됩니다</span></li>
+          <li><span>달력·업무공유·설정은 숨겨집니다</span></li>
+        </ul>
+        <span class="who">이런 분께 · 포스트잇 대신 쓰고 싶은 분</span>
+      </button>
+
+      <button type="button" class="ob-card" data-mode="full">
+        <span class="head">
+          <span class="check">✓</span>
+          <span>
+            <span class="name">전체 화면</span>
+            <span class="one" style="display:block">업무·공유·연락처·점심까지 한 화면에</span>
+          </span>
+        </span>
+        <span class="ob-preview">
+          <svg viewBox="0 0 280 168" role="img" aria-label="전체 화면 축소판 — 탭, 왼쪽 큰 목록, 오른쪽 카드 3개">
+            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
+            <rect x="16" y="14" width="34" height="13" rx="6.5" fill="#3182f6"/>
+            <g fill="#e5e8eb">
+              <rect x="56" y="14" width="30" height="13" rx="6.5"/>
+              <rect x="92" y="14" width="30" height="13" rx="6.5"/>
+            </g>
+            <rect x="16" y="36" width="164" height="118" rx="7" fill="#fff" stroke="#e5e8eb"/>
+            <g fill="#f9fafb" stroke="#e5e8eb">
+              <rect x="24" y="46" width="70" height="16" rx="5"/>
+              <rect x="102" y="46" width="70" height="16" rx="5"/>
+              <rect x="24" y="68" width="70" height="16" rx="5"/>
+              <rect x="102" y="68" width="70" height="16" rx="5"/>
+              <rect x="24" y="90" width="70" height="16" rx="5"/>
+              <rect x="102" y="90" width="70" height="16" rx="5"/>
+              <rect x="24" y="112" width="70" height="16" rx="5"/>
+              <rect x="102" y="112" width="70" height="16" rx="5"/>
+              <rect x="24" y="134" width="70" height="14" rx="5"/>
+              <rect x="102" y="134" width="70" height="14" rx="5"/>
+            </g>
+            <g fill="#3182f6">
+              <rect x="28" y="49" width="2.5" height="10" rx="1.25"/>
+              <rect x="106" y="49" width="2.5" height="10" rx="1.25"/>
+              <rect x="28" y="71" width="2.5" height="10" rx="1.25"/>
+              <rect x="106" y="71" width="2.5" height="10" rx="1.25"/>
+            </g>
+            <g fill="#d1d6db">
+              <rect x="36" y="52" width="34" height="4" rx="2"/>
+              <rect x="114" y="52" width="28" height="4" rx="2"/>
+              <rect x="36" y="74" width="40" height="4" rx="2"/>
+              <rect x="114" y="74" width="24" height="4" rx="2"/>
+              <rect x="30" y="96" width="36" height="4" rx="2"/>
+              <rect x="108" y="96" width="42" height="4" rx="2"/>
+              <rect x="30" y="118" width="44" height="4" rx="2"/>
+              <rect x="108" y="118" width="32" height="4" rx="2"/>
+              <rect x="30" y="139" width="30" height="4" rx="2"/>
+              <rect x="108" y="139" width="38" height="4" rx="2"/>
+            </g>
+            <g fill="#fff" stroke="#d1d6db">
+              <rect x="188" y="36" width="76" height="37" rx="7"/>
+              <rect x="188" y="79" width="76" height="37" rx="7"/>
+              <rect x="188" y="122" width="76" height="32" rx="7"/>
+            </g>
+            <g fill="#d1d6db">
+              <rect x="196" y="44" width="30" height="4" rx="2"/>
+              <rect x="196" y="54" width="52" height="4" rx="2"/>
+              <rect x="196" y="62" width="40" height="4" rx="2"/>
+              <rect x="196" y="87" width="30" height="4" rx="2"/>
+              <rect x="196" y="97" width="52" height="4" rx="2"/>
+              <rect x="196" y="105" width="44" height="4" rx="2"/>
+              <rect x="196" y="130" width="30" height="4" rx="2"/>
+              <rect x="196" y="140" width="48" height="4" rx="2"/>
+            </g>
+          </svg>
+        </span>
+        <ul class="ob-feat">
+          <li><span>업무를 크게, 오른쪽에 업무공유·연락하기·점심약속</span></li>
+          <li><span>달력에서 한 달을 한눈에</span></li>
+          <li><span>회신기한(D-DAY) 관리와 팀 공유</span></li>
+        </ul>
+        <span class="who">이런 분께 · 일정을 두루 챙겨야 하는 분</span>
+      </button>
+    </div>
+
+    <div class="ob-foot">
+      <p class="later">나중에 화면 위쪽에서 언제든 바꿀 수 있어요</p>
+      <button type="button" class="ob-start" id="obStart">간편 모드로 시작하기</button>
+    </div>
+  </div>
+</div>

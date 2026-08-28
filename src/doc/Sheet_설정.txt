@@ -1,0 +1,20 @@
+Option Explicit
+
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    If Target.Cells.Count > 1 Then Exit Sub
+    Application.EnableEvents = False
+    On Error Resume Next
+    modMain.SetupClick Target.Row, Target.Column
+    On Error GoTo 0
+    Application.EnableEvents = True
+End Sub
+
+' 내 이름 / 명부 경로 / 백업 보관일수를 직접 고쳤을 때 설정에 반영
+Private Sub Worksheet_Change(ByVal Target As Range)
+    If Target.Cells.Count > 1 Then Exit Sub
+    Application.EnableEvents = False
+    On Error Resume Next
+    modMain.SetupChanged Target.Address, CStr(Target.Value)
+    On Error GoTo 0
+    Application.EnableEvents = True
+End Sub

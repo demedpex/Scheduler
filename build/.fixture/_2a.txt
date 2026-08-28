@@ -1,0 +1,138 @@
+id="2a" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:12px;font-weight:700;color:#fff;background:var(--accent);padding:4px 11px;border-radius:999px">2a</div>
+        <div style="font-size:15px;font-weight:700">오늘 — 확정 배치 (A안 · 주 영역 + 보조 열)</div>
+        <div style="font-size:12px;color:var(--ink-2)">업무를 2열 블록으로 좌측 8/12, 공유·연락·점심은 우측 4/12 열에 위계순</div>
+      </div>
+      <div style="width:1440px;background:var(--bg);border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(25,31,40,.12)">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:26px;height:26px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">업</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:-.4px">업무 스케줄러</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-3)">오늘 · 2026-08-27 (목)</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px" class="no-print">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--green);background:var(--green-t);padding:6px 13px;border-radius:999px">
+<span>●</span>
+<span>모두 저장했어요</span>
+</div>
+            <div style="padding:9px 18px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.32)">파일로 저장하기</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line)" class="no-print">
+          <div style="padding:9px 22px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">오늘</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">달력</div>
+          <div style="padding:9px 22px;font-size:14px;color:var(--ink-2);border-radius:999px">설정</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px">
+          <div style="display:flex;align-items:center;background:var(--panel);border-radius:999px;box-shadow:var(--shadow-1);overflow:hidden">
+            <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">◀</div>
+            <div style="padding:9px 14px;font-size:14px;font-weight:700;letter-spacing:-.2px">2026-08-27 (목)</div>
+            <div style="padding:9px 14px;font-size:13px;color:var(--ink-2)">▶</div>
+          </div>
+          <div style="padding:8px 15px;background:var(--panel);border-radius:999px;font-size:12px;color:var(--ink-2);box-shadow:var(--shadow-1)">오늘로 가기</div>
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 14px;background:var(--accent-t);border-radius:999px;font-size:12px;color:var(--accent-d);font-weight:700">
+            오늘 업무 8건 중 2건 했어요
+            <div style="width:76px;height:6px;background:#fff;border-radius:999px;overflow:hidden">
+<div style="width:25%;height:100%;background:var(--accent);border-radius:999px">
+</div>
+</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:7px" class="no-print">
+            <div style="padding:9px 16px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border-radius:999px;box-shadow:0 3px 10px rgba(49,130,246,.3)">＋ 업무 추가</div>
+            <div style="padding:9px 15px;background:var(--call-t);color:var(--call);font-size:13px;font-weight:700;border-radius:999px">＋ 연락 추가</div>
+            <div style="padding:9px 15px;background:var(--share-t);color:var(--share);font-size:13px;font-weight:700;border-radius:999px">＋ 공유 추가</div>
+            <div style="padding:9px 15px;background:var(--lunch-t);color:var(--lunch);font-size:13px;font-weight:700;border-radius:999px">＋ 점심 추가</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:8fr 4fr;gap:18px;padding:2px 24px 24px">
+          <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:16px 18px 12px">
+              <div style="width:10px;height:10px;border-radius:999px;background:var(--task)">
+</div>
+              <div style="font-size:18px;font-weight:700;letter-spacing:-.5px">업무</div>
+              <div style="font-size:12px;color:var(--ink-3);background:var(--panel-2);padding:3px 10px;border-radius:999px">8건 중 2건 했어요</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--ink-3)">시간순</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 16px">
+              <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="8">
+                <div style="{{ t.blockStyle }}">
+                  <div style="{{ t.barStyle }}">
+</div>
+                  <div style="{{ t.checkStyle }}">{{ t.check }}</div>
+                  <div style="min-width:0">
+                    <div style="{{ t.titleStyle }}">{{ t.title }}</div>
+                    <div style="{{ t.subStyle }}">{{ t.sub }}</div>
+                  </div>
+                  <div style="{{ t.timeStyle }}">{{ t.time }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:15px 16px 11px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--share)">
+</div>
+                <div style="font-size:15px;font-weight:700">업무공유</div>
+                <div style="font-size:11px;color:var(--ink-3)">4건</div>
+                <div style="margin-left:auto;display:flex;gap:6px" class="no-print">
+                  <div style="padding:5px 11px;background:var(--panel-2);font-size:11px;color:var(--ink-2);border-radius:999px">내보내기</div>
+                  <div style="padding:5px 11px;background:var(--panel-2);font-size:11px;color:var(--ink-2);border-radius:999px">가져오기</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 14px 16px">
+                <sc-for list="{{ shares }}" as="s" hint-placeholder-count="4">
+                  <div style="{{ s.blockStyle }}">
+                    <div style="{{ s.badgeStyle }}">{{ s.dday }}</div>
+                    <div style="min-width:0">
+                      <div style="font-size:13px;font-weight:700;line-height:1.45;text-wrap:pretty">{{ s.title }}</div>
+                      <div style="font-size:11px;color:var(--ink-3);margin-top:3px;letter-spacing:-.1px">{{ s.meta }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 10px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--call)">
+</div>
+                <div style="font-size:14px;font-weight:700">유관부서 연락하기</div>
+                <div style="font-size:11px;color:var(--ink-3)">2건</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 14px 14px">
+                <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="2">
+                  <div style="{{ c.blockStyle }}">
+                    <div style="{{ c.checkStyle }}">{{ c.check }}</div>
+                    <div style="min-width:0;display:flex;align-items:baseline;gap:8px">
+                      <span style="{{ c.nameStyle }}">{{ c.name }}</span>
+                      <span style="{{ c.extStyle }}">{{ c.ext }}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums">{{ c.time }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 10px">
+                <div style="width:9px;height:9px;border-radius:999px;background:var(--lunch)">
+</div>
+                <div style="font-size:14px;font-weight:700">점심약속</div>
+                <div style="font-size:11px;color:var(--ink-3)">1건</div>
+              </div>
+              <div style="padding:0 14px 14px">
+                <div style="display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:11px 13px;background:var(--lunch-t);border-radius:var(--radius-sm)">
+                  <div style="display:flex;align-items:baseline;gap:9px">
+                    <span style="font-size:13px;font-weight:700">박준영 과장</span>
+                    <span style="font-size:12px;color:var(--ink-2)">본관 3층 한식당</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--lunch);font-weight:700;font-variant-numeric:tabular-nums">12:00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ─────────── 2b ─────────── -->
+    <div 

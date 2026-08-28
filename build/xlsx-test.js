@@ -3,7 +3,7 @@
  *
  *  실행:  node build\xlsx-test.js
  *
- *  web\스케줄러.html 에서 명부 관련 코드를 그대로 떼어내 돌린다.
+ *  dist\배포\sched.html 에서 명부 관련 코드를 그대로 떼어내 돌린다.
  *  Node 에는 DOMParser 가 없으므로 시험용 XML 파서를 끼워 준다.
  *  (브라우저에서는 내장 DOMParser 를 쓴다. 여기서 검증하는 것은
  *   ZIP 해석 / 열 번호 계산 / 공유문자열 / 머리글 매핑 로직이다)
@@ -14,7 +14,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const root = path.resolve(__dirname, '..');
-const htmlPath = path.join(root, 'web', '스케줄러.html');
+const htmlPath = path.join(root, 'dist', '배포', 'sched.html');
 
 let pass = 0, fail = 0;
 function chk(name, cond, detail){

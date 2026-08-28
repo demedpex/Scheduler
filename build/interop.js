@@ -6,7 +6,7 @@
  *          build\interop.ps1 이 두 단계를 순서대로 돌려 준다)
  *
  *  방법
- *    1) web\스케줄러.html 에서 유틸·동기화 부분만 떼어내 그대로 실행한다.
+ *    1) dist\배포\sched.html 에서 유틸·동기화 부분만 떼어내 그대로 실행한다.
  *       (사본을 따로 두지 않는다. 실제 배포되는 코드를 검사해야 의미가 있다)
  *    2) PowerShell 기준 구현이 만든 파트 텍스트와 바이트 단위로 비교한다.
  *    3) 기준 파트를 JS 파서에 먹여 원본 레코드가 그대로 복원되는지 본다.
@@ -19,7 +19,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const htmlPath = path.join(root, 'web', '스케줄러.html');
+const htmlPath = path.join(root, 'dist', '배포', 'sched.html');
 const fixDir = process.argv[2] || path.join(root, 'build', '.fixture');
 
 let pass = 0, fail = 0;

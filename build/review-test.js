@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const src = fs.readFileSync(path.join(root, 'web', '스케줄러.html'), 'utf8');
+const src = fs.readFileSync(path.join(root, 'dist', '배포', 'sched.html'), 'utf8');
 function slice(a, b){
   const i = src.indexOf(a), j = src.indexOf(b, i);
   if(i < 0 || j < 0) throw new Error('앵커 없음: ' + a);

@@ -3,7 +3,7 @@
  *
  *  실행:  node build\dday-test.js
  *
- *  web\스케줄러.html 의 날짜 유틸을 그대로 떼어내 돌린다.
+ *  dist\배포\sched.html 의 날짜 유틸을 그대로 떼어내 돌린다.
  *
  *  배경: viewDate 가 현재 시각까지 들고 있으면 daysBetween 이 반올림되면서
  *        오후에 열었을 때 "오늘이 기한"인 건이 D-DAY 가 아니라 D+1(기한 지남)로
@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const htmlPath = path.join(root, 'web', '스케줄러.html');
+const htmlPath = path.join(root, 'dist', '배포', 'sched.html');
 
 let pass = 0, fail = 0;
 function chk(name, cond, detail){

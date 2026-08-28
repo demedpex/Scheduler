@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const htmlPath = path.join(root, 'web', '스케줄러.html');
+const htmlPath = path.join(root, 'dist', '배포', 'sched.html');
 const src = fs.readFileSync(htmlPath, 'utf8');
 
 function slice(a, b){

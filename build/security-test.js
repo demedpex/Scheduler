@@ -15,7 +15,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const root = path.resolve(__dirname, '..');
-const htmlPath = path.join(root, 'web', '스케줄러.html');
+const htmlPath = path.join(root, 'dist', '배포', 'sched.html');
 const src = fs.readFileSync(htmlPath, 'utf8');
 
 let pass = 0, fail = 0, warn = 0;

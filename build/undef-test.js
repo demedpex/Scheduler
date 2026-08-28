@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const src = fs.readFileSync(path.join(root, 'web', '스케줄러.html'), 'utf8');
+const src = fs.readFileSync(path.join(root, 'dist', '배포', 'sched.html'), 'utf8');
 
 // 본문 스크립트만 떼어 온다 (데이터 블록은 JSON 이라 제외)
 const marks = [];

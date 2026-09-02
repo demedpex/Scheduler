@@ -59,6 +59,10 @@ WORKING.md             어느 파일이 기준인지
 
 고친 뒤에는 전부 돌린다. Node 만 있으면 된다.
 
+> **눌러도 아무 일이 없는데 에러도 안 나면** `ui-test.js` 부터 돌린다.
+> `hidden` 을 켜도 `.foo{display:flex}` 같은 규칙에 덮여 안 숨는 일이 있다.
+> 코드는 멀쩡해 보여서 한참 들여다보게 되는 종류다.
+>
 > 줄바꿈은 **LF 로 둔다.** `review-test.js` 같은 검사가 `
 ` 로 위치를 잡아서,
 > CRLF 로 바뀌면 앵커를 못 찾고 통째로 실패한다.
@@ -70,6 +74,7 @@ node build/security-test.js   # 위험 패턴
 node build/dday-test.js       # 날짜 계산 (20건)
 node build/xlsx-test.js       # 명부 가져오기 (18건)
 node build/batch-test.js      # 묶음 처리 (5건)
+node build/ui-test.js         # hidden 이 덮이는 곳 · 없는 id (4건)
 ```
 
 엑셀판까지 볼 때 (Windows + Excel 필요):

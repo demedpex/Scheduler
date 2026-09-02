@@ -11,35 +11,58 @@
    디자인: Claude Design "업무 스케줄러 개편 v2" A안
    ============================================================ */
 :root{
-  --bg:#f2f4f6; --panel:#ffffff; --panel-2:#f9fafb;
-  --line:#e5e8eb; --line-2:#d1d6db;
-  --ink:#191f28; --ink-2:#4e5968; --ink-3:#8b95a1;
-  --accent:#3182f6; --accent-d:#1b64da; --accent-t:#e8f3ff;
+  /* 바탕은 순백이 아니라 따뜻한 종이색이다. 하루 종일 띄워 두는 화면이라
+     흰 종이 위 문서처럼 보여야 하고, 순백은 오래 보면 눈이 시리다. */
+  --bg:#f6f5f4; --panel:#ffffff; --panel-2:#f6f5f4;
+  --line:#e6e6e6; --line-2:#dddddd;
+  /* 글자는 따뜻한 먹색 계열. 검정을 그대로 쓰지 않고 한 단계 눅인다 */
+  --ink:#0d0d0d; --ink-2:#31302e; --ink-3:#615d59; --ink-4:#a39e98;
+  /* 파랑 하나만 '누르는 것'에 쓴다. 나머지 색은 전부 구분·표시용이다 */
+  --accent:#0075de; --accent-d:#005bab; --accent-t:#e8f2fc;
   /* 카테고리 색 — 지금은 화면에 쓰지 않는다.
      색은 상태(기한·완료·저장·진행)에만 쓰고, 구분은 위치와 제목으로 한다.
      나중에 카테고리를 색으로 나누고 싶으면 여기서 다시 꺼내 쓰면 된다. */
-  --task:#3182f6;  --task-t:#e8f3ff;
-  --call:#00b26b;  --call-t:#e4f8ee;
+  --task:#0075de;  --task-t:#e8f2fc;
+  --call:#1aae39;  --call-t:#e7f6ea;
   /* 공유는 남색. 빨강은 기한(D-DAY·초과) 전용으로 비워 둔다.
      같은 카드 안에서 빨간 제목 띠와 빨간 D-DAY 배지가 겹치면
      무엇이 급한지 눈에 안 들어온다. */
-  --share:#4c5bd4; --share-t:#eceefc;
-  --lunch:#ff8a00; --lunch-t:#fff3e0;
-  --trip:#7a5af8;  --trip-t:#f0ecfe;
+  --share:#213183; --share-t:#e9ebf4;
+  --lunch:#dd5b00; --lunch-t:#fceee4;
+  --trip:#391c57;  --trip-t:#f2ecfa;
+  /* 빨강은 기한 전용이다. 참고한 디자인에는 대응하는 색이 없어 그대로 둔다 —
+     D-DAY·기한 초과는 색으로 즉시 읽혀야 하고 다른 색으로 바꿀 수 없다. */
   --red:#f04452;   --red-t:#feecee;
-  --orange:#ff8a00;--orange-t:#fff3e0;
-  --green:#00b26b; --green-t:#e4f8ee;
-  --radius:16px; --radius-sm:10px; --pill:999px;
-  --shadow-1:0 1px 2px rgba(25,31,40,.05);
-  --shadow-2:0 6px 18px rgba(25,31,40,.07);
-  --shadow-3:0 20px 48px rgba(25,31,40,.20);
+  --orange:#dd5b00;--orange-t:#fceee4;
+  --green:#1aae39; --green-t:#e7f6ea;
+  /* 테두리 색은 띠 배경에서 한 단계 진하게 뽑은 값 */
+  --edge-task:#c8e0f6; --edge-call:#c4e8cd; --edge-share:#ccd2e8;
+  --edge-lunch:#f7d5bb; --edge-trip:#ded0f2; --edge-orange:#f7d5bb;
+  /* 입력칸 4 · 버튼 8 · 카드 12 · 큰 그릇 16. 알약은 배지와 칩에만 남긴다 */
+  --radius-xs:4px; --radius-sm:8px; --radius:12px; --radius-lg:16px; --pill:999px;
+  /* 그림자는 옅은 겹으로만 쌓는다. 한 방에 짙게 떨어뜨리지 않는다 */
+  --shadow-1:0 .175px 1.04px rgba(0,0,0,.01), 0 .8px 2.93px rgba(0,0,0,.02),
+             0 2.03px 7.85px rgba(0,0,0,.027), 0 4px 18px rgba(0,0,0,.04);
+  --shadow-2:0 .3px 1.4px rgba(0,0,0,.012), 0 1.2px 4.2px rgba(0,0,0,.022),
+             0 3.2px 11px rgba(0,0,0,.03), 0 7px 24px rgba(0,0,0,.045);
+  --shadow-3:0 .5px 2px rgba(0,0,0,.014), 0 2px 7px rgba(0,0,0,.025),
+             0 6px 18px rgba(0,0,0,.035), 0 12px 30px rgba(0,0,0,.045),
+             0 23px 52px rgba(0,0,0,.05);
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
 }
 *{box-sizing:border-box}
+/* hidden 은 브라우저 기본 규칙이라 우선순위가 가장 낮다.
+   .carry-list{display:flex} 같은 규칙 하나에 덮여서 안 접히는 일이 생긴다.
+   여기서 한 번 못 박아 두면 어디에 hidden 을 걸든 그대로 숨는다. */
+[hidden]{display:none !important}
 html,body{margin:0;padding:0;height:100%}
 body{
   background:var(--bg); color:var(--ink);
-  font:14px/1.5 "Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif;
+  /* 참고한 디자인의 Inter 는 내려받을 수 없다 (망분리라 외부 글꼴 금지).
+     설치돼 있는 것 중 가장 가까운 산세리프를 앞에 두고, 한글은 맑은 고딕이 받는다.
+     라틴 글자와 숫자만 Segoe UI 로 바뀐다. */
+  font:14px/1.5 -apple-system,"Segoe UI",system-ui,"Malgun Gothic","맑은 고딕",sans-serif;
+  font-feature-settings:"lnum" 1;
   -webkit-font-smoothing:antialiased;
 }
 button{font:inherit;color:inherit;cursor:pointer}
@@ -54,7 +77,7 @@ header{
 header .logo{
   width:28px;height:28px;border-radius:9px;background:var(--accent);
   display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:14px;font-weight:800;flex:none;
+  color:#fff;font-size:14px;font-weight:700;flex:none;
 }
 header h1{
   font-size:17px;margin:0;font-weight:700;letter-spacing:-.4px;white-space:nowrap;
@@ -80,9 +103,9 @@ header .spacer{flex:1}
 
 /* 상단 검색 — 설정의 큰 검색으로 보내는 지름길. 돋보기를 넣어 검색임을 드러낸다. */
 .gsearch{
-  width:230px;padding:8px 13px 8px 34px;border-radius:var(--pill);
+  width:230px;padding:8px 13px 8px 34px;border-radius:var(--radius-xs);
   border:1.5px solid var(--accent);background:var(--accent-t);font-size:13px;font-weight:600;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233182f6' stroke-width='2.6' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 L21 21'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230075de' stroke-width='2.6' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 L21 21'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:11px 50%;background-size:15px 15px;
 }
 .gsearch::placeholder{color:var(--accent-d);opacity:.75}
@@ -95,19 +118,20 @@ header .spacer{flex:1}
   padding:26px 24px 22px;
   background:linear-gradient(180deg, var(--accent-t) 0%, #fff 62%);
   border-color:var(--accent);
-  box-shadow:0 8px 24px rgba(49,130,246,.16);
+  box-shadow:var(--shadow-2);
 }
 .bigsearch .bs-head{
   display:flex;align-items:center;gap:9px;
-  font-size:24px;font-weight:800;letter-spacing:-.8px;margin-bottom:6px;color:var(--ink);
+  font-size:26px;font-weight:700;letter-spacing:-.625px;margin-bottom:6px;color:var(--ink);
 }
 .bigsearch .bs-head svg{width:24px;height:24px;flex:none}
 .bigsearch .bs-sub{font-size:13px;color:var(--ink-2);margin-bottom:17px}
 .bigsearch .bs-row{
   display:flex;border:3px solid var(--accent);border-radius:16px;overflow:hidden;
-  background:#fff;box-shadow:0 4px 14px rgba(49,130,246,.18);
+  background:#fff;box-shadow:var(--shadow-1);
 }
-.bigsearch .bs-row:focus-within{box-shadow:0 0 0 5px rgba(49,130,246,.2)}
+/* 초점 테두리는 지운다는 뜻이 아니라 어디에 커서가 있는지 알려 주는 표시다 */
+.bigsearch .bs-row:focus-within{box-shadow:0 0 0 5px rgba(0,117,222,.2)}
 .bigsearch input{
   flex:1;border:none;outline:none;padding:18px 20px;font-size:17px;
   background:transparent;font-weight:600;
@@ -115,7 +139,7 @@ header .spacer{flex:1}
 .bigsearch input::placeholder{color:var(--ink-3);font-size:15px;font-weight:400}
 .bigsearch button{
   border:none;background:var(--accent);color:#fff;
-  padding:0 30px;font-size:16px;font-weight:800;cursor:pointer;
+  padding:0 30px;font-size:16px;font-weight:700;cursor:pointer;
   display:flex;align-items:center;gap:7px;
 }
 .bigsearch button svg{width:18px;height:18px}
@@ -138,7 +162,7 @@ header .spacer{flex:1}
 .hitrow:first-child{border-top:none}
 .hitrow:hover{background:var(--accent-t)}
 .hitrow .kind{
-  font-size:11px;font-weight:800;padding:3px 9px;border-radius:var(--pill);
+  font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--pill);
   background:var(--panel-2);color:var(--ink-2);flex:none;min-width:52px;text-align:center;
 }
 .hitrow .ttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:13px}
@@ -162,34 +186,39 @@ header .spacer{flex:1}
 .countdown.over .cd-lab,.countdown.over .cd-t{color:var(--red)}
 .countdown[hidden]{display:none}
 
+/* 실무용 버튼이라 알약이 아니라 8px 모서리다. 알약은 배지·칩에만 남긴다 */
 .btn{
-  background:var(--panel-2); border:1px solid var(--line);
-  border-radius:var(--pill); padding:8px 16px;
-  font-size:13px; font-weight:700; color:var(--ink-2);
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius-sm); padding:8px 16px;
+  font-size:13px; font-weight:500; color:var(--ink);
   transition:background .12s,border-color .12s,color .12s;
 }
-.btn:hover{background:#eef0f3;border-color:var(--line-2);color:var(--ink)}
-.btn.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(49,130,246,.3)}
+.btn:hover{background:var(--panel-2);border-color:var(--line-2);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:transparent;color:#fff;font-weight:600}
 .btn.primary:hover{background:var(--accent-d)}
 .btn.danger{background:var(--red-t);border-color:transparent;color:var(--red)}
 .btn.danger:hover{background:#fdd8dc}
+/* 옆 버튼과 하는 일이 다를 때 색으로 갈라 놓는 파랑.
+   줄마다 반복되는 자리라 머리의 [모두 오늘로]처럼 꽉 찬 파랑은 쓰지 않는다. */
+.btn.accent{background:var(--accent-t);border-color:transparent;color:var(--accent-d)}
+.btn.accent:hover{background:#d3e7f8;border-color:transparent;color:var(--accent-d)}
 .btn.sm{padding:5px 12px;font-size:12px}
 /* 등록 버튼 — 색으로 구분하지 않고 테두리·굵기로 또렷하게 */
 .btn.add{
   background:#fff;border:1.5px solid var(--line-2);color:var(--ink);
-  font-weight:800;padding:9px 17px;
+  font-weight:600;padding:9px 17px;
 }
 .btn.add:hover{background:var(--ink);border-color:var(--ink);color:#fff}
 /* 영역 머리 오른쪽에 붙는 추가 버튼 */
 .btn.addsm{
   background:#fff;border:1.5px solid var(--line-2);color:var(--ink);
-  font-weight:800;padding:6px 14px;font-size:12.5px;letter-spacing:0;
+  font-weight:600;padding:6px 14px;font-size:12.5px;letter-spacing:0;
 }
 .btn.addsm:hover{background:var(--ink);border-color:var(--ink);color:#fff}
-.btn.addsm.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 2px 8px rgba(49,130,246,.28)}
+.btn.addsm.primary{background:var(--accent);border-color:transparent;color:#fff}
 .btn.addsm.primary:hover{background:var(--accent-d);border-color:transparent;color:#fff}
 /* 업무는 주역이라 추가 버튼도 강조한다 */
-.btn.add.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(49,130,246,.3)}
+.btn.add.primary{background:var(--accent);border-color:transparent;color:#fff}
 .btn.add.primary:hover{background:var(--accent-d);border-color:transparent;color:#fff}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn:disabled:hover{background:var(--panel-2);border-color:var(--line);color:var(--ink-2)}
@@ -206,7 +235,7 @@ nav.tabs button{
   transition:background .12s,color .12s;
 }
 nav.tabs button:hover{background:var(--panel-2);color:var(--ink)}
-nav.tabs button.on{color:#fff;background:var(--accent);box-shadow:0 3px 10px rgba(49,130,246,.3)}
+nav.tabs button.on{color:#fff;background:var(--accent)}
 .tabspacer{flex:1}
 
 /* 화면 모드 전환 — 두 칸짜리 스위치.
@@ -219,16 +248,16 @@ nav.tabs button.on{color:#fff;background:var(--accent);box-shadow:0 3px 10px rgb
 .modeswitch button{
   display:inline-flex;align-items:center;gap:8px;
   border:none;background:none;border-radius:var(--pill);
-  padding:9px 20px;font-size:13.5px;font-weight:800;color:var(--ink-3);
+  padding:9px 20px;font-size:13.5px;font-weight:700;color:var(--ink-3);
   transition:background .14s,color .14s,box-shadow .14s;white-space:nowrap;
 }
 .modeswitch button svg{width:17px;height:17px;flex:none}
 .modeswitch button:hover{color:var(--ink-2)}
 .modeswitch button[data-mode="full"].on{
-  background:#fff;color:var(--ink);box-shadow:0 2px 7px rgba(25,31,40,.13);
+  background:#fff;color:var(--ink);box-shadow:var(--shadow-1);
 }
 .modeswitch button[data-mode="simple"].on{
-  background:var(--accent);color:#fff;box-shadow:0 3px 11px rgba(49,130,246,.38);
+  background:var(--accent);color:#fff;
 }
 @media (max-width:1100px){
   .modeswitch button{padding:9px 13px}
@@ -246,23 +275,24 @@ main{max-width:1440px;margin:0 auto;padding:16px 24px 48px}
 section[hidden]{display:none}
 
 /* 영역 경계를 확실히: 흰 배경 + 테두리 + 그림자 */
+/* 카드는 실선 한 겹으로 세운다. 그림자는 정말 떠 있어야 할 때만 쓴다 */
 .card{
-  background:var(--panel);border:1px solid var(--line-2);
-  border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:none;overflow:hidden;
 }
-.card.flat{box-shadow:var(--shadow-1)}
+.card.flat{box-shadow:none}
 /* 섹션 제목 — 색을 쓰지 않고 크기·굵기·잉크 바·구분선으로 존재감을 준다 */
 .card > h2{
   display:flex;align-items:center;gap:11px;flex-wrap:wrap;
   margin:0;padding:17px 18px 14px;
-  font-size:21px;font-weight:800;letter-spacing:-.7px;
+  font-size:22px;font-weight:700;letter-spacing:-.25px;
   border-bottom:1px solid var(--line);
 }
 .card > h2::before{
   content:'';width:5px;height:21px;border-radius:3px;
   background:var(--ink-3);flex:none;
 }
-.card.sub > h2{padding:15px 16px 12px;font-size:17px;letter-spacing:-.5px;gap:9px}
+.card.sub > h2{padding:15px 16px 12px;font-size:17px;letter-spacing:-.15px;gap:9px}
 .card.sub > h2::before{width:4px;height:17px}
 .card > h2 .count{
   font-size:12px;font-weight:700;color:var(--ink-2);letter-spacing:0;
@@ -277,7 +307,7 @@ section[hidden]{display:none}
   padding:5px 13px;border-radius:var(--pill);
 }
 .prog .num{font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap}
-.prog .num b{font-size:20px;font-weight:800;color:var(--accent-d)}
+.prog .num b{font-size:20px;font-weight:700;color:var(--accent-d)}
 .prog .num i{font-style:normal;font-size:14px;font-weight:700;color:var(--ink-3);margin-left:1px}
 .prog .lab{font-size:12px;font-weight:700;color:var(--ink-2);white-space:nowrap}
 .prog .bar{width:104px;height:8px;background:var(--line);border-radius:var(--pill);overflow:hidden;flex:none}
@@ -290,17 +320,17 @@ section[hidden]{display:none}
 /* 제목 띠에만 색을 쓴다. 본문(행·칩·버튼)은 중립으로 두어
    섹션 구분은 되면서 화면이 알록달록해지지는 않게 한다. */
 .card > h2{background:var(--panel-2)}
-.card.c-task  > h2{background:var(--task-t); border-bottom-color:#cfe4fd}
+.card.c-task  > h2{background:var(--task-t); border-bottom-color:var(--edge-task)}
 .card.c-task  > h2::before{background:var(--task)}
-.card.c-share > h2{background:var(--share-t);border-bottom-color:#d3d8f6}
+.card.c-share > h2{background:var(--share-t);border-bottom-color:var(--edge-share)}
 .card.c-share > h2::before{background:var(--share)}
-.card.c-call  > h2{background:var(--call-t); border-bottom-color:#c9eedd}
+.card.c-call  > h2{background:var(--call-t); border-bottom-color:var(--edge-call)}
 .card.c-call  > h2::before{background:var(--call)}
-.card.c-lunch > h2{background:var(--lunch-t);border-bottom-color:#ffe2b8}
-.card.c-trip  > h2{background:var(--trip-t); border-bottom-color:#ded5fc}
+.card.c-lunch > h2{background:var(--lunch-t);border-bottom-color:var(--edge-lunch)}
+.card.c-trip  > h2{background:var(--trip-t); border-bottom-color:var(--edge-trip)}
 .card.c-trip  > h2::before{background:var(--trip)}
 .card.c-lunch > h2::before{background:var(--lunch)}
-.card.c-set   > h2{background:var(--accent-t);border-bottom-color:#cfe4fd}
+.card.c-set   > h2{background:var(--accent-t);border-bottom-color:var(--edge-task)}
 .card.c-set   > h2::before{background:var(--accent)}
 .card > h2 .spacer{flex:1}
 .card .body{padding:14px}
@@ -321,16 +351,16 @@ section[hidden]{display:none}
 /* ---------- 지난 미완료 이월 배너 ----------
    어제 못 끝낸 업무가 어제 날짜에 남아 시야에서 사라지면 스케줄러 구실을 못 한다. */
 .carry{
-  background:var(--orange-t);border:1px solid #ffe2b8;border-radius:var(--radius);
+  background:var(--orange-t);border:1px solid var(--edge-orange);border-radius:var(--radius);
   padding:12px 16px;margin-bottom:14px;
 }
 .carry-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .carry-head .spacer{flex:1}
-.carry-head b{font-size:14px;color:#8a4b00}
+.carry-head b{font-size:14px;color:#793400}
 .carry-ico{
   width:20px;height:20px;border-radius:50%;background:var(--orange);color:#fff;
   display:inline-flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;flex:none;
+  font-size:13px;font-weight:700;flex:none;
 }
 .carry-list{margin-top:11px;display:flex;flex-direction:column;gap:6px}
 .carry-row{
@@ -395,7 +425,7 @@ body:not(.simple) .simple-note{display:none}
 .qahint{
   font-size:12px;color:var(--ink-3);min-height:18px;margin:6px 0 0 18px;
 }
-.qahint b{color:var(--accent-d);font-weight:800}
+.qahint b{color:var(--accent-d);font-weight:700}
 .qahint .tag{
   display:inline-block;background:var(--accent-t);color:var(--accent-d);
   padding:1px 8px;border-radius:var(--pill);font-weight:700;margin-right:5px;
@@ -410,7 +440,7 @@ body:not(.simple) .simple-note{display:none}
 .datebar .nav button{background:none;border:none;padding:9px 14px;font-size:13px;color:var(--ink-2)}
 .datebar .nav button:hover{background:var(--panel-2);color:var(--ink)}
 .datebar .today-label{
-  padding:8px 16px;font-size:17px;font-weight:800;letter-spacing:-.4px;
+  padding:8px 16px;font-size:17px;font-weight:700;letter-spacing:-.4px;
   min-width:205px;text-align:center;
 }
 .datebar .progress{
@@ -477,7 +507,7 @@ body:not(.simple) .simple-note{display:none}
 @media (hover:none){ .row .acts{opacity:1;pointer-events:auto} }
 .row:hover .acts{opacity:1;pointer-events:auto}
 .row .acts .btn{
-  padding:8px 20px;font-size:13px;font-weight:800;border-radius:8px;
+  padding:8px 20px;font-size:13px;font-weight:700;border-radius:8px;
   background:var(--ink);color:#fff;border-color:transparent;
   box-shadow:0 2px 8px rgba(25,31,40,.22);
 }
@@ -549,7 +579,7 @@ body:not(.simple) .simple-note{display:none}
 .repbtn{
   flex:none;width:19px;height:19px;margin-top:1px;border-radius:5px;
   border:1.5px solid var(--line-2);background:#fff;
-  font-size:11px;font-weight:800;color:#fff;line-height:1;padding:0;
+  font-size:11px;font-weight:700;color:#fff;line-height:1;padding:0;
 }
 .repbtn:hover{border-color:var(--green)}
 .repbtn.on{background:var(--green);border-color:var(--green)}
@@ -559,7 +589,7 @@ body:not(.simple) .simple-note{display:none}
 .sharelist .row .acts{position:absolute;right:10px;bottom:9px}
 /* 회신 방식 꼬리표 — 문서인지 메일인지 제목 앞에서 바로 보이게 */
 .sharelist .rt{
-  display:inline-block;font-size:10.5px;font-weight:800;
+  display:inline-block;font-size:10.5px;font-weight:700;
   padding:2px 7px;border-radius:5px;margin-right:6px;vertical-align:1px;
   background:var(--panel-2);color:var(--ink-2);border:1px solid var(--line-2);
 }
@@ -574,7 +604,7 @@ body:not(.simple) .simple-note{display:none}
   color:var(--ink-3);font-weight:700;
 }
 .sharelist .smeta .due{
-  font-size:13px;font-weight:800;color:var(--ink);
+  font-size:13px;font-weight:700;color:var(--ink);
   margin:1px 0;font-variant-numeric:tabular-nums;
 }
 .sharelist .smeta .due i{color:var(--ink-3);font-size:11.5px;font-weight:700;vertical-align:1px}
@@ -592,10 +622,10 @@ body:not(.simple) .simple-note{display:none}
 .calllist .ext.missing{color:var(--ink-2);font-weight:700}
 /* 동명이인이라 번호를 확정 못 한 상태 — 눌러서 부서를 고르게 한다 */
 .calllist .ext.warn{
-  color:var(--orange);font-weight:800;cursor:pointer;
+  color:var(--orange);font-weight:700;cursor:pointer;
   background:var(--orange-t);padding:2px 8px;border-radius:var(--pill);
 }
-.calllist .ext.warn:hover{background:#ffe2b8}
+.calllist .ext.warn:hover{background:var(--edge-orange)}
 
 .lunchlist .row{
   display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;
@@ -608,7 +638,7 @@ body:not(.simple) .simple-note{display:none}
 .lunchlist .soonwrap{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
 .lunchlist .soonhead{
   display:flex;align-items:center;gap:7px;
-  font-size:11.5px;font-weight:800;color:var(--ink-2);
+  font-size:11.5px;font-weight:700;color:var(--ink-2);
   letter-spacing:-.1px;margin:0 0 9px 1px;
 }
 .lunchlist .soonhead::before{
@@ -628,7 +658,7 @@ body:not(.simple) .simple-note{display:none}
 .lunchlist .row.soon .dd{
   grid-area:dd;align-self:center;
   min-width:42px;text-align:center;
-  font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;
+  font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;
   color:var(--ink-2);background:var(--panel-2);
   border-radius:8px;padding:7px 8px;
 }
@@ -637,9 +667,9 @@ body:not(.simple) .simple-note{display:none}
   grid-area:when;font-size:12px;color:var(--ink-3);
   font-variant-numeric:tabular-nums;white-space:nowrap;
 }
-.lunchlist .row.soon .when b{color:var(--ink);font-weight:800;margin-right:2px}
+.lunchlist .row.soon .when b{color:var(--ink);font-weight:700;margin-right:2px}
 .lunchlist .row.soon .time{
-  grid-area:time;font-size:12.5px;font-weight:800;color:var(--ink-2);
+  grid-area:time;font-size:12.5px;font-weight:700;color:var(--ink-2);
 }
 .lunchlist .row.soon .who{
   grid-area:who;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
@@ -654,8 +684,8 @@ body:not(.simple) .simple-note{display:none}
   font-variant-numeric:tabular-nums;
 }
 .pill.gray{background:var(--panel-2);color:var(--ink-2)}
-.pill.red{background:var(--red-t);color:var(--red);font-weight:800}
-.pill.red-solid{background:var(--red);color:#fff;font-weight:800}
+.pill.red{background:var(--red-t);color:var(--red);font-weight:700}
+.pill.red-solid{background:var(--red);color:#fff;font-weight:700}
 .pill.orange{background:var(--orange-t);color:var(--orange)}
 .pill.blue{background:var(--accent-t);color:var(--accent-d)}
 .pill.green{background:var(--green-t);color:var(--green)}
@@ -667,7 +697,7 @@ body:not(.simple) .simple-note{display:none}
 .calhead div{
   text-align:center;font-size:12px;font-weight:700;color:var(--ink-3);padding:10px 0 12px;
 }
-.calhead div.sun{color:var(--red)} .calhead div.sat{color:#3b6fb6}
+.calhead div.sun{color:var(--red)} .calhead div.sat{color:var(--accent)}
 .calgrid{
   display:grid;grid-template-columns:repeat(7,1fr);gap:5px;
   grid-auto-rows:1fr;
@@ -679,13 +709,13 @@ body:not(.simple) .simple-note{display:none}
   transition:box-shadow .12s,background .12s;
 }
 .cell:hover{background:#fff;box-shadow:inset 0 0 0 2px var(--line-2)}
-.cell.out{background:#fcfdfe;opacity:.55}
+.cell.out{background:var(--panel-2);opacity:.55}
 .cell.today{background:#fff;box-shadow:inset 0 0 0 2px var(--accent)}
 .cell .d{
-  font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;
+  font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;
   line-height:1.15;padding:1px 2px;align-self:flex-start;color:var(--ink);
 }
-.cell.sun .d{color:var(--red)} .cell.sat .d{color:#3b6fb6}
+.cell.sun .d{color:var(--red)} .cell.sat .d{color:var(--accent)}
 .cell.out .d{color:var(--ink-3);font-weight:700}
 .cell.today .d{
   display:inline-flex;align-items:center;justify-content:center;
@@ -710,7 +740,7 @@ body:not(.simple) .simple-note{display:none}
   flex:none;display:flex;gap:5px;flex-wrap:wrap;align-items:center;
   font-size:11px;color:var(--ink-3);
 }
-.cell .meta .more{font-weight:800;color:var(--ink-2)}
+.cell .meta .more{font-weight:700;color:var(--ink-2)}
 .cell .chip{
   font-size:11px;padding:3px 9px;border-radius:var(--pill);font-weight:700;
   align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
@@ -746,8 +776,9 @@ body:not(.simple) .simple-note{display:none}
 .field .val{flex:1;min-width:220px;color:var(--ink-2);font-size:13px}
 .card .body.fields{padding:0 0 6px}
 .card .body.fields > .field:first-child{border-top:none}
+/* 입력칸만 모서리를 4px 로 바짝 죈다. 버튼과 눈으로 구별된다 */
 input[type=text],input[type=date],input[type=time],input[type=number],textarea,select{
-  border:1px solid var(--line);border-radius:var(--radius-sm);
+  border:1px solid var(--line-2);border-radius:var(--radius-xs);
   padding:9px 12px;background:#fff;width:100%;
 }
 input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
@@ -762,7 +793,7 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
   padding:56px 16px;overflow:auto;z-index:100;
 }
 .modal{
-  background:var(--panel);border-radius:20px;width:100%;max-width:560px;
+  background:var(--panel);border-radius:var(--radius-lg);width:100%;max-width:560px;
   box-shadow:var(--shadow-3);overflow:hidden;
   /* 내용이 길어도 [저장]·[닫기] 가 화면 밖으로 밀려나지 않게 */
   max-height:calc(100vh - 112px);display:flex;flex-direction:column;
@@ -787,7 +818,7 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
   font-size:13px;font-weight:700;color:var(--ink-3);white-space:nowrap;
 }
 .segbtns button:hover{color:var(--ink-2)}
-.segbtns button.on{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(49,130,246,.28)}
+.segbtns button.on{background:var(--accent);color:#fff}
 .hint{font-size:12px;color:var(--ink-3);margin-top:5px;line-height:1.55}
 .hint.warn{color:var(--red);font-weight:700}
 .hint.ok{color:var(--green);font-weight:700}
@@ -802,7 +833,7 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
   margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
 }
 .notebox .spacer{flex:1}
-.notebox b{font-weight:800}
+.notebox b{font-weight:700}
 /* 경고 상자 - 오류를 알리는 errbox 와 달리, 하기 전에 꼭 읽혀야 하는 것 */
 .alertbox{
   display:flex;gap:11px;align-items:flex-start;
@@ -813,10 +844,10 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
 }
 .alertbox .ic{
   flex:none;width:20px;height:20px;margin-top:1px;border-radius:50%;
-  background:var(--red);color:#fff;font-size:13px;font-weight:800;
+  background:var(--red);color:#fff;font-size:13px;font-weight:700;
   display:flex;align-items:center;justify-content:center;
 }
-.alertbox b{font-weight:800}
+.alertbox b{font-weight:700}
 .guide-list{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--ink-2);line-height:1.9}
 .checkline{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin-top:16px}
 .checkline input{width:15px;height:15px;accent-color:var(--accent)}
@@ -832,7 +863,7 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
 .favchip b{font-weight:700}
 .favchip em{font-style:normal;color:var(--ink-3)}
 .favchip .x{
-  color:var(--ink-3);font-weight:800;line-height:1;
+  color:var(--ink-3);font-weight:700;line-height:1;
   padding:2px 5px;border-radius:var(--pill);
 }
 .favchip .x:hover{color:#fff;background:var(--red)}
@@ -869,7 +900,7 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
 .segbtns.multi button{flex:0 0 auto;padding:8px 14px}
 .segetc{margin-top:7px}
 .lhint{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:5px}
-.mcount{font-size:11px;font-weight:800;color:var(--ink-3);margin-left:5px}
+.mcount{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:5px}
 .memadd{display:flex;gap:7px}
 .memadd input{flex:1}
 .memadd .btn{flex:none;padding:0 16px}
@@ -880,7 +911,7 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
   padding:5px 7px 5px 12px;font-size:12.5px;font-weight:700;
 }
 .memchip .x{
-  color:var(--ink-3);font-weight:800;line-height:1;
+  color:var(--ink-3);font-weight:700;line-height:1;
   padding:2px 5px;border-radius:var(--pill);cursor:pointer;
 }
 .memchip .x:hover{color:#fff;background:var(--red)}
@@ -899,13 +930,13 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
 .triplist .via{background:var(--panel-2);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}
 .triplist .at{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);font-variant-numeric:tabular-nums}
 .triplist .tmem{font-size:11.5px;color:var(--ink-3);margin-top:5px}
-.triplist .tmem em{font-style:normal;font-weight:800;color:var(--ink-2)}
+.triplist .tmem em{font-style:normal;font-weight:700;color:var(--ink-2)}
 
 /* ---- 다가올 출장 ---- 점심약속과 같은 모양으로 눈이 익게 */
 .triplist .soonwrap{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
 .triplist .soonhead{
   display:flex;align-items:center;gap:7px;
-  font-size:11.5px;font-weight:800;color:var(--ink-2);
+  font-size:11.5px;font-weight:700;color:var(--ink-2);
   letter-spacing:-.1px;margin:0 0 9px 1px;
 }
 .triplist .soonhead::before{
@@ -925,7 +956,7 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
 .triplist .row.soon .dd{
   grid-area:dd;align-self:center;
   min-width:42px;text-align:center;
-  font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;
+  font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;
   color:var(--ink-2);background:var(--panel-2);
   border-radius:8px;padding:7px 8px;
 }
@@ -934,8 +965,8 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
   grid-area:when;font-size:12px;color:var(--ink-3);
   font-variant-numeric:tabular-nums;white-space:nowrap;
 }
-.triplist .row.soon .when b{color:var(--ink);font-weight:800;margin-right:2px}
-.triplist .row.soon .time{grid-area:time;font-size:12.5px;font-weight:800;color:var(--ink-2)}
+.triplist .row.soon .when b{color:var(--ink);font-weight:700;margin-right:2px}
+.triplist .row.soon .time{grid-area:time;font-size:12.5px;font-weight:700;color:var(--ink-2)}
 .triplist .row.soon .who{
   grid-area:who;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
 }
@@ -960,11 +991,11 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
 .dpsec:last-child{margin-bottom:0}
 .dphead{
   display:flex;align-items:center;gap:7px;
-  font-size:11.5px;font-weight:800;color:var(--ink-2);margin:0 0 7px 1px;
+  font-size:11.5px;font-weight:700;color:var(--ink-2);margin:0 0 7px 1px;
 }
 .dphead::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--accent);flex:none}
 .dphead .n{
-  font-size:11px;font-weight:800;color:var(--ink-3);
+  font-size:11px;font-weight:700;color:var(--ink-3);
   background:var(--panel-2);border-radius:var(--pill);padding:2px 8px;
 }
 .dprow{
@@ -974,13 +1005,13 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
 }
 .dprow:last-child{margin-bottom:0}
 .dprow.soft{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
-.dprow .mk{flex:none;width:11px;text-align:center;color:var(--ink-3);font-weight:800}
+.dprow .mk{flex:none;width:11px;text-align:center;color:var(--ink-3);font-weight:700}
 .dprow .tt{flex:1;min-width:0;color:var(--ink);font-weight:700;word-break:keep-all}
 .dprow .tt em{
   display:block;font-style:normal;font-size:12px;font-weight:600;
   color:var(--ink-3);margin-top:2px;
 }
-.dprow .tm{flex:none;font-size:12px;font-weight:800;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.dprow .tm{flex:none;font-size:12px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .dprow.done .tt{color:var(--ink-3);text-decoration:line-through}
 .dprow.done .mk{color:var(--green)}
 .dprow .pill{flex:none}
@@ -1000,7 +1031,7 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
   display:flex;align-items:center;justify-content:center;
   background:var(--accent-t);color:var(--accent-d);font-size:20px;line-height:1;
 }
-.pickcard .nm{font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+.pickcard .nm{font-size:16px;font-weight:700;letter-spacing:-.3px;color:var(--ink)}
 .pickcard .ds{font-size:12.5px;line-height:1.7;color:var(--ink-3);margin-top:7px}
 .pickcard:hover .nm{color:var(--accent-d)}
 .pickcard:hover .ic{background:var(--accent);color:#fff}
@@ -1090,15 +1121,14 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
   margin-top:auto;padding-top:12px;border-top:1px solid var(--line);
   font-size:12px;color:var(--ink-3);
 }
-.ob-card.on .who{border-top-color:rgba(49,130,246,.18);color:var(--accent-d)}
+.ob-card.on .who{border-top-color:rgba(0,117,222,.18);color:var(--accent-d)}
 
 /* 마무리 */
 .onboard .ob-foot{display:flex;flex-direction:column;gap:14px;align-items:center}
 .onboard .later{font-size:12px;color:var(--ink-3);text-align:center}
 .ob-start{
-  width:100%;height:56px;border:0;border-radius:14px;background:var(--accent);
-  color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;
-  box-shadow:0 6px 16px rgba(49,130,246,.32);
+  width:100%;height:56px;border:0;border-radius:var(--radius);background:var(--accent);
+  color:#fff;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;
 }
 .ob-start:hover{background:var(--accent-d)}
 .ob-start:focus-visible{outline:3px solid var(--accent-t);outline-offset:2px}
@@ -1152,23 +1182,23 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
         </span>
         <span class="ob-preview">
           <svg viewBox="0 0 280 168" role="img" aria-label="간편 모드 화면 축소판 — 위에 입력창 하나, 아래에 세로 목록 하나">
-            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
-            <rect x="16" y="14" width="248" height="26" rx="7" fill="#fff" stroke="#3182f6" stroke-width="1.5"/>
-            <rect x="26" y="24" width="86" height="6" rx="3" fill="#d1d6db"/>
-            <rect x="222" y="20" width="32" height="14" rx="7" fill="#3182f6"/>
+            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f6f5f4"/>
+            <rect x="16" y="14" width="248" height="26" rx="7" fill="#fff" stroke="#0075de" stroke-width="1.5"/>
+            <rect x="26" y="24" width="86" height="6" rx="3" fill="#dddddd"/>
+            <rect x="222" y="20" width="32" height="14" rx="7" fill="#0075de"/>
             <g fill="#fff">
-              <rect x="16" y="52" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
-              <rect x="16" y="78" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
-              <rect x="16" y="104" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
-              <rect x="16" y="130" width="248" height="20" rx="6" stroke="#e5e8eb" stroke-width="1"/>
+              <rect x="16" y="52" width="248" height="20" rx="6" stroke="#e6e6e6" stroke-width="1"/>
+              <rect x="16" y="78" width="248" height="20" rx="6" stroke="#e6e6e6" stroke-width="1"/>
+              <rect x="16" y="104" width="248" height="20" rx="6" stroke="#e6e6e6" stroke-width="1"/>
+              <rect x="16" y="130" width="248" height="20" rx="6" stroke="#e6e6e6" stroke-width="1"/>
             </g>
-            <g fill="#3182f6">
+            <g fill="#0075de">
               <rect x="22" y="56" width="3" height="12" rx="1.5"/>
               <rect x="22" y="82" width="3" height="12" rx="1.5"/>
               <rect x="22" y="108" width="3" height="12" rx="1.5"/>
               <rect x="22" y="134" width="3" height="12" rx="1.5"/>
             </g>
-            <g fill="#d1d6db">
+            <g fill="#dddddd">
               <rect x="34" y="59" width="130" height="6" rx="3"/>
               <rect x="34" y="85" width="96" height="6" rx="3"/>
               <rect x="34" y="111" width="142" height="6" rx="3"/>
@@ -1194,14 +1224,14 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
         </span>
         <span class="ob-preview">
           <svg viewBox="0 0 280 168" role="img" aria-label="전체 화면 축소판 - 탭, 왼쪽 큰 업무 목록, 오른쪽 카드 4개">
-            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f9fafb"/>
-            <rect x="16" y="14" width="34" height="13" rx="6.5" fill="#3182f6"/>
-            <g fill="#e5e8eb">
+            <rect x="0" y="0" width="280" height="168" rx="8" fill="#f6f5f4"/>
+            <rect x="16" y="14" width="34" height="13" rx="6.5" fill="#0075de"/>
+            <g fill="#e6e6e6">
               <rect x="56" y="14" width="30" height="13" rx="6.5"/>
               <rect x="92" y="14" width="30" height="13" rx="6.5"/>
             </g>
-            <rect x="16" y="36" width="164" height="118" rx="7" fill="#fff" stroke="#e5e8eb"/>
-            <g fill="#f9fafb" stroke="#e5e8eb">
+            <rect x="16" y="36" width="164" height="118" rx="7" fill="#fff" stroke="#e6e6e6"/>
+            <g fill="#f6f5f4" stroke="#e6e6e6">
               <rect x="24" y="46" width="70" height="16" rx="5"/>
               <rect x="102" y="46" width="70" height="16" rx="5"/>
               <rect x="24" y="68" width="70" height="16" rx="5"/>
@@ -1213,13 +1243,13 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
               <rect x="24" y="134" width="70" height="14" rx="5"/>
               <rect x="102" y="134" width="70" height="14" rx="5"/>
             </g>
-            <g fill="#3182f6">
+            <g fill="#0075de">
               <rect x="28" y="49" width="2.5" height="10" rx="1.25"/>
               <rect x="106" y="49" width="2.5" height="10" rx="1.25"/>
               <rect x="28" y="71" width="2.5" height="10" rx="1.25"/>
               <rect x="106" y="71" width="2.5" height="10" rx="1.25"/>
             </g>
-            <g fill="#d1d6db">
+            <g fill="#dddddd">
               <rect x="36" y="52" width="34" height="4" rx="2"/>
               <rect x="114" y="52" width="28" height="4" rx="2"/>
               <rect x="36" y="74" width="40" height="4" rx="2"/>
@@ -1231,13 +1261,13 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
               <rect x="30" y="139" width="30" height="4" rx="2"/>
               <rect x="108" y="139" width="38" height="4" rx="2"/>
             </g>
-            <g fill="#fff" stroke="#d1d6db">
+            <g fill="#fff" stroke="#dddddd">
               <rect x="188" y="36" width="76" height="27" rx="6"/>
               <rect x="188" y="66" width="76" height="27" rx="6"/>
               <rect x="188" y="96" width="76" height="27" rx="6"/>
               <rect x="188" y="126" width="76" height="28" rx="6"/>
             </g>
-            <g fill="#d1d6db">
+            <g fill="#dddddd">
               <rect x="196" y="43" width="28" height="4" rx="2"/>
               <rect x="196" y="52" width="52" height="4" rx="2"/>
               <rect x="196" y="73" width="28" height="4" rx="2"/>
@@ -1316,6 +1346,7 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
         <b id="carryTitle"></b>
         <span class="spacer"></span>
         <button class="btn sm" id="carryToggle">펼쳐보기 ▾</button>
+        <button class="btn sm" id="carryClose">모두 닫기</button>
         <button class="btn sm primary" id="carryAll">모두 오늘로</button>
       </div>
       <div class="carry-list" id="carryList" hidden></div>
@@ -1584,6 +1615,13 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
               <div class="val">
                 <button class="btn sm" id="btnTrash">휴지통 열기</button>
                 <div class="hint">지운 것은 바로 없어지지 않아요. 여기서 되살릴 수 있습니다.</div>
+              </div>
+            </div>
+            <div class="field" id="carryOffField" hidden>
+              <label>닫아 둔 지난 미완료</label>
+              <div class="val">
+                <button class="btn sm" id="btnCarryShow">배너에 다시 보이기</button>
+                <div class="hint" id="carryOffHint"></div>
               </div>
             </div>
             <div class="field">
@@ -2566,6 +2604,16 @@ function setReplied(id, on){
   markDirty();
 }
 
+/* [닫기] 로 이월 배너에서 내린 지난 미완료.
+   업무 자체는 건드리지 않는다 — done 도 그대로, 원래 날짜에 미완료로 남는다.
+   달력·검색·그날 목록에는 계속 보이고 배너에서만 빠진다.
+   그래서 회신 표시(myReplied)처럼 업무 레코드가 아니라 cfg 에 둔다. */
+function carryOff(id){ return !!(DB.cfg.carryOff && DB.cfg.carryOff[id]); }
+function setCarryOff(id, on){
+  if(!DB.cfg.carryOff) DB.cfg.carryOff = {};
+  if(on) DB.cfg.carryOff[id] = 1; else delete DB.cfg.carryOff[id];
+}
+
 function shareSummary(r){ return (r.docNo || '') + ' / ' + (r.title || '') + ' / 기한 ' + (r.dueDate || ''); }
 function addLog(action, id, before, after, src){
   DB.log.unshift({time:nowStamp(), action, id, before:ellipsis(before,200), after:ellipsis(after,200), src:src||''});
@@ -3466,14 +3514,15 @@ function trashModal(){
 /* ------------------------------------------------------------
    직원 명부 안내
    명부가 없으면 연락하기가 반쪽이 된다(이름으로 내선을 못 찾음).
-   그래서 처음 열 때 한 번, 연락 등록을 시도할 때 한 번 알려 준다.
+   그래서 연락하기를 쓰려는 순간에만 알려 준다. 처음 열 때는 띄우지 않는다 —
+   무엇에 쓰는 명부인지 모르는 사람에게 파일부터 내놓으라고 하는 꼴이 된다.
    ------------------------------------------------------------ */
 function pickEmpFile(){
   showView('setup');
   $('#empFile').click();
 }
 
-function empGuideModal(){
+function empGuideModal(onLater){
   openModal(
     '<h3>직원 명부를 먼저 등록해 주세요</h3>' +
     '<div class="body">' +
@@ -3504,16 +3553,22 @@ function empGuideModal(){
     '</div>');
 
   const remember = () => { if($('#g_never').checked){ DB.cfg.empGuideOff = true; markDirty(); } };
-  $('#g_later').onclick = () => { remember(); closeModal(); };
+  $('#g_later').onclick = () => { remember(); closeModal(); if(onLater) onLater(); };
   $('#g_tpl').onclick = () => { downloadEmpTemplate(); };
   $('#g_now').onclick = () => { remember(); closeModal(); pickEmpFile(); };
 }
 
-// 명부가 비어 있고 "다시 보지 않기"를 고르지 않았을 때만
-function maybeShowEmpGuide(){
-  if(DB.emp.length) return;
-  if(DB.cfg.empGuideOff) return;
-  empGuideModal();
+/* 명부가 비어 있을 때, 연락하기를 쓰려는 순간에 한 번만 띄운다.
+   "다시 보지 않기"를 고르지 않아도 두 번은 띄우지 않는다 —
+   연락 하나 넣을 때마다 안내가 가로막으면 정작 등록을 못 한다.
+   띄웠으면 true. 부른 쪽은 이 값으로 다음 창을 열지 말지 정한다. */
+function maybeShowEmpGuide(onLater){
+  if(DB.emp.length) return false;
+  if(DB.cfg.empGuideOff || DB.cfg.empGuideSeen) return false;
+  DB.cfg.empGuideSeen = true;
+  markDirty();
+  empGuideModal(onLater);
+  return true;
 }
 
 // 올린 명부를 그대로 보여 준다. 몇 명이 어떻게 들어갔는지 눈으로 확인하는 창.
@@ -3927,7 +3982,7 @@ function importModal(){
                   (got ? '✓ ' : '') + k + '</span>');
       }
       return '<div style="margin-bottom:6px">' +
-             '<span style="font-size:11px;font-weight:800;color:var(--ink-3);margin-right:6px">' +
+             '<span style="font-size:11px;font-weight:700;color:var(--ink-3);margin-right:6px">' +
              escHtml(b.sender) + '</span>' + dots.join('') + '</div>';
     }).join('');
   }
@@ -4272,13 +4327,16 @@ function quickAddSubmit(){
 
 /* 지난 미완료 업무 — 오늘 화면을 보고 있을 때만 알려 준다.
    과거 날짜를 들여다보는 중에 뜨면 혼란스럽다. */
-function overdueTasks(){
+function overdueAll(){
   const t = todayStr();
   return alive(DB.task)
     // 마감일이 아직 안 지난 기간 업무는 '지난 것'이 아니라 진행 중이다.
     .filter(r => !r.done && r.date && r.date < t && !(r.until && r.until >= t))
     .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 }
+// 배너에 띄울 것 / 닫아 둔 것. 끝났거나 지워진 건은 양쪽 다에서 저절로 빠진다.
+function overdueTasks(){ return overdueAll().filter(r => !carryOff(r.id)); }
+function overdueHidden(){ return overdueAll().filter(r => carryOff(r.id)); }
 
 function renderCarry(isToday){
   const box = $('#carryBox');
@@ -4295,7 +4353,8 @@ function renderCarry(isToday){
       '<span class="when">' + escHtml((r.date || '').slice(5).replace('-', '/')) +
         ' · ' + ago + '일 전</span>' +
       '<span class="what" title="' + escHtml(r.title) + '">' + escHtml(r.title) + '</span>' +
-      '<button class="btn sm" data-carry="' + escHtml(r.id) + '">오늘로</button>' +
+      '<button class="btn sm accent" data-carry="' + escHtml(r.id) + '">오늘로</button>' +
+      '<button class="btn sm" data-carryoff="' + escHtml(r.id) + '">닫기</button>' +
     '</div>';
   }).join('');
 }
@@ -4444,8 +4503,20 @@ function renderToday(){
       '</div>' +
       '<span class="time">' + escHtml(r.time || '') + '</span>' +
     '</div>';
-  }).join('') : emptyBox('연락할 곳이 없어요.', '[＋ 연락 추가]를 누르면 여기에 보여요.');
+  }).join('') : (DB.emp.length
+    ? emptyBox('연락할 곳이 없어요.', '[＋ 추가]를 누르면 여기에 보여요.')
+    /* 명부가 없을 때는 여기가 안내 자리다. 첫 실행을 팝업으로 가로막는 대신,
+       연락하기를 보러 온 사람에게만 보인다. */
+    : '<div class="empty"><b>연락처를 등록해 주세요.</b>' +
+      '[＋ 추가]로 연락할 곳을 넣어요. ' +
+      '직원 명부를 올려두면 이름만 넣어도 내선번호를 찾아와요.' +
+      '<div style="margin-top:10px">' +
+        '<button class="btn sm primary" id="btnEmpFromContact">명부 등록하기</button>' +
+      '</div></div>');
   $('#contactCount').textContent = contacts.length + '건';
+  // 다시 그릴 때마다 새로 생기는 버튼이라 여기서 붙인다
+  const empFromContact = $('#btnEmpFromContact');
+  if(empFromContact) empFromContact.onclick = () => empGuideModal();
 
   /* ---------- 4) 출장 ---------- */
   const trips = sortByTime(alive(DB.trip).filter(r => r.date === ds));
@@ -4653,6 +4724,13 @@ function renderSetup(){
   $('#empNames').innerHTML = DB.emp.slice(0, 500)
     .map(e => '<option value="' + escHtml(e.name) + '">').join('');
 
+  // 배너에서 닫아 둔 지난 미완료 — 되돌릴 통로를 여기 둔다
+  const carryHid = overdueHidden();
+  $('#carryOffField').hidden = !carryHid.length;
+  $('#carryOffHint').textContent = carryHid.length
+    ? '지난 미완료 ' + carryHid.length + '건을 배너에서 닫아 뒀어요. 업무는 그대로 있어요.'
+    : '';
+
   drawSearchExamples();
   $('#lastSync').textContent = DB.cfg.lastSync || '아직 없어요';
   $('#countInfo').textContent =
@@ -4722,7 +4800,9 @@ $('#mNext').onclick  = () => { calMonth = new Date(calMonth.getFullYear(), calMo
 $('#mToday').onclick = () => { calMonth = new Date(); renderCal(); };
 
 $('#btnAddTask').onclick    = () => taskModal();
-$('#btnAddContact').onclick = () => contactModal();
+// 연락하기를 처음 등록하려는 순간이 명부를 안내할 자리다.
+// [나중에 하기]를 누르면 곧바로 등록 창으로 이어 준다 — 등록을 막지 않는다.
+$('#btnAddContact').onclick = () => { if(!maybeShowEmpGuide(contactModal)) contactModal(); };
 $('#btnAddShare').onclick   = () => shareModal();
 $('#btnAddLunch').onclick   = () => lunchModal();
 $('#btnExport').onclick     = exportModal;
@@ -4869,8 +4949,6 @@ function finishOnboard(){
   applySimple();
   renderAll();
   if(DB.cfg.simple) $('#qaInput').focus();
-  // 이름·모드를 정한 다음에 명부 안내를 띄워야 순서가 자연스럽다
-  setTimeout(maybeShowEmpGuide, 250);
 }
 
 $('#obModes').addEventListener('click', e => {
@@ -5029,11 +5107,35 @@ $('#carryAll').onclick = () => {
   markDirty(); renderAll();
   toast(list.length + '건을 오늘로 옮겼어요.');
 };
+// 지우는 것이 아니라 배너에서만 내리는 것이라, 무엇이 남는지 물음에 적어 준다.
+$('#carryClose').onclick = () => {
+  const list = overdueTasks();
+  if(!list.length) return;
+  if(!confirmBox('지난 미완료 ' + list.length + '건을 배너에서 닫을까요? 업무는 지워지지 않아요. 원래 날짜와 달력에 그대로 있어요.')) return;
+  list.forEach(r => setCarryOff(r.id, true));
+  markDirty(); renderAll();
+  toast(list.length + '건을 닫았어요. 설정 > 데이터에서 다시 볼 수 있어요.');
+};
 $('#carryList').addEventListener('click', e => {
+  const h = e.target.closest('[data-carryoff]');
+  if(h){
+    setCarryOff(h.dataset.carryoff, true);
+    markDirty(); renderAll();
+    toast('배너에서 닫았어요. 업무는 그대로 있어요.');
+    return;
+  }
   const b = e.target.closest('[data-carry]');
   if(!b) return;
   if(carryToToday(b.dataset.carry)){ markDirty(); renderAll(); toast('오늘로 옮겼어요.'); }
 });
+// 닫은 것을 되돌리는 유일한 통로. 남은 것이 없으면 줄 자체를 감춘다.
+$('#btnCarryShow').onclick = () => {
+  const hid = overdueHidden();
+  if(!hid.length) return;
+  hid.forEach(r => setCarryOff(r.id, false));
+  markDirty(); renderAll();
+  toast(hid.length + '건을 배너에 다시 올렸어요.');
+};
 
 // 공유 건 회신 표시 토글 (로컬 전용)
 $('#listShare').addEventListener('click', e => {
@@ -5313,11 +5415,10 @@ window.addEventListener('beforeunload', e => {
   setInterval(tickBackup, 1000);
   renderAll();
 
-  // 처음이면 온보딩부터. 이름·모드를 정하고 나서 명부 안내로 이어진다.
+  // 처음이면 온보딩부터. 명부 안내는 여기서 띄우지 않는다 —
+  // 연락하기를 쓰려는 순간에 띄워야 무엇에 쓰는 명부인지 알 수 있다.
   if(!DB.cfg.onboarded || !DB.cfg.name){
     showOnboard();
-  }else{
-    setTimeout(maybeShowEmpGuide, 300);
   }
 })();
 </script>

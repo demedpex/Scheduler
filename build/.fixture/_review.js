@@ -497,6 +497,16 @@ function setReplied(id, on){
   markDirty();
 }
 
+/* [닫기] 로 이월 배너에서 내린 지난 미완료.
+   업무 자체는 건드리지 않는다 — done 도 그대로, 원래 날짜에 미완료로 남는다.
+   달력·검색·그날 목록에는 계속 보이고 배너에서만 빠진다.
+   그래서 회신 표시(myReplied)처럼 업무 레코드가 아니라 cfg 에 둔다. */
+function carryOff(id){ return !!(DB.cfg.carryOff && DB.cfg.carryOff[id]); }
+function setCarryOff(id, on){
+  if(!DB.cfg.carryOff) DB.cfg.carryOff = {};
+  if(on) DB.cfg.carryOff[id] = 1; else delete DB.cfg.carryOff[id];
+}
+
 function shareSummary(r){ return (r.docNo || '') + ' / ' + (r.title || '') + ' / 기한 ' + (r.dueDate || ''); }
 function addLog(action, id, before, after, src){
   DB.log.unshift({time:nowStamp(), action, id, before:ellipsis(before,200), after:ellipsis(after,200), src:src||''});
@@ -1456,13 +1466,16 @@ function quickAddSubmit(){
 
 /* 지난 미완료 업무 — 오늘 화면을 보고 있을 때만 알려 준다.
    과거 날짜를 들여다보는 중에 뜨면 혼란스럽다. */
-function overdueTasks(){
+function overdueAll(){
   const t = todayStr();
   return alive(DB.task)
     // 마감일이 아직 안 지난 기간 업무는 '지난 것'이 아니라 진행 중이다.
     .filter(r => !r.done && r.date && r.date < t && !(r.until && r.until >= t))
     .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 }
+// 배너에 띄울 것 / 닫아 둔 것. 끝났거나 지워진 건은 양쪽 다에서 저절로 빠진다.
+function overdueTasks(){ return overdueAll().filter(r => !carryOff(r.id)); }
+function overdueHidden(){ return overdueAll().filter(r => carryOff(r.id)); }
 
 function renderCarry(isToday){
   const box = $('#carryBox');
@@ -1479,7 +1492,8 @@ function renderCarry(isToday){
       '<span class="when">' + escHtml((r.date || '').slice(5).replace('-', '/')) +
         ' · ' + ago + '일 전</span>' +
       '<span class="what" title="' + escHtml(r.title) + '">' + escHtml(r.title) + '</span>' +
-      '<button class="btn sm" data-carry="' + escHtml(r.id) + '">오늘로</button>' +
+      '<button class="btn sm accent" data-carry="' + escHtml(r.id) + '">오늘로</button>' +
+      '<button class="btn sm" data-carryoff="' + escHtml(r.id) + '">닫기</button>' +
     '</div>';
   }).join('');
 }

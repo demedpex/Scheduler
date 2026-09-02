@@ -720,6 +720,16 @@ function setReplied(id, on){
   markDirty();
 }
 
+/* [닫기] 로 이월 배너에서 내린 지난 미완료.
+   업무 자체는 건드리지 않는다 — done 도 그대로, 원래 날짜에 미완료로 남는다.
+   달력·검색·그날 목록에는 계속 보이고 배너에서만 빠진다.
+   그래서 회신 표시(myReplied)처럼 업무 레코드가 아니라 cfg 에 둔다. */
+function carryOff(id){ return !!(DB.cfg.carryOff && DB.cfg.carryOff[id]); }
+function setCarryOff(id, on){
+  if(!DB.cfg.carryOff) DB.cfg.carryOff = {};
+  if(on) DB.cfg.carryOff[id] = 1; else delete DB.cfg.carryOff[id];
+}
+
 function shareSummary(r){ return (r.docNo || '') + ' / ' + (r.title || '') + ' / 기한 ' + (r.dueDate || ''); }
 function addLog(action, id, before, after, src){
   DB.log.unshift({time:nowStamp(), action, id, before:ellipsis(before,200), after:ellipsis(after,200), src:src||''});

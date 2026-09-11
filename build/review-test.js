@@ -227,8 +227,12 @@ r = q('교육 14:00~16:00');    chk('시간 범위는 앞의 것', r.time === '1
 console.log('');
 console.log('  요일');
 const dow = new Date().getDay();
+/* 2026-09-11 개정 — 「까지」는 시작일이 아니라 마감일자로 넣는다.
+   전에는 date 에 넣어서, 그날이 오기 전에는 목록에 안 보였다.
+   마감인데 마감 당일에야 나타나는 셈이라 쓸모가 없었다.
+   지금은 until 에 넣어 기준일부터 그날까지 매일 보인다. */
 r = q('보고서 금요일까지');
-chk('금요일까지 -> 금요일', parseDateDow(r.date) === 5 && r.title === '보고서', JSON.stringify(r));
+chk('금요일까지 -> 금요일이 마감', parseDateDow(r.until) === 5 && r.usedDue === true && r.title === '보고서', JSON.stringify(r));
 r = q('다음주 화요일 팀 회의');
 chk('다음주 화요일 -> 화요일', parseDateDow(r.date) === 2 && r.title === '팀 회의', JSON.stringify(r));
 r = q('이번주 목요일 점검');
@@ -248,12 +252,14 @@ r = q('글피 출장');          chk('글피 -> 3일 뒤', r.date === M.dateStr(
 r = q('9.3 예산 회의');      chk('9.3 형식', r.date.endsWith('-09-03') && r.title === '예산 회의', JSON.stringify(r));
 r = q('9-3 예산 회의');      chk('9-3 형식', r.date.endsWith('-09-03'), JSON.stringify(r));
 r = q('27일 정산');          chk('27일 -> 이번달/다음달 27일', r.date.endsWith('-27') && r.title === '정산', JSON.stringify(r));
-r = q('내일까지 보고서 제출'); chk('내일까지', r.date === tomorrow && r.title === '보고서 제출', JSON.stringify(r));
+r = q('내일까지 보고서 제출'); chk('내일까지 -> 내일이 마감', r.until === tomorrow && r.usedDue === true && r.title === '보고서 제출', JSON.stringify(r));
 
 console.log('');
 console.log('  헷갈리면 안 되는 것');
 r = q('2026년 계획 수립');   chk('연도는 날짜로 안 본다', r.title === '2026년 계획 수립', JSON.stringify(r));
-r = q('30일 이내 처리');     chk('30일도 날짜로 보긴 함(허용)', r.title.includes('이내'), JSON.stringify(r));
+/* 2026-09-11 개정 — 「N일 이내」를 이제 알아듣는다.
+   전에는 30일만 날짜로 보고 '이내' 를 제목에 남겼다. */
+r = q('30일 이내 처리');     chk('30일 이내 -> 30일 뒤가 마감', r.usedDue === true && r.title === '처리', JSON.stringify(r));
 r = q('회의실 3층 예약');    chk('층수는 시간이 아니다', r.time === '' && r.title === '회의실 3층 예약', JSON.stringify(r));
 r = q('자료 12부 인쇄');     chk('부수는 시간이 아니다', r.time === '' && r.title === '자료 12부 인쇄', JSON.stringify(r));
 

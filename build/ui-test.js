@@ -102,6 +102,67 @@ const asked = new Set([...src.matchAll(/\$\('#([a-zA-Z0-9_]+)'\)/g)].map(m => m[
 const missing = [...asked].filter(id => !have.has(id));
 chk('부르는 id ' + asked.size + '개가 모두 문서에 있다', missing.length === 0, missing.join(', '));
 
+/* ---------------------------------------------------------------
+   3. 앞에 쓴 입력칸 규칙이 뒤의 공통 규칙에 덮이는가
+
+   한 줄 입력칸이 알약 모양에 큼직해야 하는데 계속 작은 네모로 나왔다.
+   .quickadd input{...} 을 위쪽에 써 두고, 아래쪽에
+   input[type=text],...{...} 공통 규칙이 같은 속성을 다시 주고 있었다.
+   둘은 특정도가 같아서(0,0,1,1) 뒤에 온 쪽이 이긴다 — 에러도 경고도 없다.
+   [type=text] 를 붙여 한 급 올려 고쳤고, 여기서 지킨다.
+   --------------------------------------------------------------- */
+console.log('');
+console.log('3. 입력칸 규칙이 뒤의 공통 규칙에 덮이지 않는가');
+
+const TAGS = /^(input|textarea|select)(\[[^\]]*\])?$/;
+// 특정도 [id, class·속성·의사클래스, 태그]. 둘이 같으면 뒤에 온 쪽이 이긴다.
+function spec(sel){
+  const s = sel.replace(/::[a-z-]+/g, '');
+  return [
+    (s.match(/#[\w-]+/g) || []).length,
+    (s.match(/\.[\w-]+|\[[^\]]*\]|:[a-z-]+(\([^)]*\))?/g) || []).length,
+    (s.match(/(^|[\s>+~])[a-z]+/g) || []).length,
+  ];
+}
+const wins = (a, b) => {                   // a 가 b 를 이기거나 같은가 (뒤에 있을 때)
+  for(let i = 0; i < 3; i++){ if(a[i] !== b[i]) return a[i] > b[i]; }
+  return true;                             // 같으면 뒤에 온 쪽이 이긴다
+};
+const props = body => [...body.matchAll(/(?:^|;)\s*([a-z-]+)\s*:/g)].map(x => x[1]);
+
+// 입력칸을 겨누는 모든 규칙 조각을 순서대로 모은다
+const parts = [];
+for(const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)){
+  const whole = m[1].trim();
+  if(whole.startsWith('@')) continue;
+  for(const one of whole.split(',')){
+    const sel = one.trim();
+    const last = sel.split(/[\s>+~]+/).pop();
+    if(!last || !TAGS.test(last)) continue;
+    parts.push({ at: m.index, sel: sel, tag: last.replace(/\[.*/, ''),
+                 spec: spec(sel), props: props(m[2]) });
+  }
+}
+
+/* 뒤에 더 콕 집은 규칙이 앞의 일반 규칙을 덮는 것은 정상이다.
+   잡아야 하는 것은 그 반대다 — 어느 칸에만 주려고 클래스를 붙여 써 둔 규칙이,
+   뒤에 오는 전체 규칙(클래스 없는 input[type=...])에 밀리는 경우.
+   쓴 사람은 당연히 이길 줄 알고 썼는데 조용히 진다. */
+const scoped = s => /[.#]/.test(s);
+const shadowed = [];
+parts.forEach(a => {
+  if(!scoped(a.sel)) return;                          // 컴포넌트에 붙여 쓴 규칙만
+  parts.forEach(b => {
+    if(b.at <= a.at || b.tag !== a.tag) return;       // 뒤에 있고 같은 태그를 겨눌 때만
+    if(scoped(b.sel)) return;                         // 뒤엣것도 콕 집었으면 정상
+    if(!wins(b.spec, a.spec)) return;
+    const hit = a.props.filter(p => b.props.indexOf(p) >= 0);
+    if(hit.length) shadowed.push(a.sel + ' 의 ' + hit.join('·') + ' 를 뒤의 ' + b.sel + ' 가 덮는다');
+  });
+});
+chk('입력칸을 겨누는 규칙 ' + parts.length + '개를 검사했다', parts.length > 0);
+chk('덮이는 규칙이 없다', shadowed.length === 0, shadowed.join(' / '));
+
 console.log('');
 if(fail === 0){ console.log('===== 전부 통과 (' + pass + '건) ====='); process.exit(0); }
 else { console.log('===== 성공 ' + pass + ' / 실패 ' + fail + ' ====='); process.exit(1); }

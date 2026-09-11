@@ -132,11 +132,13 @@ header .spacer{flex:1}
 }
 /* 초점 테두리는 지운다는 뜻이 아니라 어디에 커서가 있는지 알려 주는 표시다 */
 .bigsearch .bs-row:focus-within{box-shadow:0 0 0 5px rgba(0,117,222,.2)}
-.bigsearch input{
+/* 아래 공통 input 규칙과 같은 급이라 그대로 두면 뒤엣것이 이긴다.
+   테두리 없는 큰 칸이 조용히 작은 네모로 돌아간다 */
+.bigsearch input[type=text]{
   flex:1;border:none;outline:none;padding:18px 20px;font-size:17px;
   background:transparent;font-weight:600;
 }
-.bigsearch input::placeholder{color:var(--ink-3);font-size:15px;font-weight:400}
+.bigsearch input[type=text]::placeholder{color:var(--ink-3);font-size:15px;font-weight:400}
 .bigsearch button{
   border:none;background:var(--accent);color:#fff;
   padding:0 30px;font-size:16px;font-weight:700;cursor:pointer;
@@ -390,7 +392,8 @@ body.simple .taskgrid{grid-template-columns:1fr !important}
 body.simple .taskgrid .row{padding:15px 18px 15px 28px}
 body.simple .taskgrid .row .title{font-size:17px;line-height:1.4}
 body.simple .taskgrid .row .sub{font-size:12.5px;-webkit-line-clamp:2;max-height:3.7em;display:-webkit-box}
-body.simple .quickadd input{padding:16px 22px;font-size:16px}
+body.simple .quickadd input[type=text]{padding:23px 8px;font-size:21px}
+body.simple .qa-lead b{font-size:30px}
 body.simple #btnSimple{background:var(--accent);border-color:transparent;color:#fff}
 body.simple .card > h2{font-size:20px}
 .simple-note{
@@ -403,27 +406,79 @@ body:not(.simple) .simple-note{display:none}
    Enter 한 번으로 끝나야 한다. */
 /* 스크롤해도 한 줄 입력은 따라온다. 생각난 순간 바로 적을 수 있어야 한다.
    헤더·탭 높이는 화면마다 달라지므로 JS 가 실측해 --hdrH / --tabH 로 넣어 준다. */
+/* 검색 포털처럼 화면 가운데로 모은다.
+   가로로 꽉 채우면 칸이 아무리 커도 "그냥 긴 줄" 로만 보여서 눈에 안 들어온다.
+   가운데에 폭을 좁혀 세워야 여기가 먼저 읽힌다. */
 .qa-sticky{
   position:sticky;top:calc(var(--hdrH,58px) + var(--tabH,58px));
-  z-index:40;background:var(--bg);padding:10px 0 2px;margin-bottom:6px;
+  z-index:40;background:var(--bg);padding:22px 0 10px;margin-bottom:8px;
+  transition:padding .16s ease;
 }
+/* 스크롤을 시작하면 제목 줄을 접어 상자만 남긴다.
+   고정 바라서 큰 채로 따라오면 목록을 140px 씩 가린다.
+   접히는 시점이 scrollY 8px 한 곳이라 스크롤 중에 들썩이지 않는다. */
+.qa-sticky.stuck{padding:10px 0 6px}
+.qa-sticky.stuck .qa-lead{max-height:0;opacity:0;margin-bottom:0}
+.qa-sticky.stuck .qa-ic{width:48px;font-size:20px}
+.qa-sticky.stuck .quickadd input[type=text]{padding-top:13px;padding-bottom:13px;font-size:17px}
+.qa-sticky.stuck .quickadd input[type=text]::placeholder{font-size:15px}
+.qa-sticky.stuck .quickadd .btn.add{font-size:15px;padding:0 26px}
+.qa-sticky.stuck .qahint{margin-top:6px}
 .qa-sticky::after{
   content:'';position:absolute;left:0;right:0;bottom:-10px;height:10px;
-  background:linear-gradient(180deg,rgba(242,244,246,1),rgba(242,244,246,0));
+  background:linear-gradient(180deg,rgba(246,245,244,1),rgba(246,245,244,0));
   pointer-events:none;opacity:0;transition:opacity .15s;
 }
 .qa-sticky.stuck::after{opacity:1}
 
-.quickadd{display:flex;gap:8px}
-.quickadd input{
-  flex:1;padding:13px 18px;font-size:15px;
-  border:1.5px solid var(--line-2);border-radius:var(--pill);background:#fff;
+/* 무엇을 하는 자리인지 위에 적어 둔다. 아래 [＋ 업무 자세히 추가] 와
+   하는 일이 달라서, 안 적어 두면 파란 단추 두 개가 같은 것으로 보인다. */
+.qa-lead{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  margin:0 0 14px;letter-spacing:-.5px;text-align:center;
+  overflow:hidden;max-height:120px;opacity:1;
+  transition:max-height .16s ease,opacity .12s ease,margin-bottom .16s ease;
 }
-.quickadd input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
-.quickadd input::placeholder{color:var(--ink-3);font-size:14px}
-.quickadd .btn{padding:0 22px;flex:none}
+.qa-lead b{font-size:27px;font-weight:700;color:var(--ink);line-height:1.25}
+.qa-lead span{font-size:13.5px;color:var(--ink-3);letter-spacing:-.2px}
+
+/* 포털 검색창처럼 굵은 테두리 한 겹으로 영역째 세운다.
+   칸·단추를 따로 키워 봤자 주변에 묻힌다 — 덩어리로 보여야 먼저 눈에 들어온다.
+   설정 화면의 [큰 검색]이 이미 쓰는 방식이라 새 모양을 만들지 않았다. */
+.quickadd{
+  display:flex;align-items:stretch;background:#fff;
+  width:100%;max-width:740px;margin:0 auto;
+  border:2.5px solid var(--accent);border-radius:var(--pill);
+  overflow:hidden;box-shadow:var(--shadow-2);
+}
+.quickadd:focus-within{box-shadow:0 0 0 4px rgba(0,117,222,.16)}
+.qa-ic{
+  flex:none;width:58px;display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:700;color:var(--accent);
+  transition:width .16s ease,font-size .16s ease;
+}
+/* 공통 input 규칙이 이 아래에 또 있다. 같은 급이면 뒤에 온 쪽이 이겨서
+   [type=text] 로 한 급 올려 둔다 — 안 그러면 이 칸의 모양이 조용히 사라진다. */
+/* 글자를 키우고 자간을 죄어 읽히게 한다. 숫자는 고정폭으로 세워
+   "9/15 14:00" 같은 것이 들쭉날쭉하지 않게 한다. */
+.quickadd input[type=text]{
+  flex:1;min-width:0;padding:19px 8px;font-size:19px;font-weight:500;
+  letter-spacing:-.3px;line-height:1.35;font-variant-numeric:tabular-nums;
+  border:none;border-radius:0;background:transparent;
+  transition:padding .16s ease,font-size .16s ease;
+}
+.quickadd input[type=text]:focus{outline:none;border-color:transparent}
+.quickadd input[type=text]::placeholder{
+  color:var(--ink-4);font-size:17px;font-weight:400;letter-spacing:-.2px;
+}
+.quickadd .btn.add{
+  flex:none;align-self:stretch;border:none;border-radius:0;
+  background:var(--accent);color:#fff;padding:0 34px;font-size:17px;font-weight:600;
+}
+.quickadd .btn.add:hover{background:var(--accent-d);color:#fff}
 .qahint{
-  font-size:12px;color:var(--ink-3);min-height:18px;margin:6px 0 0 18px;
+  font-size:12.5px;color:var(--ink-3);min-height:19px;
+  margin:10px auto 0;max-width:740px;text-align:center;
 }
 .qahint b{color:var(--accent-d);font-weight:700}
 .qahint .tag{
@@ -475,7 +530,14 @@ body:not(.simple) .simple-note{display:none}
   .datebar .today-label{min-width:0;font-size:15px;padding:8px 10px}
   .datebar .btn{padding:7px 12px;font-size:12px}
   .card > h2{font-size:18px;padding:14px 14px 11px}
-  .quickadd input{padding:11px 15px;font-size:14px}
+  .qa-sticky{padding:12px 0 6px}
+  .quickadd input[type=text]{padding:14px 4px;font-size:16px}
+  .quickadd input[type=text]::placeholder{font-size:14px}
+  .qa-ic{width:40px;font-size:18px}
+  .quickadd .btn.add{padding:0 18px;font-size:15px}
+  .qa-lead{margin-bottom:10px}
+  .qa-lead b{font-size:19px}
+  .qa-lead span{font-size:12px}
   .calgrid{height:auto;min-height:0;grid-auto-rows:minmax(74px,auto)}
   .cell .d{font-size:15px}
   .cell .tasks{display:none}
@@ -542,6 +604,47 @@ body:not(.simple) .simple-note{display:none}
 .taskgrid .row .bar:active{cursor:grabbing}
 .taskgrid .row.done .bar{cursor:default}
 .taskgrid .row.done .bar::after{display:none}
+/* 한 줄 입력에서 옮겨 온 칸. 사람이 쓴 것이 아니라 기계가 채운 값이라
+   한 번은 눈으로 확인하고 넘어가야 한다. 손대는 순간 표시를 뗀다. */
+.filled{background:var(--accent-t)}
+
+/* 상세 등록으로 가는 자리. 한 줄 입력의 파란 [추가] 와 하는 일이 다르므로
+   색이 아니라 모양으로 가른다 — 채우지 않고 점선 테두리만 두른 큰 칸이다.
+   업무 목록 바로 아래라 "여기에 더 넣는다"가 그대로 읽힌다. */
+.addtile{
+  width:100%;margin-top:10px;display:flex;align-items:center;gap:12px;
+  padding:14px 18px;background:#fff;cursor:pointer;text-align:left;
+  border:1.5px dashed var(--line-2);border-radius:var(--radius-sm);
+  transition:border-color .12s,background .12s;
+}
+.addtile:hover{border-style:solid;border-color:var(--accent);background:var(--accent-t)}
+.addtile .ic{
+  width:30px;height:30px;flex:none;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel-2);color:var(--ink-2);font-size:17px;font-weight:700;
+}
+.addtile:hover .ic{background:var(--accent);color:#fff}
+.addtile .tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.addtile .tx b{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
+.addtile:hover .tx b{color:var(--accent-d)}
+.addtile .tx em{font-style:normal;font-size:11.5px;color:var(--ink-3)}
+.addtile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 켜 둔 거르기 — 지금 목록이 걸러진 상태라는 것이 늘 보여야 한다.
+   꽉 찬 파랑은 [＋ 추가]가 쓰므로 여기는 연한 쪽을 쓴다 */
+.btn.toggled{background:var(--accent-t);border-color:transparent;color:var(--accent-d);font-weight:600}
+.btn.toggled:hover{background:#d3e7f8;border-color:transparent;color:var(--accent-d)}
+/* 정렬 고르기 — 카드 머리에 들어가므로 입력칸 기본 너비(100%)를 쓰지 않는다 */
+.sortpick{display:inline-flex;align-items:center;gap:6px;letter-spacing:0}
+.sortpick > span{font-size:11.5px;font-weight:700;color:var(--ink-3)}
+.sortpick select{
+  width:auto;padding:5px 8px;font-size:12px;font-weight:600;
+  color:var(--ink-2);background:#fff;
+}
+.sortpick select:hover{border-color:var(--line-2)}
+/* 기준으로 세워 둔 동안에는 끌어도 소용이 없다. 손잡이를 눌러 보게 두지 않는다 */
+.taskgrid.sorted .row .bar{cursor:default}
+.taskgrid.sorted .row .bar::after{display:none}
 .taskgrid .row.dragging{opacity:.35}
 .taskgrid .row.drop-before{box-shadow:inset 3px 0 0 var(--accent),inset 0 0 0 1px var(--accent)}
 .taskgrid .row.drop-after{box-shadow:inset -3px 0 0 var(--accent),inset 0 0 0 1px var(--accent)}
@@ -631,6 +734,9 @@ body:not(.simple) .simple-note{display:none}
   display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;
   padding:11px 13px 11px 19px;box-shadow:inset 4px 0 0 var(--line-2);
 }
+/* 버튼을 칸으로 잡으면 좁은 열에서 이름과 장소가 두 줄로 밀린다.
+   평소엔 흐름에서 빼 두고 마우스를 올렸을 때만 오른쪽에 덮어 보여 준다. */
+.lunchlist .row .acts{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
 .lunchlist .row .time{color:var(--ink-2)}
 .lunchlist .place{font-size:12px;color:var(--ink-3)}
 /* ---- 다가올 점심 약속 ----
@@ -1353,9 +1459,14 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
     </div>
 
     <div class="qa-sticky" id="qaSticky">
+      <div class="qa-lead">
+        <b>오늘 할 일을 한 줄로 적어 보세요</b>
+        <span>자세한 내용과 기간은 아래 [＋ 업무 자세히 추가]에서 적어요</span>
+      </div>
       <div class="quickadd">
+        <span class="qa-ic" aria-hidden="true">＋</span>
         <input type="text" id="qaInput" autocomplete="off"
-               placeholder="할 일을 적고 Enter — 예: 보고서 초안 14:00 · 감사 준비 (9.3~11.1)">
+               placeholder="예: 보고서 초안 14:00 · 감사 준비 (9.3~11.1)">
         <button class="btn add primary" id="qaBtn">추가</button>
       </div>
       <div class="qahint" id="qaHint"></div>
@@ -1379,9 +1490,22 @@ table.mini thead th{border-top:none;font-size:12px;color:var(--ink-3);font-weigh
           업무
           <span class="count" id="taskCount"></span>
           <span class="spacer"></span>
-          <button class="btn addsm primary" id="btnAddTask">＋ 추가</button>
+          <button class="btn sm" id="btnHideDone"></button>
+          <label class="sortpick">
+            <span>정렬</span>
+            <select id="taskSort"></select>
+          </label>
         </h2>
-        <div class="body"><div class="rows taskgrid" id="listTask"></div></div>
+        <div class="body">
+          <div class="rows taskgrid" id="listTask"></div>
+          <button class="addtile" id="btnAddTask">
+            <span class="ic">＋</span>
+            <span class="tx">
+              <b>업무 자세히 추가</b>
+              <em>내용 · 기간 · 마감일까지 적어요</em>
+            </span>
+          </button>
+        </div>
       </div>
 
       <!-- 보조 열: 공유 → 연락 → 점심 (위계순) -->
@@ -2691,22 +2815,27 @@ document.addEventListener('keydown', e => {
 function confirmBox(msg){ return window.confirm(msg); }
 
 /* --- 업무 --- */
-function taskModal(id){
+/* pre 는 한 줄 입력에서 넘어온 값이다. 적던 것을 버리지 않고 그대로 채워 준다.
+   고치는 중(id 가 있는)일 때는 쓰지 않는다. */
+function taskModal(id, pre){
   const r = id ? DB.task.find(x => x.id === id) : null;
+  const v = r || pre || {};
   openModal(
     '<h3>' + (r ? '업무 수정' : '업무 등록') + '</h3>' +
     '<div class="body">' +
       '<div id="err"></div>' +
-      '<div class="frow"><label>제목</label><input type="text" id="f_title" data-focus value="' + escHtml(r ? r.title : '') + '"></div>' +
+      (!r && pre ? '<div class="notebox"><span>한 줄로 적으신 것을 옮겨 왔어요. ' +
+        '틀린 곳은 고쳐서 저장해요.</span></div>' : '') +
+      '<div class="frow"><label>제목</label><input type="text" id="f_title" data-focus value="' + escHtml(v.title || '') + '"></div>' +
       '<div class="frow two">' +
-        '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(r ? r.date : dateStr(viewDate)) + '"></div>' +
-        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(r ? r.time : '') + '"></div>' +
+        '<div><label>날짜</label><input type="date" id="f_date" value="' + escHtml(v.date || dateStr(viewDate)) + '"></div>' +
+        '<div><label>시간 (선택)</label><input type="time" id="f_time" value="' + escHtml(v.time || '') + '"></div>' +
       '</div>' +
       '<div class="frow"><label>마감일자 (선택)</label>' +
-        '<input type="date" id="f_until" value="' + escHtml(r ? (r.until || '') : '') + '">' +
+        '<input type="date" id="f_until" value="' + escHtml(v.until || '') + '">' +
         '<div class="hint">마감일자를 정하면 <b>그날까지 매일</b> 목록에 보여요. ' +
         '하루만 하는 일이면 비워 두세요.</div></div>' +
-      '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(r ? r.content : '') + '</textarea></div>' +
+      '<div class="frow"><label>내용</label><textarea id="f_content">' + escHtml(v.content || '') + '</textarea></div>' +
     '</div>' +
     '<div class="foot">' +
       (r ? '<button class="btn danger" id="f_del">삭제</button>' : '') +
@@ -2716,6 +2845,18 @@ function taskModal(id){
     '</div>', {wide:true});
 
   bindEnterSave();
+  /* 파서가 채운 칸에 옅은 배경을 깔아 둔다. 어디를 확인해야 하는지 바로 보인다. */
+  if(!r && pre){
+    [['#f_title', pre.title], ['#f_date', pre.date], ['#f_time', pre.time],
+     ['#f_until', pre.until], ['#f_content', pre.content]].forEach(([sel, v]) => {
+      const el = $(sel);
+      if(!el || !v) return;
+      el.classList.add('filled');
+      const off = () => el.classList.remove('filled');
+      el.addEventListener('input', off);
+      el.addEventListener('change', off);
+    });
+  }
   $('#f_cancel').onclick = closeModal;
   if(r) $('#f_del').onclick = () => { if(softDelete('task', r.id)) { closeModal(); renderAll(); } };
   $('#f_ok').onclick = () => {
@@ -2733,6 +2874,12 @@ function taskModal(id){
       const ord = nextOrderFor(date);     // 순서를 매긴 날이면 맨 뒤로
       if(ord !== undefined) rec.order = ord;
       DB.task.push(rec);
+    }
+    // 한 줄 입력에서 넘어온 것이면, 저장되고 나서야 그 칸을 비운다.
+    // 창을 닫기만 했을 때 적던 것이 사라지면 안 된다.
+    if(!r && pre && pre.fromQuickAdd && $('#qaInput')){
+      $('#qaInput').value = '';
+      quickAddPreview();
     }
     markDirty(); closeModal(); renderAll();
     toast(r ? '수정했습니다.' : '등록했습니다.');
@@ -4055,13 +4202,52 @@ function sortByTime(list){
    ------------------------------------------------------------ */
 function taskSortKey(r){
   if(typeof r.order === 'number') return r.order;
-  if(r.time) return +r.time.slice(0, 2) * 60 + +r.time.slice(3, 5);
-  return 100000;
+  return taskTimeKey(r);
 }
-function sortTasks(list){
+// 시간이 없는 건은 뒤로. 0시로 치면 안 적은 것이 맨 앞에 온다
+function taskTimeKey(r){
+  return r.time ? +r.time.slice(0, 2) * 60 + +r.time.slice(3, 5) : 100000;
+}
+/* 마감일 — 기간 업무는 마감일자가, 하루짜리는 그날이 곧 마감이다.
+   섞어 놓고 세워도 "먼저 끝내야 하는 것"이 위로 온다. */
+function taskDueKey(r){ return r.until || r.date || '9999-99-99'; }
+/* 등록한 시각은 따로 안 들고 있다. id 에 박혀 있는 것을 꺼내 쓴다
+   (이름-YYYYMMDD-HHMMSS-NNNN). 옛 건이라 형식이 다르면 맨 뒤로 보낸다. */
+function taskAddedKey(r){
+  const m = /-(\d{8})-(\d{6})-/.exec(r.id || '');
+  return m ? m[1] + m[2] : '99999999999999';
+}
+function cmpStr(a, b){ return a < b ? -1 : a > b ? 1 : 0; }
+
+/* 정렬 기준. [직접 정한 순서]가 기본이고 드래그가 만드는 것이 그것이다.
+   나머지는 보는 순서만 바꾼다 — order 를 건드리지 않으므로
+   기준을 이리저리 바꿔 봐도 직접 정해 둔 순서는 그대로 남는다. */
+const TASK_SORTS = [
+  ['manual', '직접 정한 순서'],
+  ['due',    '마감일 빠른 순'],
+  ['time',   '시간 빠른 순'],
+  ['added',  '등록한 순'],
+  ['title',  '제목 가나다순'],
+];
+const TASK_CMP = {
+  manual: (a, b) => taskSortKey(a) - taskSortKey(b),
+  due:    (a, b) => cmpStr(taskDueKey(a), taskDueKey(b)) || taskTimeKey(a) - taskTimeKey(b),
+  time:   (a, b) => taskTimeKey(a) - taskTimeKey(b),
+  added:  (a, b) => cmpStr(taskAddedKey(a), taskAddedKey(b)),
+  title:  (a, b) => (a.title || '').localeCompare(b.title || '', 'ko'),
+};
+function taskSortMode(){
+  return TASK_CMP[DB.cfg.taskSort] ? DB.cfg.taskSort : 'manual';
+}
+/* 어느 기준이든 완료한 건은 맨 뒤다. 남은 일이 먼저 보여야 한다.
+   마지막에 id 로 한 번 더 가르는 것은, 같은 값일 때 순서가 들쭉날쭉하면
+   다시 그릴 때마다 줄이 미묘하게 움직여서다. */
+function sortTasksBy(list, mode){
+  const cmp = TASK_CMP[mode] || TASK_CMP.manual;
   return list.slice().sort((a, b) =>
-    (a.done ? 1 : 0) - (b.done ? 1 : 0) || taskSortKey(a) - taskSortKey(b));
+    (a.done ? 1 : 0) - (b.done ? 1 : 0) || cmp(a, b) || cmpStr(a.id, b.id));
 }
+function sortTasks(list){ return sortTasksBy(list, taskSortMode()); }
 /* 기간 업무 — 마감일자를 정하면 시작일부터 마감일까지 매일 목록에 보인다.
    일주일·한 달 이어지는 일이 시작한 날에만 뜨고 사라지던 것을 고친 것이다.
    마감일자가 없으면 예전 그대로 그날 하루만 보인다.
@@ -4110,7 +4296,9 @@ function dayTasks(ds){ return alive(DB.task).filter(r => taskOnDay(r, ds)); }
 
 // 한 번 끌어다 놓으면 그날 업무 전부에 순서를 박아 둔다
 function materializeOrder(ds){
-  const list = sortTasks(dayTasks(ds));
+  // 보고 있는 기준이 무엇이든 직접 순서를 기준으로 박는다.
+  // 마감일 순으로 보다가 끌면 그 화면 순서가 order 로 굳어 버린다.
+  const list = sortTasksBy(dayTasks(ds), 'manual');
   list.forEach((r, i) => { r.order = i; });
   return list;
 }
@@ -4137,138 +4325,99 @@ function moveTask(ds, dragId, targetId, after){
 //   5건 이하 -> 1열로 넓게 / 6건부터 -> 2열 / 13건부터 -> 2열 유지하고 조밀하게
 function taskDensity(n){ return n <= 5 ? 'd1' : n <= 12 ? 'd2' : 'd3'; }
 
+/* 완료한 건 거르기.
+   진행률은 늘 전체 기준으로 센다 — 숨겼다고 "3/3 다 했어요"가 되면
+   남은 일이 있는데도 끝난 것처럼 보인다. 줄어드는 것은 목록뿐이다. */
+function hideDone(){ return !!DB.cfg.taskHideDone; }
+function paintHideDone(doneN){
+  const b = $('#btnHideDone');
+  if(!b) return;
+  b.classList.toggle('toggled', hideDone());
+  b.textContent = hideDone() ? '완료 ' + doneN + '건 숨김' : '완료 숨기기';
+  b.title = hideDone() ? '누르면 완료한 건도 다시 보여요' : '누르면 완료한 건을 목록에서 빼요';
+  b.disabled = !hideDone() && doneN === 0;
+}
+
+// 고른 기준을 화면에 맞춰 둔다. 고쳐 놓은 값이 있으면 그것이 선택돼 보인다
+function paintTaskSort(){
+  const sel = $('#taskSort');
+  if(!sel) return;
+  if(!sel.options.length){
+    sel.innerHTML = TASK_SORTS.map(([v, t]) =>
+      '<option value="' + v + '">' + t + '</option>').join('');
+  }
+  sel.value = taskSortMode();
+  sel.title = smodeHint(taskSortMode());
+}
+function smodeHint(mode){
+  return mode === 'manual'
+    ? '왼쪽 손잡이를 잡고 끌어 순서를 바꿔요'
+    : '기준으로 세워 둔 동안에는 끌어서 못 옮겨요';
+}
+
 function emptyBox(head, tail){
   return '<div class="empty"><b>' + escHtml(head) + '</b>' + escHtml(tail) + '</div>';
 }
 
 /* ------------------------------------------------------------
    한 줄 빠른 입력 파서
-   "보고서 초안 오후 2시" -> 제목 "보고서 초안", 시간 14:00
-   "다음주 화요일 팀 회의" -> 다음주 화요일
+
+   "보고서 초안 오후 2시"      -> 제목 "보고서 초안", 시간 14:00
+   "담달 15일 이사회"          -> 10월 15일
+   "다음주까지 여신 실적 정리"  -> 마감 다음주 금요일
    못 알아들은 말은 전부 제목으로 둔다. 입력이 실패하는 일은 없어야 한다.
+   틀린 날짜를 집어넣는 것보다 못 알아듣고 제목에 남기는 편이 낫다 —
+   빈 칸은 사람이 채우지만, 그럴듯하게 채워진 칸은 검수 없이 넘어간다.
+
+   ※ 순수 함수다. 여기서 DOM 을 만지거나 DB 를 고치지 않는다.
+
+   ── 구조: 낱말 하나를 날짜 하나에 바로 붙이지 않는다 ──
+   「범위 한정어 + 구체 날짜」 조합이 반드시 깨지기 때문이다.
+   담달을 보는 순간 10/1 로 확정해 버리면 뒤의 15일을 못 본다.
+     1단계  한정어로 기준점을 옮긴다   (담달 -> 다음 달, 차주 -> 다음 주)
+     2단계  옮긴 기준점 위에서 구체 날짜를 푼다 (15일 · 초 · 셋째주 · 수요일)
+     3단계  2단계에서 아무것도 못 찾으면 한정어 자체의 기본값을 쓴다
+   그래서 규칙 수가 곱이 아니라 합으로 는다.
+
+   ── 규칙 순서 (먼저 걸린 것이 이긴다) ──
+     1 시간 -> 2 절대날짜 -> 3 기간 -> 4 분기표기 -> 5 월일
+     -> 6 한정어+구체(2단계) -> 7 상대낱말 -> 8 요일 -> 9 주·달·분기 -> 10 일 단독
+   "10일 뒤 10시" 의 10 이 서로 먹지 않는 것, "3월" 의 월을 요일로 보지 않는 것,
+   "4/4분기" 를 4월 4일로 보지 않는 것이 이 순서에 달려 있다.
+
+   ※ 음력·공휴일 기준 표현("추석 전", "설 연휴")은 일부러 안 받는다.
+     해마다 날짜가 달라 표를 들고 있어야 하고, 틀리면 엉뚱한 날에 일이 잡힌다.
+     제목에 그대로 남겨 두는 편이 안전하다.
    ------------------------------------------------------------ */
 const QA_WEEK = { '월':1, '화':2, '수':3, '목':4, '금':5, '토':6, '일':0 };
 
-function parseQuickAdd(text, baseDate){
-  let t = ' ' + String(text || '').replace(/\s+/g, ' ').trim() + ' ';
-  const today = startOfDay(new Date());
-  let date = dateStr(baseDate || today);
-  let time = '';
-  let usedDate = false;
+/* 마감을 뜻하는 조사와 시작을 뜻하는 조사.
+   "다음주까지"는 마감, "다음주에"는 시작이다 — 같은 낱말이 뜻이 갈린다. */
+const QA_DUE  = '까지|안에|내로|이내|내에|전까지';
+const QA_FROM = '부터|에|중으로|중|쯤|경|께';
+const QA_JOSA = '(?:' + QA_DUE + '|' + QA_FROM + ')?';
 
-  const cut = m => { t = t.replace(m, ' '); };
+/* 1단계에서 쓰는 범위 한정어 */
+const QA_MS = '(?:다다음\\s?달|다음\\s?달|내달|담달|차월|이번\\s?달|이달|금월|당월|\\d{1,2}\\s?월)';
+const QA_WS = '(?:다다음\\s?주|다담주|지난\\s?주|저번\\s?주|이번\\s?주|금주|다음\\s?주|차주|담주|내주)';
+/* 한글 수사. "한 달 뒤" 처럼 숫자를 안 쓰는 사람이 많다 */
+const QA_NUM = { '한':1, '두':2, '세':3, '네':4, '다섯':5, '여섯':6, '일곱':7, '여덟':8, '아홉':9, '열':10,
+                 '첫':1, '둘':2, '셋':3, '넷':4 };
+function qaNum(s){ return QA_NUM[s] !== undefined ? QA_NUM[s] : +s; }
 
-  /* ---------- 시간 ----------
-     오전/오후 + 시:분 / N시 M분 / N시반.
-     14:00~15:00 처럼 범위로 적어도 앞의 것만 쓴다. */
-  let m = t.match(/ (오전|오후|아침|저녁|밤)?\s?(\d{1,2}):(\d{2})(?:\s?[~\-–]\s?\d{1,2}:\d{2})? /);
-  if(m && +m[2] <= 23 && +m[3] <= 59){
-    time = qaHour(m[1], +m[2]) + ':' + pad(+m[3]);
-    cut(m[0]);
-  }else{
-    m = t.match(/ (오전|오후|아침|저녁|밤)?\s?(\d{1,2})\s?시\s?(반|(\d{1,2})\s?분)?(?:\s?[~\-–]\s?\d{1,2}\s?시)? /);
-    if(m && +m[2] <= 23){
-      const mi = m[3] === '반' ? 30 : (m[4] ? +m[4] : 0);
-      if(mi <= 59){ time = qaHour(m[1], +m[2]) + ':' + pad(mi); cut(m[0]); }
-    }
-  }
-
-  /* ---------- 날짜: 낱말 ---------- */
-  const rel = [['글피', 3], ['모레', 2], ['내일', 1], ['오늘', 0]];
-  for(const [w, off] of rel){
-    const re = new RegExp(' ' + w + '(?:까지|부터|에|중|안에)? ');
-    const mm = t.match(re);
-    if(mm){ date = dateStr(addDays(today, off)); cut(mm[0]); usedDate = true; break; }
-  }
-
-  /* ---------- 날짜: N일 뒤 / N주 뒤 ---------- */
-  if(!usedDate){
-    m = t.match(/ (\d{1,2})\s?(일|주)\s?(뒤|후)(?:에)? /);
-    if(m){
-      const n = +m[1] * (m[2] === '주' ? 7 : 1);
-      date = dateStr(addDays(today, n)); cut(m[0]); usedDate = true;
-    }
-  }
-
-  /* ---------- 날짜: (이번주|다음주) X요일 ---------- */
-  if(!usedDate){
-    m = t.match(/ (이번\s?주|금주|다음\s?주|차주|담주|담달)?\s?([월화수목금토일])요일?(?:까지|부터|에|중)? /);
-    if(m && QA_WEEK[m[2]] !== undefined){
-      const wantDow = QA_WEEK[m[2]];
-      const scope = (m[1] || '').replace(/\s/g, '');
-      let d;
-      if(scope === '다음주' || scope === '차주' || scope === '담주'){
-        d = qaWeekday(addDays(qaMonday(today), 7), wantDow);
-      }else if(scope === '이번주' || scope === '금주'){
-        d = qaWeekday(qaMonday(today), wantDow);
-      }else{
-        // 그냥 "금요일" 이면 오늘 포함 다음에 오는 그 요일
-        d = today;
-        for(let i = 0; i < 7; i++){ if(d.getDay() === wantDow) break; d = addDays(d, 1); }
-      }
-      date = dateStr(d); cut(m[0]); usedDate = true;
-    }
-  }
-
-  /* ---------- 기간: (9.3~11.1) ----------
-     한 줄 등록으로도 여러 날 이어지는 일을 넣을 수 있어야 한다.
-     앞이 시작일, 뒤가 마감일. 괄호는 있어도 없어도 된다. */
-  let until = '';
-  if(!usedDate){
-    m = t.match(/ \(?(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\s?[~∼]\s?(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\)? /);
-    if(!m) m = t.match(/ \(?(\d{1,2})\s?월\s?(\d{1,2})\s?일?\s?[~∼]\s?(\d{1,2})\s?월\s?(\d{1,2})\s?일?\)? /);
-    if(m){
-      const a = [+m[1], +m[2]], b = [+m[3], +m[4]];
-      const okMD = v => v[0] >= 1 && v[0] <= 12 && v[1] >= 1 && v[1] <= 31;
-      if(okMD(a) && okMD(b)){
-        const from = qaYearOf(a[0], a[1], today);
-        let to = qaYearOf(b[0], b[1], today);
-        // 12/28~1/3 처럼 해를 넘기면 마감일만 다음 해로 민다
-        if(to < from) to = (+from.slice(0, 4) + 1) + to.slice(4);
-        date = from; until = to; cut(m[0]); usedDate = true;
-      }
-    }
-  }
-
-  /* ---------- 날짜: 숫자 표기 ---------- */
-  if(!usedDate){
-    // 9/3, 9.3, 9-3, 09/03
-    m = t.match(/ (\d{1,2})\s?[\/.\-]\s?(\d{1,2})(?:까지|부터|에)? /);
-    if(!m) m = t.match(/ (\d{1,2})\s?월\s?(\d{1,2})\s?일(?:까지|부터|에)? /);
-    if(m){
-      const mo = +m[1], dd = +m[2];
-      if(mo >= 1 && mo <= 12 && dd >= 1 && dd <= 31){
-        date = qaYearOf(mo, dd, today); cut(m[0]); usedDate = true;
-      }
-    }
-  }
-  if(!usedDate){
-    // "27일" -> 이번 달 27일 (이미 지났으면 다음 달)
-    m = t.match(/ (\d{1,2})\s?일(?:까지|부터|에)? /);
-    if(m){
-      const dd = +m[1];
-      if(dd >= 1 && dd <= 31){
-        let y = today.getFullYear(), mo = today.getMonth() + 1;
-        if(dd < today.getDate()){ mo++; if(mo > 12){ mo = 1; y++; } }
-        const cand = y + '-' + pad(mo) + '-' + pad(dd);
-        if(parseDate(cand)){ date = cand; cut(m[0]); usedDate = true; }
-      }
-    }
-  }
-
-  return { title: t.replace(/\s+/g, ' ').trim(), date, until, time, usedDate, usedTime: !!time };
+function qaLastDay(y, mo){ return new Date(y, mo, 0).getDate(); }   // mo 는 1~12
+function qaYmd(y, mo, d){ return y + '-' + pad(mo) + '-' + pad(d); }
+function qaMonthOf(today, off){                                     // off 달 뒤의 {y, mo}
+  const d = new Date(today.getFullYear(), today.getMonth() + off, 1);
+  return { y: d.getFullYear(), mo: d.getMonth() + 1 };
 }
+function qaIsDue(s){ return new RegExp(QA_DUE).test(s || ''); }
+function qaIsFrom(s){ return new RegExp('(?:' + QA_FROM + ')\\s*$').test(s || ''); }
 
-// 오전/오후를 반영한 24시간제 시각
-function qaHour(ampm, h){
-  if(ampm === '오후' || ampm === '저녁' || ampm === '밤'){ if(h < 12) h += 12; }
-  else if(ampm === '오전' || ampm === '아침'){ if(h === 12) h = 0; }
-  return pad(h);
-}
 // 그 주의 월요일
 function qaMonday(d){
-  const dow = d.getDay();               // 0=일
-  return addDays(d, dow === 0 ? -6 : 1 - dow);
+  const dow = d.getDay();
+  return addDays(startOfDay(d), dow === 0 ? -6 : 1 - dow);
 }
 // 월요일 기준 주에서 원하는 요일
 function qaWeekday(monday, wantDow){
@@ -4278,8 +4427,406 @@ function qaWeekday(monday, wantDow){
 function qaYearOf(mo, dd, today){
   const y = today.getFullYear();
   const cand = new Date(y, mo - 1, dd);
-  if(daysBetween(cand, today) < -180) return (y + 1) + '-' + pad(mo) + '-' + pad(dd);
-  return y + '-' + pad(mo) + '-' + pad(dd);
+  if(daysBetween(cand, today) < -180) return qaYmd(y + 1, mo, dd);
+  return qaYmd(y, mo, dd);
+}
+// 오전/오후를 반영한 24시간제 시각
+function qaHour(ampm, h){
+  if(ampm === '오후' || ampm === '저녁' || ampm === '밤'){ if(h < 12) h += 12; }
+  else if(ampm === '오전' || ampm === '아침' || ampm === '새벽'){ if(h === 12) h = 0; }
+  return pad(h);
+}
+function qaOkMd(mo, dd){ return mo >= 1 && mo <= 12 && dd >= 1 && dd <= 31; }
+function qaDays(n, C){
+  if(n < 1 || n > 365) return null;
+  const from = dateStr(C.base);
+  return { date: from, until: dateStr(addDays(parseDate(from), n - 1)) };
+}
+function qaSpan(m1, d1, m2, d2, C){
+  if(!qaOkMd(m1, d1) || !qaOkMd(m2, d2)) return null;
+  const from = qaYearOf(m1, d1, C.today);
+  let to = qaYearOf(m2, d2, C.today);
+  // 12/28~1/3 처럼 해를 넘기면 마감일만 다음 해로 민다
+  if(to < from) to = (+from.slice(0, 4) + 1) + to.slice(4);
+  return { date: from, until: to };
+}
+// 분기 끝. q 는 1~4. 이미 지났으면 내년 것으로 본다
+function qaQuarterEnd(q, today){
+  const endMo = q * 3;
+  let y = today.getFullYear();
+  if(qaYmd(y, endMo, qaLastDay(y, endMo)) < dateStr(today)) y++;
+  return qaYmd(y, endMo, qaLastDay(y, endMo));
+}
+/* 그 달 N째 주. 1일이 든 주의 월요일부터 센다.
+   2026-09 은 1일이 화요일이라 첫 주 월요일이 8/31 이고, 셋째 주는 9/14~9/18 이다. */
+function qaNthWeek(y, mo, n){
+  if(n < 1 || n > 6) return null;
+  const mon = addDays(qaMonday(new Date(y, mo - 1, 1)), (n - 1) * 7);
+  return { date: dateStr(mon), until: dateStr(addDays(mon, 4)) };   // 월~금
+}
+
+/* ---------- 2단계: 옮긴 기준점 위에서 구체 날짜 풀기 ----------
+   못 풀면 null 을 돌려주고, 부르는 쪽은 3단계(한정어 기본값)로 간다.
+   여기서 어설프게 찍지 않는 것이 이 파서의 안전장치다. */
+function qaOnMonth(y, mo, spec, josa, explicitMonth){
+  if(spec.day){
+    const dd = +spec.day;
+    if(dd < 1 || dd > qaLastDay(y, mo)) return null;      // 담달 40일 -> 포기
+    return qaYmd(y, mo, dd);
+  }
+  if(spec.nth) return qaNthWeek(y, mo, spec.nth);
+  if(spec.part === '초') return qaYmd(y, mo, 1);
+  if(spec.part === '말') return qaYmd(y, mo, qaLastDay(y, mo));
+  if(spec.part === '중순') return qaYmd(y, mo, 15);
+  if(spec.part === '중'){
+    /* "10월중" 은 10월 안에 라는 뜻이라 달의 시작으로 본다.
+       "월중"(그 달 중순)과 다르다 — 앞에 달을 콕 집었는지로 가른다. */
+    return explicitMonth ? qaYmd(y, mo, 1) : qaYmd(y, mo, 15);
+  }
+  return null;
+}
+function qaOnWeek(monday, spec, josa){
+  if(spec.dow !== undefined) return dateStr(qaWeekday(monday, spec.dow));
+  if(spec.part === '초') return dateStr(qaWeekday(monday, 1));
+  if(spec.part === '말') return dateStr(qaWeekday(monday, 6));
+  if(spec.part === '중') return dateStr(qaWeekday(monday, 3));
+  return null;
+}
+
+/* ---------- 날짜 규칙표 ----------
+   [정규식, 뜻풀이, 조사없이도마감?] 의 줄 세우기. 위에서부터 먼저 걸린 것이 이긴다.
+   뜻풀이는 날짜 문자열이나 {date, until} 을 돌려준다. 못 풀면 null 이고 다음 줄로 넘어간다.
+   기간(A~B)의 양쪽도 이 표를 그대로 쓴다 — 두 벌로 나뉘면 반드시 어긋난다. */
+function qaDateRules(){
+  const weekOff = s => /다다음|다담/.test(s) ? 14 : /지난|저번/.test(s) ? -7
+                     : /다음|차주|담주|내주/.test(s) ? 7 : 0;
+  const monOff  = s => /다다음/.test(s) ? 2 : /다음|내달|담달|차월/.test(s) ? 1 : 0;
+  /* 한정어 뒤에 올 수 있는 구체 날짜. 통째로 한 번에 잡아야
+     "다음 주말" 의 주만 먹고 말이 남는 사고가 안 난다. */
+  const SPEC = '(?:\\s?(\\d{1,2})\\s?일|\\s?([첫둘셋넷다섯\\d])\\s?째\\s?주|'
+             + '\\s?([월화수목금토일])(?:요일|욜)?(?:\\s?[\\/·,]\\s?[월화수목금토일](?:요일|욜)?)*|'
+             + '\\s?(초|중순|중|말))?';
+
+  return [
+    /* 2. 절대 날짜 — 연도까지 적은 것 */
+    [new RegExp(' (20\\d{2})\\s?[-.\\/]\\s?(\\d{1,2})\\s?[-.\\/]\\s?(\\d{1,2})' + QA_JOSA + ' '),
+      (m) => qaOkMd(+m[2], +m[3]) ? qaYmd(+m[1], +m[2], +m[3]) : null],
+    // 두 자리 연도 (26.9.3). 네 자리를 먼저 본 뒤라야 안전하다
+    [new RegExp(' (\\d{2})\\s?[-.\\/]\\s?(\\d{1,2})\\s?[-.\\/]\\s?(\\d{1,2})' + QA_JOSA + ' '),
+      (m) => qaOkMd(+m[2], +m[3]) ? qaYmd(2000 + +m[1], +m[2], +m[3]) : null],
+
+    /* 3. 기간 — 숫자끼리 */
+    [/ \(?(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\s?[~∼]\s?(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\)? /,
+      (m, C) => qaSpan(+m[1], +m[2], +m[3], +m[4], C)],
+    [/ \(?(\d{1,2})\s?월\s?(\d{1,2})\s?일?\s?[~∼]\s?(\d{1,2})\s?월\s?(\d{1,2})\s?일?\)? /,
+      (m, C) => qaSpan(+m[1], +m[2], +m[3], +m[4], C)],
+    // N일간 · 2주간 · 일주일간 · 한 달간
+    [/ 일주일\s?(?:간|동안) /, (m, C) => qaDays(7, C)],
+    [/ ([한두세네다섯\d]{1,3})\s?(일|주)\s?(?:간|동안) /,
+      (m, C) => qaDays(qaNum(m[1]) * (m[2] === '주' ? 7 : 1), C)],
+
+    /* 4. 분기 표기 — 월일보다 먼저다. "4/4분기" 를 4월 4일로 보면 안 된다 */
+    [new RegExp(' (\\d)\\s?\\/\\s?(\\d)\\s?분기' + QA_JOSA + ' '),
+      (m, C) => (+m[2] >= 1 && +m[2] <= 4) ? qaQuarterEnd(+m[2], C.today) : null],
+
+    /* 5. 월일 */
+    [new RegExp(' (\\d{1,2})\\s?[\\/.\\-]\\s?(\\d{1,2})' + QA_JOSA + ' '),
+      (m, C) => qaOkMd(+m[1], +m[2]) ? qaYearOf(+m[1], +m[2], C.today) : null],
+    [new RegExp(' (\\d{1,2})\\s?월\\s?(\\d{1,2})\\s?일' + QA_JOSA + ' '),
+      (m, C) => qaOkMd(+m[1], +m[2]) ? qaYearOf(+m[1], +m[2], C.today) : null],
+
+    /* 6. 한정어 + 구체 날짜 (2단계).
+       요일 단독·주 단위보다 먼저 본다. "다음주 화요일" 은 여기서 끝나야 한다. */
+    [new RegExp(' (' + QA_MS + ')' + SPEC + '\\s?' + QA_JOSA + ' '), (m, C) => {
+      const head = m[1].replace(/\s/g, '');
+      const numMonth = /^\d/.test(head);
+      let y, mo;
+      if(numMonth){
+        mo = +head.replace('월', '');
+        if(mo < 1 || mo > 12) return null;
+        y = +qaYearOf(mo, 1, C.today).slice(0, 4);
+      }else{
+        const g = qaMonthOf(C.today, monOff(head));
+        y = g.y; mo = g.mo;
+      }
+      const spec = { day: m[2], nth: m[3] ? qaNum(m[3]) : 0, part: m[5] };
+      const got = qaOnMonth(y, mo, spec, m[0], numMonth);
+      if(got) return got;
+      // 구체 날짜가 있었는데 못 풀었으면 통째로 포기한다 (자신 있게 틀리지 않는다)
+      if(m[2] || m[3] || m[4] || m[5]) return null;
+      // 3단계 — 한정어 자체의 기본값
+      if(numMonth) return qaYmd(y, mo, 1);
+      return monOff(head) === 0 ? qaYmd(y, mo, qaLastDay(y, mo)) : qaYmd(y, mo, 1);
+    }],
+    [new RegExp(' (' + QA_WS + ')' + SPEC + '\\s?' + QA_JOSA + ' '), (m, C) => {
+      const head = m[1].replace(/\s/g, '');
+      const monday = addDays(qaMonday(C.today), weekOff(head));
+      const dowCh = m[4] ? m[4].replace(/[^월화수목금토일]/g, '').charAt(0) : '';
+      const spec = { dow: dowCh ? QA_WEEK[dowCh] : undefined, part: m[5] };
+      const got = qaOnWeek(monday, spec, m[0]);
+      if(got) return got;
+      if(m[2] || m[3]) return null;                 // 주에 "15일"·"셋째주"는 안 붙인다
+      /* 3단계 — 꼬리가 없으면 그 주 금요일이다. "다음주까지" 는 주가 끝나기 전까지라는 뜻.
+         "다음주에"·"다음주 중" 처럼 시작을 가리키면 월요일로 본다. */
+      if(qaIsFrom(m[0])) return dateStr(qaWeekday(monday, 1));
+      return dateStr(qaWeekday(monday, 5));
+    }],
+
+    /* 7. 상대 낱말 */
+    [new RegExp(' (내일모레|명후일|그저께|그제|글피|모레|내일|명일|익일|낼|어제|전일|오늘|금일|당일|today)'
+       + QA_JOSA + ' '),
+      (m, C) => dateStr(addDays(C.today, ({ '내일모레':2, '명후일':2, '그저께':-2, '그제':-2,
+        '글피':3, '모레':2, '내일':1, '명일':1, '익일':1, '낼':1, '어제':-1, '전일':-1 })[m[1]] || 0))],
+    [/ [Dd]\s?[-−]\s?(\d{1,3}) /, (m, C) => dateStr(addDays(C.today, +m[1]))],
+    [/ ([한두세네다섯\d]{1,2})\s?일\s?(?:뒤|후|내|이내|안에)(?:에)? /,
+      (m, C) => dateStr(addDays(C.today, qaNum(m[1])))],
+    [/ ([한두세네다섯\d]{1,2})\s?주\s?(?:뒤|후) /,
+      (m, C) => dateStr(addDays(C.today, qaNum(m[1]) * 7))],
+    [/ ([한두세네다섯\d]{1,2})\s?(?:개월|달)\s?(?:뒤|후) /, (m, C) => {
+      const t = C.today, n = qaNum(m[1]);
+      const d = new Date(t.getFullYear(), t.getMonth() + n, 1);
+      const dd = Math.min(t.getDate(), qaLastDay(d.getFullYear(), d.getMonth() + 1));
+      return qaYmd(d.getFullYear(), d.getMonth() + 1, dd);
+    }],
+    [/ 며칠\s?(?:뒤|후|내|이내) /, (m, C) => dateStr(addDays(C.today, 3))],
+    [/ (조만간|곧|빠른\s?시일\s?내에?|가급적\s?빨리|ASAP|asap) /, (m, C) => dateStr(addDays(C.today, 3))],
+    [/ (당장|바로|즉시) /, (m, C) => dateStr(C.today)],
+
+    /* 8-0. 월초·월중·월말·말일 — 요일 단독보다 먼저 본다.
+       뒤에 두면 「월중」의 월을 요일로 잡고 중을 조사로 먹어서 월요일이 된다. */
+    [new RegExp(' (월초|월중|월말|말일|당월말)' + QA_JOSA + ' '), (m, C) => {
+      const { y, mo } = qaMonthOf(C.today, 0);
+      if(m[1] === '월초') return qaYmd(y, mo, 1);
+      if(m[1] === '월중') return qaYmd(y, mo, 15);
+      return qaYmd(y, mo, qaLastDay(y, mo));
+    }],
+
+    /* 8. 요일 단독.
+       맨 글자 하나("월")는 뒤가 공백이나 조사일 때만 요일로 본다.
+       안 그러면 "3월"·"월말" 의 월을 요일로 잡는다. */
+    [new RegExp(' ([월화수목금토일])(요일|욜)?(?:\\s?[\\/·,]\\s?[월화수목금토일](?:요일|욜)?)*'
+       + QA_JOSA + '(?= )'), (m, C) => {
+      const dow = QA_WEEK[m[1]];
+      if(dow === undefined) return null;
+      /* 「일」은 한 글자로 두면 "그냥 할 일" 의 일을 일요일로 잡는다.
+         일상어로 훨씬 자주 쓰는 글자라 요일/욜 을 붙였을 때만 요일로 본다. */
+      if(m[1] === '일' && !m[2]) return null;
+      let d = C.today;                     // 오늘 포함 다음에 오는 그 요일
+      for(let i = 0; i < 7; i++){ if(d.getDay() === dow) break; d = addDays(d, 1); }
+      return dateStr(d);
+    }],
+
+    /* 9. 주·달 단독 */
+    [/ (주초|주중|주말) /, (m, C) =>
+      dateStr(qaWeekday(qaMonday(C.today), { '주초':1, '주중':3, '주말':6 }[m[1]]))],
+    /* 상순·중순·하순. 「중순」은 위에서 15일로 정해 두었으므로 여기서도 15일로 맞춘다
+       (지시서에 15일과 20일이 함께 적혀 있어 앞의 것을 따랐다). */
+    [new RegExp(' (상순|중순|하순)' + QA_JOSA + ' '), (m, C) => {
+      const { y, mo } = qaMonthOf(C.today, 0);
+      return m[1] === '상순' ? qaYmd(y, mo, 10)
+           : m[1] === '중순' ? qaYmd(y, mo, 15)
+           : qaYmd(y, mo, qaLastDay(y, mo));
+    }],
+
+    /* 9. 분기·반기·연 */
+    [new RegExp(' (이번\\s?분기|금분기|다음\\s?분기|차분기|분기말)' + QA_JOSA + ' '), (m, C) => {
+      const q = Math.floor(C.today.getMonth() / 3) + 1;
+      return /다음|차분기/.test(m[1]) ? qaQuarterEnd(q === 4 ? 1 : q + 1, C.today)
+                                      : qaQuarterEnd(q, C.today);
+    }],
+    /* 반기는 「그 반기 안에」 라는 뜻이라 조사가 없어도 그 자체가 마감이다
+       (규칙표 세 번째 칸 true). 이미 지난 반기를 말할 리가 없으니 지났으면 내년 것으로 본다. */
+    [new RegExp(' (상반기|하반기)\\s?(말)?' + QA_JOSA + ' '), (m, C) => {
+      const mo = m[1] === '상반기' ? 6 : 12;
+      const dd = mo === 6 ? 30 : 31;
+      let y = C.today.getFullYear();
+      if(qaYmd(y, mo, dd) < dateStr(C.today)) y++;
+      return qaYmd(y, mo, dd);
+    }, true],
+    [new RegExp(' (연말|금년\\s?말|올해\\s?말|올해|금년)' + QA_JOSA + ' '),
+      (m, C) => qaYmd(C.today.getFullYear(), 12, 31)],
+    [new RegExp(' (연초|내년\\s?초|내년|명년)' + QA_JOSA + ' '),
+      (m, C) => qaYmd(C.today.getFullYear() + 1, 1, 1)],
+
+    /* 10. 일 단독 — "27일". 이번 달 그 날, 이미 지났으면 다음 달 */
+    [new RegExp(' (\\d{1,2})\\s?일' + QA_JOSA + ' '), (m, C) => {
+      const dd = +m[1];
+      if(dd < 1 || dd > 31) return null;
+      const g = qaMonthOf(C.today, dd < C.today.getDate() ? 1 : 0);
+      if(dd > qaLastDay(g.y, g.mo)) return null;
+      return qaYmd(g.y, g.mo, dd);
+    }],
+  ];
+}
+
+/* 문장 조각에서 날짜를 찾는다. 찾으면 {date, until, text, due}, 못 찾으면 null.
+   text 는 잘라낼 원문 조각이다 — 제목에서 그만큼만 지우려고 돌려준다. */
+function qaFindDate(str, C){
+  const t = ' ' + String(str || '').replace(/\s+/g, ' ').trim() + ' ';
+  const rules = qaDateRules();
+  for(let i = 0; i < rules.length; i++){
+    const m = t.match(rules[i][0]);
+    if(!m) continue;
+    const got = rules[i][1](m, C);
+    if(!got) continue;
+    const out = typeof got === 'string' ? { date: got, until: '' } : got;
+    out.text = m[0];
+    // 규칙표 세 번째 칸이 true 면 조사가 없어도 마감으로 본다
+    out.due = qaIsDue(m[0]) || rules[i][2] === true;
+    return out;
+  }
+  return null;
+}
+
+/* ---------- 본체 ---------- */
+function parseQuickAdd(text, baseDate){
+  const raw = String(text || '').replace(/\s+/g, ' ').trim();
+  let t = ' ' + raw + ' ';
+  const today = startOfDay(new Date());
+  const base = baseDate ? startOfDay(baseDate) : today;
+  const C = { today: today, base: base };
+
+  let date = dateStr(base), until = '', time = '';
+  let usedDate = false, usedDue = false;
+  const cut = s => { t = t.replace(s, ' '); };
+
+  /* ---------- 1. 시간 ----------
+     날짜보다 먼저 떼어낸다. "10일 뒤 10시" 의 두 10 이 서로 먹지 않게. */
+  const setT = (h, mi) => { if(h <= 23 && mi <= 59){ time = pad(h) + ':' + pad(mi); return true; } return false; };
+  let m;
+
+  // 9am · 2:30pm — 콜론 규칙보다 먼저 봐야 "am" 이 제목에 남지 않는다
+  if(!time && (m = t.match(/ (\d{1,2})(?::(\d{2}))?\s?(a\.?m\.?|p\.?m\.?) /i))){
+    let h = +m[1]; const mi = m[2] ? +m[2] : 0;
+    if(h <= 12){
+      if(/^p/i.test(m[3]) && h < 12) h += 12;
+      if(/^a/i.test(m[3]) && h === 12) h = 0;
+      if(setT(h, mi)) cut(m[0]);
+    }
+  }
+  // 자정 · 정오
+  if(!time && (m = t.match(/ (자정|정오) /))){
+    time = m[1] === '정오' ? '12:00' : '00:00'; cut(m[0]);
+  }
+  // 14:00 · 오후 2:30 · 14:00~15:00 (앞의 것만)
+  if(!time && (m = t.match(/ (오전|오후|아침|저녁|밤|새벽)?\s?(\d{1,2}):(\d{2})(?:\s?[~∼\-–]\s?\d{1,2}:\d{2})? /))){
+    if(+m[2] <= 23 && +m[3] <= 59){
+      time = qaHour(m[1], +m[2]) + ':' + pad(+m[3]); cut(m[0]);
+    }
+  }
+  // 14~15시 (앞의 것만). 아래 "N시" 규칙은 뒤의 15시를 잡아서 따로 둔다
+  if(!time && (m = t.match(/ (오전|오후|아침|저녁|밤|새벽)?\s?(\d{1,2})\s?[~∼]\s?\d{1,2}\s?시 /))){
+    if(+m[2] <= 23){ time = qaHour(m[1], +m[2]) + ':00'; cut(m[0]); }
+  }
+  // 2시 · 2시반 · 14시 30분 · 9시경 · 2시-3시(앞의 것만)
+  if(!time && (m = t.match(/ (오전|오후|아침|저녁|밤|새벽)?\s?(\d{1,2})\s?시\s?(반|(\d{1,2})\s?분)?(?:\s?[~∼\-–]\s?\d{1,2}\s?시)?(?:쯤|경|께|정각)? /))){
+    const mi = m[3] === '반' ? 30 : (m[4] ? +m[4] : 0);
+    if(+m[2] <= 23 && mi <= 59){
+      time = qaHour(m[1], +m[2]) + ':' + pad(mi); cut(m[0]);
+    }
+  }
+  /* 시각 없이 때만 말하는 것 — 시간은 비우고 제목에서만 뺀다.
+     "오전 중"·"월요일 아침까지" 의 꼬리를 제목에 남기면 목록이 지저분해진다.
+     숫자가 붙은 "아침 8시" 는 위 규칙이 이미 통째로 떼어낸 뒤라 안 걸린다. */
+  while((m = t.match(/ (?:오전|오후|아침|점심|저녁)\s?(?:중으로|중|내로|이내|안에|까지)|퇴근\s?전(?:까지)? /))) cut(m[0]);
+
+  /* ---------- 2~8. 날짜 ----------
+     먼저 "A~B" · "A부터 B까지" 처럼 양쪽에 날짜가 있는 꼴을 본다.
+     한쪽씩 따로 보면 앞엣것만 잡고 끝나서 기간이 안 만들어진다. */
+  const sp = qaSpanPhrase(t, C);
+  if(sp){
+    date = sp.date; until = sp.until; usedDate = true;
+    sp.cuts.forEach(cut);
+  }
+  if(!usedDate){
+    const hit = qaFindDate(t, C);
+    if(hit){
+      date = hit.date;
+      until = hit.until || '';
+      usedDate = true;
+      cut(hit.text);
+      /* 「9/15까지」는 그날 하루가 아니라 그날까지 해야 하는 일이다.
+         하루짜리로 넣으면 그날이 오기 전에는 목록에 안 떠서,
+         정작 준비하는 동안 눈에 안 보인다. 마감일자로 넣어 매일 보이게 한다.
+         기준일보다 이전이거나 같으면 마감이 될 수 없으니 그대로 둔다. */
+      /* 마감 조사가 날짜 바로 뒤에 안 붙는 경우도 있다 — "월요일 아침까지".
+         기간을 이미 잡았으면 건드리지 않는다. */
+      const dueAnywhere = new RegExp(QA_DUE).test(raw);
+      if(!until && (hit.due || dueAnywhere) && hit.date > dateStr(base)){
+        until = hit.date; date = dateStr(base); usedDue = true;
+      }
+    }
+  }
+
+  /* ---------- 제목 · 내용 ---------- */
+  let left = t.replace(/\s+/g, ' ').trim();
+  /* 잘라낸 자리가 제목을 파먹어 아무것도 안 남는 일이 있다 ("월요일 아침까지").
+     사람이 친 말을 잃는 것이 가장 나쁘므로 원문을 제목으로 되돌린다.
+     날짜는 제대로 읽은 것이니 그대로 둔다. */
+  if(left.length <= 1 && raw.length > 1) left = raw;
+  const ram = qaRambling(left);
+  let title = left, content = '';
+
+  if(ram){
+    // 주절주절 쓴 문장. 제목은 짧게 깎고, 원문은 통째로 내용에 남긴다
+    title = qaShorten(left);
+    content = raw;
+  }else{
+    // 「 - 」 뒤는 내용으로 본다. 날짜의 9-3 과 안 헷갈리게 앞뒤로 띄운 것만
+    const dash = left.match(/^(.*\S)\s+[-–—:]\s+(\S.*)$/);
+    if(dash){ title = dash[1].trim(); content = dash[2].trim(); }
+  }
+
+  return { title: title, date: date, until: until, time: time, content: content,
+           usedDate: usedDate, usedTime: !!time, usedDue: usedDue, rambling: ram };
+}
+
+/* "내일~다음주 금요일" · "오늘부터 금요일까지" 처럼 양쪽에 날짜가 있는 꼴.
+   양쪽 다 풀려야 기간으로 본다. 한쪽만 풀리면 손대지 않고 넘긴다 —
+   반쪽짜리로 기간을 만들면 엉뚱한 날까지 일이 깔린다. */
+function qaSpanPhrase(t, C){
+  let i = t.search(/[~∼]/);
+  if(i > 0){
+    const a = qaFindDate(t.slice(0, i), C), b = qaFindDate(t.slice(i + 1), C);
+    if(a && b && !a.until && !b.until && a.date <= b.date)
+      return { date: a.date, until: b.date, cuts: [a.text, b.text, t[i]] };
+  }
+  const m = t.match(/(.*)부터(.*)까지/);
+  if(m){
+    const a = qaFindDate(m[1], C), b = qaFindDate(m[2], C);
+    if(a && b && !a.until && !b.until && a.date <= b.date)
+      return { date: a.date, until: b.date, cuts: [a.text, b.text, '부터', '까지'] };
+  }
+  return null;
+}
+
+/* 주절주절 쓴 문장인가.
+   길이만 보면 긴 제목을 오해하고, 말투만 보면 짧은 메모를 놓친다. 둘을 같이 본다. */
+const QA_TALK = /(하라고|하래|하셨|하신|해야|야\s?됨|야\s?함|했는데|하는데|해서|합니다|해주|해줘|바랍니다|요청|부탁|드림|필요|확인바|알아보|물어보|받아야|보내야|정리해|준비해|예정|하기로|할\s?것|요망)/;
+function qaRambling(s){
+  const n = s.length;
+  if(n > 25) return true;
+  return n > 12 && QA_TALK.test(s);
+}
+
+/* 긴 문장을 명사구에 가깝게 깎는다.
+   완벽할 필요는 없다 — 사람이 폼에서 두 글자만 고치면 되는 상태면 된다.
+   원문은 내용에 그대로 남으므로 여기서 버려도 잃는 것이 없다. */
+function qaShorten(s){
+  let v = s;
+  // 연결어미에서 한 번 끊는다. 앞쪽이 본론인 경우가 많다
+  const cutAt = v.search(/(하셨는데|하시는데|했는데|하는데|인데|지만|는데|라서|어서|니까)/);
+  if(cutAt > 4) v = v.slice(0, cutAt);
+  // 머리 군더더기
+  v = v.replace(/^(아까|방금|오늘|어제|그리고|근데|참|아\s?맞다|일단|혹시|급한데)\s+/g, '');
+  // 직급을 부르는 말이 문장 맨 앞에 그대로 오기도 한다 ("부장님이 ...")
+  v = v.replace(/^\S{0,10}(?:부장|차장|과장|팀장|대리|주임|이사|상무|전무)님?(?:이|께서|은|는)\s+/, '');
+  v = v.replace(/^\S{1,10}팀에서\s+/, '');
+  // 꼬리 서술어
+  // 「보내야 됨」·「받아야 함」처럼 앞 글자가 바뀌는 꼴도 함께 떼어낸다
+  v = v.replace(/\s*(하라고\s?하셨는데|하라고\s?함|하라고|하래|\S*야\s?(?:함|됨)|하기로\s?함|할\s?것|바람|요망|요청드림|부탁드림|드림|예정|하기)\s*$/, '');
+  v = v.replace(/[\s,.·]+$/, '');
+  return v.trim() || s;
 }
 
 function quickAddPreview(){
@@ -4287,8 +4834,8 @@ function quickAddPreview(){
   const box = $('#qaHint');
   if(!raw.trim()){
     box.innerHTML = 'Enter 를 누르면 바로 등록돼요. ' +
-      '시간 <b>14:00</b> · 날짜 <b>내일</b> <b>9/3</b> · ' +
-      '여러 날 이어지는 일은 <b>(9.3~11.1)</b> 처럼 적으면 마감일까지 매일 보여요.';
+      '<b>내일 2시</b> · <b>다음주까지</b> · <b>이달 말</b> · <b>3일간</b> · ' +
+      '<b>상반기</b> 처럼 적어도 알아들어요.';
     return;
   }
   const p = parseQuickAdd(raw, viewDate);
@@ -4296,10 +4843,19 @@ function quickAddPreview(){
   const d = parseDate(p.date);
   const label = p.date === todayStr() ? '오늘'
               : (d ? p.date.slice(5).replace('-', '/') + ' (' + WD[d.getDay()] + ')' : p.date);
-  box.innerHTML = '<span class="tag">' + escHtml(p.until ? label + ' ~ ' + mdOf(p.until) : label) + '</span>' +
+  /* 마감으로 잡혔으면 그렇다고 적는다. 시작일로 오해하면 일정이 통째로 어긋난다. */
+  const dueD = p.until ? parseDate(p.until) : null;
+  const dueLabel = dueD ? mdOf(p.until) + ' (' + WD[dueD.getDay()] + ')' : '';
+  box.innerHTML =
+    (p.usedDue
+      ? '<span class="tag">마감 ' + escHtml(dueLabel) + '</span>'
+      : '<span class="tag">' + escHtml(p.until ? label + ' ~ ' + mdOf(p.until) : label) + '</span>') +
     (p.time ? '<span class="tag">' + escHtml(p.time) + '</span>' : '') +
-    '<b>' + escHtml(p.title) + '</b> 로 등록됩니다' +
-    (p.until ? ' · 마감일까지 매일 보여요' : '');
+    (p.content ? '<span class="tag">내용</span>' : '') +
+    '<b>' + escHtml(p.title) + '</b> ' +
+    /* 바로 등록되는 줄 알았다가 창이 뜨면 당황한다. 미리 알려 준다. */
+    (p.rambling ? '— Enter 를 누르면 등록창이 열려요'
+                : '로 등록돼요' + (p.until ? ' · 마감일까지 매일 보여요' : ''));
 }
 
 function quickAddSubmit(){
@@ -4308,8 +4864,18 @@ function quickAddSubmit(){
   const p = parseQuickAdd(raw, viewDate);
   if(!p.title){ toast('제목을 적어 주세요.'); return; }
 
+  /* 주절주절 쓴 문장은 바로 넣지 않는다. 제목을 기계가 깎은 것이라
+     한 번은 사람이 봐야 한다. 상세폼에 채워서 열고 확인 뒤 저장하게 한다. */
+  if(p.rambling){
+    $('#qaInput').value = '';
+    quickAddPreview();
+    taskModal(null, { title: p.title, date: p.date, until: p.until,
+                      time: p.time, content: p.content, fromQuickAdd: true });
+    return;
+  }
+
   const rec = {
-    id: newId(myName()), title: p.title, content: '',
+    id: newId(myName()), title: p.title, content: p.content || '',
     date: p.date, until: p.until || '', time: p.time, done: false, doneAt: '',
     author: myName(), mtime: nowStamp(), del: false
   };
@@ -4387,10 +4953,15 @@ function renderToday(){
   /* ---------- 1) 업무 (주역) ---------- */
   const tasks = sortTasks(dayTasks(ds));
   const doneN = tasks.filter(r => r.done).length;
+  const shown = hideDone() ? tasks.filter(r => !r.done) : tasks;
 
   const grid = $('#listTask');
-  grid.className = 'rows taskgrid ' + taskDensity(tasks.length);
-  grid.innerHTML = tasks.length ? tasks.map(r => {
+  const smode = taskSortMode();
+  grid.className = 'rows taskgrid ' + taskDensity(shown.length)
+                 + (smode === 'manual' ? '' : ' sorted');
+  paintTaskSort();
+  paintHideDone(doneN);
+  grid.innerHTML = shown.length ? shown.map(r => {
     // 기간 업무는 남은 날짜와 기간을 함께 보여 준다. 오늘 하루짜리는 예전 그대로.
     const sp = taskSpanInfo(r, d);
     const sub = [sp ? '기간 ' + sp.range : '', r.content || ''].filter(Boolean).join(' · ');
@@ -4407,7 +4978,12 @@ function renderToday(){
       '<span class="acts">' + rowActs() + '</span>' +
     '</div>';
   }).join('')
-    : emptyBox('오늘 등록된 업무가 없어요.', '[＋ 업무 추가]를 누르면 여기에 보여요.');
+    : tasks.length
+      /* 걸러서 빈 것과 아예 없는 것은 다른 상태다. 같은 말을 쓰면
+         "다 했는데 왜 없다고 하지" 하고 헷갈린다. */
+      ? emptyBox('오늘 할 일을 다 했어요.',
+                 '완료한 ' + doneN + '건은 [완료 ' + doneN + '건 숨김]을 눌러 다시 봐요.')
+      : emptyBox('오늘 등록된 업무가 없어요.', '위에 한 줄로 적거나, 아래 [＋ 업무 자세히 추가]를 눌러요.');
 
   // 진행 표시: 완료 수를 크게, 전체는 작게, 옆에 막대와 상태 문구
   const box = $('#taskCount');
@@ -4574,6 +5150,7 @@ function renderToday(){
         (r.place ? '<span class="place">' + escHtml(r.place) + '</span>' : '') +
       '</div>' +
       '<span class="time">' + escHtml(r.time || '') + '</span>' +
+      '<span class="acts">' + rowActs() + '</span>' +
     '</div>').join('') : emptyBox('오늘 점심약속이 없어요.', '[＋ 추가]로 잡아 두세요.');
 
   const soon = alive(DB.lunch)
@@ -4594,6 +5171,7 @@ function renderToday(){
           '<span class="time">' + escHtml(r.time || '') + '</span>' +
           '<span class="who"><b>' + escHtml(r.target) + '</b>' +
             (r.place ? '<em>' + escHtml(r.place) + '</em>' : '') + '</span>' +
+          '<span class="acts">' + rowActs() + '</span>' +
         '</div>';
       }).join('') + '</div>';
   }
@@ -4799,7 +5377,34 @@ $('#mPrev').onclick  = () => { calMonth = new Date(calMonth.getFullYear(), calMo
 $('#mNext').onclick  = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1); renderCal(); };
 $('#mToday').onclick = () => { calMonth = new Date(); renderCal(); };
 
-$('#btnAddTask').onclick    = () => taskModal();
+/* 정렬 기준은 화면에만 걸린다. 업무 자체는 하나도 안 바뀐다 —
+   그래서 파일에 저장할 것도 기준 이름 하나뿐이다. */
+/* 거르기도 화면에만 걸린다. 업무는 하나도 안 바뀐다 */
+$('#btnHideDone').onclick = () => {
+  DB.cfg.taskHideDone = !hideDone();
+  markDirty();
+  renderToday();
+  toast(hideDone() ? '완료한 건을 숨겼어요.' : '완료한 건도 다시 보여요.');
+};
+
+$('#taskSort').onchange = () => {
+  DB.cfg.taskSort = $('#taskSort').value;
+  markDirty();
+  renderToday();
+  toast(taskSortMode() === 'manual'
+    ? '직접 정한 순서로 돌아왔어요.'
+    : TASK_SORTS.filter(x => x[0] === taskSortMode())[0][1] + '으로 세웠어요.');
+};
+
+/* 한 줄로 적다가 "이건 자세히 적어야겠다" 싶을 때 다시 치게 하지 않는다.
+   적던 것을 그대로 파싱해 상세 창에 채워 넣는다. */
+$('#btnAddTask').onclick    = () => {
+  const raw = $('#qaInput').value.trim();
+  if(!raw){ taskModal(); return; }
+  const p = parseQuickAdd(raw, viewDate);
+  taskModal(null, { title: p.title, date: p.date, until: p.until,
+                    time: p.time, content: p.content, fromQuickAdd: true });
+};
 // 연락하기를 처음 등록하려는 순간이 명부를 안내할 자리다.
 // [나중에 하기]를 누르면 곧바로 등록 창으로 이어 준다 — 등록을 막지 않는다.
 $('#btnAddContact').onclick = () => { if(!maybeShowEmpGuide(contactModal)) contactModal(); };
@@ -5012,7 +5617,13 @@ $('#modeSwitch').addEventListener('click', e => {
   grid.addEventListener('mousedown', e => {
     const bar = e.target.closest('.bar');
     const row = e.target.closest('.row');
-    if(bar && row && !row.classList.contains('done')) row.setAttribute('draggable', 'true');
+    if(!bar || !row || row.classList.contains('done')) return;
+    // 기준으로 세워 둔 동안 끌면 놓는 순간 되돌아간다. 아예 켜지 않는다
+    if(taskSortMode() !== 'manual'){
+      toast('[직접 정한 순서]로 바꾸면 끌어서 옮길 수 있어요.');
+      return;
+    }
+    row.setAttribute('draggable', 'true');
   });
   const dropHandle = () => $$('.taskgrid .row[draggable]').forEach(r => r.removeAttribute('draggable'));
   document.addEventListener('mouseup', dropHandle);
